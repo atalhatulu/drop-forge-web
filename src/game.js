@@ -329,8 +329,8 @@ const WEAPON_ABILITIES=[
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
- if(status)status.textContent=announcement>0?announcementText:(game.inHub?'HAZIRLIK · '+legacy.marks+' ÇEKİRDEK':'DERİNLİK '+room.y)+' · '+($('hint').textContent||'E ATÖLYE · PORTAL');
- if(ability){const spec=WEAPON_ABILITIES[p.weapon];ability.textContent=spec?'SAĞ TIK · '+spec.name+' · '+(abilityCooldown(p,p.weapon)>0?abilityCooldown(p,p.weapon).toFixed(1)+'sn':'HAZIR'):'SAĞ TIK · SİLAH YOK';}
+ const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK · '+legacy.marks+' ÇEKİRDEK':'DERİNLİK '+room.y)+' · '+($('hint').textContent||'E ATÖLYE · PORTAL');if(status&&status.textContent!==message)status.textContent=message;
+ if(ability){const spec=WEAPON_ABILITIES[p.weapon],value=spec?'SAĞ TIK · '+spec.name+' · '+(abilityCooldown(p,p.weapon)>0?abilityCooldown(p,p.weapon).toFixed(1)+'sn':'HAZIR'):'SAĞ TIK · SİLAH YOK';if(ability.textContent!==value)ability.textContent=value;ability.title=spec?.description||'Silahın yok';}
 }
 function specialBullet(p,st,angle,{family=st.family,damage=st.damage,speed=st.speed,pierces=st.pierce,areaBonus=st.areaBonus,impactStagger=st.staggerBonus,shotEffects={shockRemaining:1}}={}){
  const spec=PROJECTILE_FAMILIES[family];game.bullets.push({x:p.x+p.w/2,y:p.y+p.h*.45,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:spec.life,damage:Math.max(1,Math.round(damage)),mods:[...(p.slots[p.activeSlot].mods||[])],shotEffects,weapon:p.weapon,family,pierces,impactStagger,areaBonus,hitTargets:new Set(),radius:spec.radius});
@@ -342,7 +342,7 @@ function useWeaponAbility(){
  const bolt=(offset=0,multiplier=1,options={})=>specialBullet(p,st,angle+offset,{...options,damage:st.damage*multiplier,shotEffects:shared});
  if(id===0)for(const offset of [-.13,0,.13])bolt(offset,.95,{family:'kinetic'});
  else if(id===1)p.abilityBuff={weapon:id,time:2.2};
- else if(id===2){let hit=0;for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y)<195&&Math.abs(Math.atan2(e.y+e.h/2-y,e.x+e.w/2-x)-angle)<1.2){hitEnemy(room,e,Math.round(st.shotDamage*.63),'ability',id);e.stagger=Math.max(e.stagger,.35);e.knockVx=Math.cos(angle)*280;hit++;}if(game.inHub&&room.dummy&&Math.hypot(room.dummy.x+room.dummy.w/2-x,room.dummy.y+room.dummy.h/2-y)<195)hitDummy(room,Math.round(st.shotDamage*.63),p.face);burst(room,x+Math.cos(angle)*85,y+Math.sin(angle)*85,'#b9edff',24,240);}
+ else if(id===2){let hit=0;for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-x,e.y+e.h/2-y)<195&&Math.abs(Math.atan2(Math.sin(Math.atan2(e.y+e.h/2-y,e.x+e.w/2-x)-angle),Math.cos(Math.atan2(e.y+e.h/2-y,e.x+e.w/2-x)-angle)))<1.2){hitEnemy(room,e,Math.round(st.shotDamage*.63),'ability',id);e.stagger=Math.max(e.stagger,.35);e.knockVx=Math.cos(angle)*280;hit++;}if(game.inHub&&room.dummy&&Math.hypot(room.dummy.x+room.dummy.w/2-x,room.dummy.y+room.dummy.h/2-y)<195)hitDummy(room,Math.round(st.shotDamage*.63),p.face);burst(room,x+Math.cos(angle)*85,y+Math.sin(angle)*85,'#b9edff',24,240);}
  else if(id===3)bolt(0,2.15,{family:'plasma',pierces:2,areaBonus:st.areaBonus*1.5});
  else if(id===4)bolt(0,2.05,{family:'pierce',pierces:5,speed:st.speed*1.2});
  else if(id===5)bolt(0,1.55,{family:'kinetic',impactStagger:3.2,pierces:1});
