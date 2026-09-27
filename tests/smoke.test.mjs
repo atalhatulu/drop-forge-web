@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
   assert.match(html, /href="\.\/styles\/game\.css"/);
-  assert.match(html, /src="\.\/src\/catalog\.js"[^]*src="\.\/src\/game\.js"/);
+  assert.match(html, /src="\.\/src\/catalog\.js"[^]*src="\.\/src\/world\.js"[^]*src="\.\/src\/game\.js"/);
   assert.match(html, /href="\.\/styles\/quickbar\.css"/);
   assert.match(html, /href="\.\/styles\/workbench\.css"/);
   assert.match(html, /<canvas\b/i);
@@ -91,14 +91,8 @@ test('game script parses and combat systems are wired', () => {
 
 test('seeded map includes defense, hunt, and meaningful route rewards', () => {
   const source=readFileSync('src/game.js','utf8');
-  const rngStart=source.indexOf('function rng(seed)');
-  const rngEnd=source.indexOf('function announce(',rngStart);
-  const hashStart=source.indexOf('function hash2(');
-  const hashEnd=source.indexOf('const BIOMES=',hashStart);
-  const mapStart=source.indexOf('function makeMap(seed)');
-  const mapEnd=source.indexOf('function buildGame(seed)',mapStart);
-  assert.ok(rngStart>=0 && rngEnd>rngStart && hashStart>=0 && hashEnd>hashStart && mapStart>=0 && mapEnd>mapStart);
-  const mapFactory=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+  const root={};new Function('window',readFileSync('src/world.js','utf8'))(root);
+  const mapFactory=root.DropForgeWorld.createMapGenerator({W:1120,FLOOR:548,buildTerrain:()=>{},buildBiome:()=>{}});
   const back={left:'right',right:'left',up:'down',down:'up'};
   for(const seed of [1,42,97321,382711,12345678]){
     const rooms=mapFactory(seed);
@@ -128,10 +122,8 @@ test('game boot keeps chest helper in a function and populates both starter sele
 
 test('four five-room regions form a boss-gated downward tree', () => {
  const source=readFileSync('src/game.js','utf8');
- const rngStart=source.indexOf('function rng(seed)'),rngEnd=source.indexOf('function announce(',rngStart);
- const hashStart=source.indexOf('function hash2('),hashEnd=source.indexOf('const BIOMES=',hashStart);
- const mapStart=source.indexOf('function makeMap(seed)'),mapEnd=source.indexOf('function buildGame(seed)',mapStart);
- const makeMap=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+ const root={};new Function('window',readFileSync('src/world.js','utf8'))(root);
+ const makeMap=root.DropForgeWorld.createMapGenerator({W:1120,FLOOR:548,buildTerrain:()=>{},buildBiome:()=>{}});
  const biomeNames=['cave','forest','crystal','lava'],back={left:'right',right:'left',up:'down',down:'up'};
  for(const seed of [1,42,97321,382711,12345678,333333,999999]){
   const rooms=makeMap(seed),bosses=rooms.filter(r=>r.type==='boss'),spine=rooms.filter(r=>r.spine);
@@ -333,7 +325,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -510,7 +502,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);
