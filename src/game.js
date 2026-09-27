@@ -39,10 +39,50 @@ function getModSlots(weapon){const lv=masteryLevel(weapon);return lv>=8?4:lv>=6?
 function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
 function installMod(slot,mod){const spec=MODS[mod];if(!slot||!spec||masteryLevel(slot.weapon)<spec.level||spec.slot>=getModSlots(slot.weapon)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
 function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce(MODS[m].name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
-function ensureForgeModSlots(){const grid=document.querySelector('#forgePanel .forgeGrid');if(!grid)return;for(let n=1;n<=2;n++){const first=$('forgeMod'+n);if(!first)continue;first.closest('label').firstChild.textContent=n+'. '+MOD_SLOT_NAMES[0];for(let j=2;j<=4;j++){const id='forgeMod'+n+'_'+j;if($(id))continue;const label=document.createElement('label');label.textContent=n+'. '+MOD_SLOT_NAMES[j-1];const select=document.createElement('select');select.id=id;select.dataset.forgeWeapon=String(n);select.dataset.forgeModSlot=String(j);label.append(select);const previous=j===2?first.closest('label'):$( 'forgeMod'+n+'_'+(j-1) ).closest('label');previous.after(label);}}}
+const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
+let forgeFocusGun=1,forgeEditors={1:-1,2:-1};
+function ensureForgeModSlots(){/* Four dedicated hidden selectors are part of the workbench markup. */}
 function forgeMods(n){return Array.from({length:4},(_,j)=>$(j===0?'forgeMod'+n:'forgeMod'+n+'_'+(j+1))).filter(Boolean);}
 function chosenForgeMods(n){const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);return forgeMods(n).map((el,j)=>j<limit&&MODS[el.value]?.slot===j&&MODS[el.value].level<=masteryLevel(weapon)?el.value:undefined);}
-function refreshForge(){if(!document.getElementById('forgeGun1')||typeof WEAPON_NAMES==='undefined')return;ensureForgeModSlots();for(let n=1;n<=2;n++){const gun=$('forgeGun'+n),prev=gun.value||String(n-1);gun.innerHTML=WEAPON_NAMES.map((name,i)=>unlockedWeapons.has(i)?'<option value="'+i+'">'+WEAPON_TYPES[i]+' · '+name+' · UST '+masteryLevel(i)+'</option>':'<option value="locked-'+i+'" disabled>??? · KİLİTLİ SİLAH</option>').join('');gun.value=unlockedWeapons.has(Number(prev))?prev:String(n-1);const weapon=Number(gun.value),limit=getModSlots(weapon),lv=masteryLevel(weapon);for(const [j,el] of forgeMods(n).entries()){const old=el.value;el.disabled=j>=limit;el.innerHTML='<option value="">'+(el.disabled?'KİLİTLİ · USTALIK '+[2,4,6,8][j]:'BOŞ EKLENTİ')+'</option>'+Object.entries(MODS).filter(([,m])=>m.level<=lv&&m.slot===j).map(([id,m])=>'<option value="'+id+'">'+m.name+' · '+m.description+'</option>').join('');if(!el.disabled&&[...el.options].some(o=>o.value===old))el.value=old;}}$('forgeMastery').textContent='AÇIK SİLAH: '+unlockedWeapons.size+'/'+WEAPON_PROJECTILES.length+' · Dört eklenti yuvası ustalık seviyesine göre açılır.';renderForgePreview();}
+function syncForgeWorkbench(){
+ if(!document.getElementById('forgeGun1'))return;
+ for(let n=1;n<=2;n++){
+  const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);
+  const card=document.querySelector('[data-weapon-card="'+n+'"]');
+  if(card)card.classList.toggle('focused',forgeFocusGun===n);
+  const focusButton=card?.querySelector('[data-focus-gun]');if(focusButton)focusButton.textContent=forgeFocusGun===n?'İNCELEMEDE ✓':'İNCELE →';
+  for(let j=0;j<4;j++){
+   const node=card?.querySelector('[data-slot="'+j+'"]'),value=forgeMods(n)[j]?.value||'',locked=j>=limit;
+   if(!node)continue;
+   node.disabled=locked;node.classList.toggle('locked',locked);node.classList.toggle('filled',!locked&&!!value);node.classList.toggle('active',forgeEditors[n]===j&&!locked);
+   node.setAttribute('aria-label',n+'. silah '+FORGE_SLOT_LABELS[j]+': '+(locked?'ustalık '+[2,4,6,8][j]+' gerekli':value?MODS[value].name:'eklentiyi seç'));
+   node.querySelector('.attachLabel').textContent=FORGE_SLOT_LABELS[j];
+   node.querySelector('.attachValue').textContent=locked?'UST '+[2,4,6,8][j]:value?MODS[value].name:'+';
+  }
+  const editor=$('forgeEditor'+n),j=forgeEditors[n],chosen=forgeMods(n)[j];
+  if(j<0||j>=limit||!chosen){editor.classList.add('hidden');continue;}
+  editor.classList.remove('hidden');$('forgeEditorLabel'+n).textContent=FORGE_SLOT_LABELS[j];
+  $('forgeEditorHint'+n).textContent='Bu yuvaya yalnızca bir eklenti takılabilir.';
+  const picker=$('forgeEditorSelect'+n);picker.innerHTML=chosen.innerHTML;picker.value=chosen.value;
+ }
+ const weapon=Number($('forgeGun'+forgeFocusGun).value);
+ $('forgeMastery').textContent='USTALIK '+masteryLevel(weapon)+' · '+weaponName(weapon)+' · '+getModSlots(weapon)+'/4 AÇIK YUVA · Silah ustalığı kalıcıdır.';
+}
+function refreshForge(){
+ if(!document.getElementById('forgeGun1')||typeof WEAPON_NAMES==='undefined')return;
+ for(let n=1;n<=2;n++){
+  const gun=$('forgeGun'+n),prev=gun.value||String(n-1);
+  gun.innerHTML=WEAPON_NAMES.map((name,i)=>unlockedWeapons.has(i)?'<option value="'+i+'">'+WEAPON_TYPES[i]+' · '+name+' · UST '+masteryLevel(i)+'</option>':'<option value="locked-'+i+'" disabled>??? · KİLİTLİ SİLAH</option>').join('');
+  gun.value=unlockedWeapons.has(Number(prev))?prev:String(n-1);
+  const weapon=Number(gun.value),limit=getModSlots(weapon),lv=masteryLevel(weapon);
+  for(const [j,el] of forgeMods(n).entries()){
+   const old=el.value;el.disabled=j>=limit;
+   el.innerHTML='<option value="">'+(el.disabled?'KİLİTLİ · USTALIK '+[2,4,6,8][j]:'BOŞ EKLENTİ')+'</option>'+Object.entries(MODS).filter(([,m])=>m.level<=lv&&m.slot===j).map(([id,m])=>'<option value="'+id+'">'+m.name+' · '+m.description+'</option>').join('');
+   if(!el.disabled&&[...el.options].some(o=>o.value===old))el.value=old;
+  }
+ }
+ syncForgeWorkbench();renderForgePreview();
+}
 const WEAPON_PROJECTILES=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
 const UNLOCK_KEY='dropForge.unlockedWeapons.v1';let unlockedWeapons=new Set([0,1]);
 try{const a=JSON.parse(localStorage.getItem(UNLOCK_KEY)||'[]');if(Array.isArray(a))for(const id of a)if(Number.isInteger(id)&&id>=0&&id<WEAPON_PROJECTILES.length)unlockedWeapons.add(id);}catch(e){}
@@ -167,7 +207,7 @@ function buildGame(seed){const difficulty=$('difficulty').value in DIFFICULTY?$(
 // Physical training hub: the existing starting room becomes a safe, playable staging area.
 function setupHub(){if(!game)return;const room=game.rooms[0],p=game.player;game.inHub=true;game.roomId=0;room.cleared=true;room.arenaStarted=true;room.training=true;room.platforms=[];room.props=[];room.breakables=[];room.hazards=[];room.crystals=[];room.rocks=[];room.decor=[];room.hubDoors=room.doors;room.doors={};room.merchant=null;room.wheel=null;room.dummy={x:616,y:FLOOR-92,w:46,h:92,hit:0,total:0,lastDamage:0};room.hubGate={x:1018,y:FLOOR-5};room.forge={x:310,y:FLOOR-4};p.x=110;p.y=FLOOR-p.h;p.vx=0;p.vy=0;p.grounded=true;p.invuln=0;p.hp=p.maxHp;game.enemyBullets=[];game.bullets=[];game.grenades=[];game.motionTrails=[];game.trailClock=0;paused=false;shopOpen=false;loadoutOpen=false;hubForgeOpen=false;helpOpen=false;$('helpOverlay').classList.add('hidden');$('pause').classList.add('hidden');$('gamePauseMenu').classList.add('hidden');$('shopOverlay').classList.add('hidden');$('loadoutOverlay').classList.add('hidden');$('seedInput').value=String(game.seed);$('seedLabel').textContent='HAZIRLIK ALANI · SEED '+game.seed;announce('HAZIRLIK ALANI · E: ATÖLYE · KUKLAYI TEST ET · E: PORTAL',4);updateHud();canvas.focus();}
 let hubForgeOpen=false,helpOpen=false;
-function openHubForge(){if(!game?.inHub||paused)return;saveSlot();const p=game.player;for(let i=0;i<2;i++)if(p.slots[i])$('forgeGun'+(i+1)).value=String(p.slots[i].weapon);refreshForge();for(let i=0;i<2;i++)if(p.slots[i])for(let j=0;j<4;j++){const selector=$(j?'forgeMod'+(i+1)+'_'+(j+1):'forgeMod'+(i+1));if(selector&&!selector.disabled)selector.value=p.slots[i].mods[j]||'';}renderForgePreview();hubForgeOpen=true;paused=true;mouse.down=false;$('pause').classList.remove('hidden');$('pause').querySelector('.eyebrow').textContent='OYUN İÇİ HAZIRLIK';$('pause').querySelector('h1').innerHTML='SİLAH <em>ATÖLYESİ</em>';$('pause').querySelector('p').textContent='İki silahını ve eklentilerini seç. Çıkınca hedef kuklasında test edebilir, portaldan sefere girebilirsin.';$('startBtn').textContent='KAYDET · TEST ALANINA DÖN';}
+function openHubForge(){if(!game?.inHub||paused)return;saveSlot();const p=game.player;for(let i=0;i<2;i++)if(p.slots[i])$('forgeGun'+(i+1)).value=String(p.slots[i].weapon);refreshForge();for(let i=0;i<2;i++)if(p.slots[i])for(let j=0;j<4;j++){const selector=forgeMods(i+1)[j];if(selector&&!selector.disabled)selector.value=p.slots[i].mods[j]||'';}forgeFocusGun=1;forgeEditors={1:-1,2:-1};syncForgeWorkbench();renderForgePreview();hubForgeOpen=true;paused=true;mouse.down=false;$('pause').classList.remove('hidden');$('pause').querySelector('.eyebrow').textContent='OYUN İÇİ HAZIRLIK';$('pause').querySelector('h1').innerHTML='SİLAH <em>ATÖLYESİ</em>';$('pause').querySelector('p').textContent='İki silahını ve eklentilerini seç. Çıkınca hedef kuklasında test edebilir, portaldan sefere girebilirsin.';$('startBtn').textContent='KAYDET · TEST ALANINA DÖN';}
 function closeHubForge(){if(!hubForgeOpen)return;hubForgeOpen=false;paused=false;$('pause').classList.add('hidden');canvas.focus();}
 function applyHubForge(){if(!game?.inHub)return;const ids=[Number($('forgeGun1').value),Number($('forgeGun2').value)];if(ids[0]===ids[1]||ids.some(id=>!unlockedWeapons.has(id))){announce('İKİ FARKLI AÇIK SİLAH SEÇ');return;}let seed=Number($('seedInput').value.trim());if(!Number.isSafeInteger(seed)||seed<1)seed=game.seed;const diff=$('difficulty').value;if(seed!==game.seed){closeHubForge();buildGame(seed>>>0);setupHub();return;}const p=game.player;saveSlot();const old=p.slots;p.slots=ids.map((weapon,i)=>{const previous=old.find(q=>q?.weapon===weapon),slot={weapon,mods:chosenForgeMods(i+1),ammo:previous?.ammo??MAG_SIZE[weapon],reserve:previous?.reserve??Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*7)};slot.ammo=weaponStats(slot).mag;slot.reserve=Math.max(slot.reserve,Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*5));return slot;});p.activeSlot=0;p.weapon=p.slots[0].weapon;p.ammo=p.slots[0].ammo;p.reserve=p.slots[0].reserve;game.difficulty=diff in DIFFICULTY?diff:'normal';game.settings=DIFFICULTY[game.difficulty];cancelReload(p);closeHubForge();announce('SİLAHLAR HAZIR · KUKLAYI TEST ET · E İLE PORTALA GİR',3);updateHud();}
 function enterExpedition(){if(!game?.inHub)return;const room=game.rooms[0],next=room.links.down;if(next===undefined){announce('SEFER PORTALI HAZIR DEĞİL');return;}const p=game.player;saveSlot();for(const slot of p.slots)if(slot){slot.ammo=weaponStats(slot).mag;slot.reserve=Math.min(AMMO_MAX[slot.weapon],MAG_SIZE[slot.weapon]*7);}p.hp=p.maxHp;p.ammo=p.slots[p.activeSlot]?.ammo??0;p.reserve=p.slots[p.activeSlot]?.reserve??0;p.kits=1;p.grenades=1;game.inHub=false;room.dummy=null;room.hubGate=null;room.forge=null;room.doors=room.hubDoors||room.doors;room.training=false;room.merchant={x:880,y:FLOOR};game.bullets=[];game.enemyBullets=[];game.grenades=[];game.flow=0;game.flowChain=0;game.flowTime=0;enterRoom(next,'up');announce('SEFER BAŞLADI · '+BIOMES[currentRoom().biome].name,3);}
@@ -387,7 +427,15 @@ function update(dt){
 const FORGE_GUNS=[['KIVILCIM-15','#f5bf65','#5788b2',0],['VIZIR-30','#78e7c5','#4a6baf',1],['KOR PARÇALAYICI','#fd9a68','#9a5a82',2],['DEMIR DISI','#d6a3ff','#5d68c6',1],['YILDIZ DELEN','#9ce2ff','#655eb0',3],['KISA VOLT','#ffd28d','#577ab7',0],['AY IŞIĞI','#81d5ff','#b47fd4',1],['NOVA POMPASI','#ffc4a8','#b15b97',2],['UZAK YANKI','#c9f0b1','#648a96',3],['NEON ARI','#caa7ff','#5779c9',1],['IŞIN KESİCİ','#62ffe4','#286f90',4],['METEOR-4','#ffb46f','#844b57',5],['ARK DOKUYUCU','#a5d9ff','#6250bd',6]];
 function makeForgeSprite(i){const spec=FORGE_GUNS[i],c=document.createElement('canvas');c.width=64;c.height=32;const x=c.getContext('2d');x.imageSmoothingEnabled=false;function block(a,b,w,h,color){x.fillStyle=color;x.fillRect(a,b,w,h);}block(5,12,45,9,'#182335');block(9,9,31,11,spec[2]);block(14,10,19,3,spec[1]);block(44,11,spec[3]===3?17:12,5,'#a8bfc9');block(46,12,10,2,spec[1]);block(8,20,13,3,'#111929');block(16,21,6,9,'#222d42');block(17,22,4,6,spec[1]);block(35,19,6,spec[3]===2?8:4,'#243247');block(10,6,4,4,'#e3faff');block(27,6,3,4,spec[1]);if(spec[3]===3){block(5,5,29,3,spec[1]);block(3,8,5,8,'#a8bfc9');}if(spec[3]===2){block(37,10,10,12,'#2f3e55');block(40,7,4,6,spec[1]);}if(spec[3]===1){block(9,22,7,4,spec[1]);block(26,7,9,2,'#e2f6f5');}if(spec[3]===4){block(4,10,56,13,'#143d53');block(10,8,40,3,spec[1]);block(40,12,17,4,'#7affdf');block(8,23,19,3,'#36b9b5');block(29,20,8,8,'#135a67');block(52,8,8,3,'#d5fff1');}if(spec[3]===5){block(3,9,57,15,'#573e49');block(6,12,42,9,'#d87756');block(12,8,31,3,'#ffd38e');block(46,10,14,13,'#333748');block(48,14,12,6,'#ffbf62');block(9,23,16,4,'#ad6160');}if(spec[3]===6){block(5,7,50,18,'#273566');block(7,11,46,9,spec[2]);block(15,7,25,3,'#b5e7ff');block(37,10,8,12,spec[1]);block(53,8,8,16,'#91f5ff');block(24,3,4,5,'#ffffff');block(11,23,20,3,'#8ba8ff');}return c;}
 for(let i=0;i<FORGE_GUNS.length;i++)WEAPON_SPRITES[i]=makeForgeSprite(i);
-const WEAPON_NAMES=FORGE_GUNS.map(q=>q[0]);for(let i=1;i<=2;i++)$('forgeGun'+i).onchange=refreshForge;document.querySelector('#forgePanel .forgeGrid').addEventListener('change',e=>{if(e.target.dataset.forgeModSlot||e.target.id==='forgeMod1'||e.target.id==='forgeMod2')renderForgePreview();});refreshForge();
+const WEAPON_NAMES=FORGE_GUNS.map(q=>q[0]);
+for(let n=1;n<=2;n++){
+ $('forgeGun'+n).onchange=()=>{forgeFocusGun=n;forgeEditors[n]=-1;refreshForge();};
+ $('forgeEditorSelect'+n).onchange=e=>{const j=forgeEditors[n];if(j<0)return;const hidden=forgeMods(n)[j];if(hidden&&!hidden.disabled){hidden.value=e.target.value;syncForgeWorkbench();renderForgePreview();}};
+}
+document.querySelectorAll('.forgeAttachSlot').forEach(node=>node.onclick=()=>{const n=Number(node.dataset.gun),j=Number(node.dataset.slot);if(j>=getModSlots(Number($('forgeGun'+n).value)))return;forgeFocusGun=n;forgeEditors[1]=n===1?j:-1;forgeEditors[2]=n===2?j:-1;syncForgeWorkbench();renderForgePreview();});
+document.querySelectorAll('[data-close-editor]').forEach(node=>node.onclick=()=>{forgeEditors[Number(node.dataset.closeEditor)]=-1;syncForgeWorkbench();});
+document.querySelectorAll('[data-focus-gun]').forEach(node=>node.onclick=()=>{forgeFocusGun=Number(node.dataset.focusGun);syncForgeWorkbench();renderForgePreview();});
+refreshForge();
 function weaponName(id){return id===null?'BIÇAK':WEAPON_NAMES[id]||'SİLAH';}
 function weaponType(id){return WEAPON_TYPES[id]||'YAKIN DÖVÜŞ';}
 
@@ -415,7 +463,13 @@ function renderQuickSlot(number,{weapon=null,name,sub='',count='',icon='empty',s
 
 function masteryProgress(id){if(id===null||id===undefined)return {fraction:0,earned:0,need:0};const level=masteryLevel(id),xp=mastery[id]||0,base=90*(level-1)*(level-1),next=masteryNeeded(id);return level>=10?{fraction:1,earned:xp,need:xp}:{fraction:clamp((xp-base)/(next-base),0,1),earned:xp-base,need:next-base};}
 function xpBarHTML(id){const xp=masteryProgress(id);return '<div class="xpMeta"><span>USTALIK '+masteryLevel(id)+'</span><span>'+(masteryLevel(id)>=10?'MAKSİMUM':Math.floor(xp.earned)+' / '+xp.need+' XP')+'</span></div><div class="xpTrack" role="progressbar" aria-label="'+weaponName(id)+' ustalık XP" aria-valuenow="'+Math.floor(xp.fraction*100)+'" aria-valuemin="0" aria-valuemax="100"><div style="width:'+(xp.fraction*100).toFixed(1)+'%"></div></div>';}
-function renderForgePreview(){const el=$('forgePreview');if(!el||!WEAPON_SPRITES[0])return;el.innerHTML='';for(let i=1;i<=2;i++){const id=Number($('forgeGun'+i).value)||0,card=document.createElement('div');card.className='forgePreviewCard';card.innerHTML='<img alt="'+weaponName(id)+'" src="'+WEAPON_SPRITES[id].toDataURL('image/png')+'"><div><b>'+weaponName(id)+'</b><small>'+weaponType(id)+' · '+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[id]].name+'</small>'+xpBarHTML(id)+'<small>TAKILI: '+(chosenForgeMods(i).filter(Boolean).map(k=>MODS[k].name).join(' · ')||'YOK')+'</small></div>'+weaponStatHTML({weapon:id,mods:chosenForgeMods(i)});el.append(card);}}
+function renderForgePreview(){
+ const el=$('forgePreview');if(!el||!WEAPON_SPRITES[0])return;
+ const n=forgeFocusGun,id=Number($('forgeGun'+n).value)||0,mods=chosenForgeMods(n),st=weaponStats({weapon:id,mods});
+ const selected=mods.filter(Boolean),sprite=WEAPON_SPRITES[id].toDataURL('image/png');
+ const status=selected.length?selected.map(k=>'<span class="forgeChip">'+MODS[k].name+'</span>').join(''):'<span class="forgeChip empty">EKLENTİ TAKILI DEĞİL</span>';
+ el.innerHTML='<div class="forgePreviewVisual"><span class="forgeBadge">SİLAH '+n+' · '+weaponType(id)+'</span><img alt="'+weaponName(id)+' görseli" src="'+sprite+'"><span class="forgeBadge">'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[id]].name+' · UST '+masteryLevel(id)+'</span></div><div class="forgePreviewInfo"><b>'+weaponName(id)+'</b><small>Seçili silah · Özellikler takılan eklentiyle anında güncellenir.</small>'+xpBarHTML(id)+'<div class="forgeModList">'+status+'</div><div class="forgeStats"><div class="forgeStat"><label>HASAR / MERMİ</label><strong>'+st.damage+'</strong></div><div class="forgeStat"><label>ATIŞ / SN</label><strong>'+st.fireRate.toFixed(2)+'</strong></div><div class="forgeStat"><label>ŞARJÖR</label><strong>'+st.mag+'</strong></div><div class="forgeStat"><label>TEORİK DPS</label><strong>'+st.dps.toFixed(1)+'</strong></div></div>'+weaponStatHTML({weapon:id,mods})+'</div>';
+}
 
 function dropWeapon(room,weapon,x,y,vx=0,ammo=MAG_SIZE[weapon],reserve=AMMO_MAX[weapon],mods=[]){if(weapon===null)return;room.loot.push({weapon,ammo,reserve,mods:[...mods],x,y,vy:-365,vx,grounded:false});}
 function spinWheel(room){const w=room.wheel;if(!w||w.used||w.spinTime>0||!room.cleared)return;w.spinTime=1.65;announce('ŞANS ÇARKI DÖNÜYOR…',1.65);sound(650,.13,'triangle');}
