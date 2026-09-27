@@ -27,10 +27,11 @@ Tarayıcıda çalışan 2D procedural arena shooter / roguelite.
 - `src/scene-props.js` — hub, tüccar, çark ve jeneratör canvas çizimi
 - `src/loot-view.js` — sandık, kırılabilir nesne, dekor ve ganimet çizimi
 - `src/actors-view.js` — oyuncu, düşman ve portal sprite çizimi
+- `src/physics.js` — çarpışma ve zemin fiziği
 - `src/game.js` — oyun durumunu, savaş ve envanter etkileşimlerini, mağaza satın alımlarını ve sahne döngüsünü koordine eden çalışma zamanı
 - `tests/smoke.test.mjs` — katalog ve ana oyun birlikte yüklenerek çalışan regresyon testleri
 
-`npm test` regresyon testlerini, `npm run check` tüm `src/*.js` giriş dosyalarının sözdizimini kontrol eder. Tarayıcıda yükleme sırası: `catalog.js` → `progression.js` → `abilities-data.js` → `shop-data.js` → `mod-presentation.js` → `world.js` → `weapon-stats.js` → `enemy-ai.js` → `shop-view.js` → `map-view.js` → `biome-view.js` → `loadout-presentation.js` → `scene-props.js` → `loot-view.js` → `actors-view.js` → `game.js`.
+`npm test` regresyon testlerini, `npm run check` tüm `src/*.js` giriş dosyalarının sözdizimini kontrol eder. Tarayıcıda yükleme sırası: `catalog.js` → `progression.js` → `abilities-data.js` → `shop-data.js` → `mod-presentation.js` → `world.js` → `weapon-stats.js` → `enemy-ai.js` → `shop-view.js` → `map-view.js` → `biome-view.js` → `loadout-presentation.js` → `scene-props.js` → `loot-view.js` → `actors-view.js` → `physics.js` → `game.js`.
 
 Refaktör durumu: kataloglar, kayıtlar, yetenek tanımları, eklenti sunumu, harita/oda üretimi, silah istatistikleri, düşman davranışları, mağaza uygunluk/sunumu ve CSS ayrı modüllerdedir. `game.js` hâlâ büyük bir çalışma zamanı dosyasıdır. Sonraki adaylar çizim sistemi, envanter/atölye etkileşimleri ve savaşın yan etkileridir. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır.
 
