@@ -549,3 +549,13 @@ test('extracted biome hazards generate deterministic seeded layouts', () => {
  assert.equal(crystal.crystals.length,5);
  assert.equal(crystal.hazards.length,0);
 });
+
+
+test('extracted damage respects portal shields and destroys unshielded portals', () => {
+ const window={};new Function('window',readFileSync('src/damage.js','utf8'))(window);
+ const drops=[],events=[];let shake=0;
+ const {hitPortal}=window.DropForgeDamage.createDamageSystem({getGame:()=>({player:{x:0,w:10},flow:0}),grantMastery:()=>{},addFlow:()=>{},burst:()=>{},floating:(...args)=>events.push(args),setHitStop:()=>{},getShake:()=>shake,setShake:v=>{shake=v;},sound:()=>{},killEnemy:()=>{},dropPickup:(...args)=>drops.push(args)});
+ const room={};const portal={x:40,y:50,hp:20,maxHp:20,shield:1,shieldCooldown:0,burstWindow:0,alive:true};
+ hitPortal(room,portal,30);assert.equal(portal.hp,20);assert.equal(portal.alive,true);
+ portal.shield=0;hitPortal(room,portal,30);assert.equal(portal.hp,0);assert.equal(portal.alive,false);assert.equal(drops.length,1);
+});
