@@ -55,7 +55,7 @@ test('attachment stats reflect actual game modifiers', () => {
 test('starter loadout exposes four attachment slots for both weapons', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.match(source,/function ensureForgeModSlots\(\)/);
-  assert.match(source,/for\(let j=2;j<=4;j\+\+\)/);
+  assert.match(source,/function forgeMods\(n\)/);
   assert.match(source,/mods:chosenForgeMods\(i\+1\)/);
 });
 
@@ -117,7 +117,7 @@ test('defense completion and route reward markup are present', () => {
 test('game boot keeps chest helper in a function and populates both starter selects', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.match(source,/function dropChest\(room\)\{/);
-  assert.match(source,/for\(let i=1;i<=2;i\+\+\)\$\('forgeGun'\+i\)\.onchange=refreshForge/);
+  assert.match(source,/\$\('forgeGun'\+n\)\.onchange=/);
   assert.match(source,/refreshForge\(\);\s*function weaponName/);
 });
 
@@ -256,7 +256,7 @@ test('shot simulation, reload, and live panels reuse the same weaponStats functi
  assert.match(source,/p\.reloadDuration=st\.reload/);
  assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
  assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
- assert.match(source,/weaponStatHTML\(\{weapon:id,mods:chosenForgeMods\(i\)\}\)/);
+ assert.match(source,/weaponStatHTML\(\{weapon:id,mods\}\)/);
  assert.match(source,/statRow\('TAM İSABET'/);
  assert.match(source,/statRow\('TEORİK DPS'/);
  assert.match(source,/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
@@ -320,12 +320,12 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
   getContext(){return ctx}toDataURL(){return 'data:image/png;base64,'}
   append(element){this.children.push(element);if(element.id)nodes.set(element.id,element)}
   after(element){for(const child of element.children||[])if(child.id)nodes.set(child.id,child)}
-  closest(){return new Node('label','LABEL')}querySelector(){return new Node()}addEventListener(){}
+  closest(){return new Node('label','LABEL')}querySelector(){return new Node()}addEventListener(){}setAttribute(){}
   focus(){}getBoundingClientRect(){return {left:0,top:0,width:1280,height:720}}insertAdjacentHTML(){}
  }
  Object.defineProperty(Node.prototype,'innerHTML',{get(){return this._html||''},set(html){this._html=html;if(this.tagName==='SELECT'){this.options=[...String(html).matchAll(/<option\b([^>]*)>/g)].map(m=>({value:(m[1].match(/value="([^"]*)"/)||[])[1]||'',disabled:/disabled/.test(m[1])}));this.value=this.options.find(item=>!item.disabled)?.value||'';}}});
  const grid=new Node('grid');
- const doc={getElementById(id){if(!nodes.has(id)){if(/^forgeMod[12]_[234]$/.test(id))return null;nodes.set(id,new Node(id,['forgeGun1','forgeGun2','forgeMod1','forgeMod2','difficulty'].includes(id)?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:null},createElement(tag){return new Node('',tag.toUpperCase())}};
+ const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){return query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):[]},createElement(tag){return new Node('',tag.toUpperCase())}};
  const win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(){}};
  new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
