@@ -126,3 +126,56 @@ footer .stat.ammo{flex:0 1 auto!important;min-width:0!important}
 @media(max-width:900px){.inventory{gap:7px;min-height:90px}.inventory .invHelp{display:none}.inventory .invLabel{max-width:55px}.inventory .invSlot{flex-basis:76px;width:76px;height:76px}#game{width:min(100%,calc((100dvh - 222px)*16/9))}}
 @media(max-width:580px){.inventory{width:100%;padding:6px!important;min-height:84px;overflow-x:auto;justify-content:flex-start}.inventory .invLabel{display:none}.inventorySlots{gap:4px;min-width:max-content}.inventory .invSlot{flex:0 0 65px;width:65px;height:72px}.inventory .invIcon{width:52px;height:29px}.inventory .itemIcon{width:27px;height:27px}.inventory .invName{font-size:8px}footer{gap:6px!important;font-size:10px}footer .stat.ammo{display:none}#game{width:min(100%,calc((100dvh - 203px)*16/9))}}
 @media(max-height:570px){.inventory{min-height:70px;padding:3px!important}.inventory .invSlot{height:62px}.inventory .invIconWrap{min-height:21px}.inventory .invIcon{height:24px}.inventory .itemIcon{height:23px;width:23px}#game{width:min(100%,calc((100dvh - 169px)*16/9))}}
+
+/* Weapon workbench: two clear loadout cards, square click-to-equip sockets and one focused preview. */
+#pause>.panel{width:min(1090px,100%);text-align:left}
+#pause .forgePanel{padding:11px;background:linear-gradient(170deg,#101e37,#0b1528);border:2px solid #617da7}
+.forgeHead{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:10px}
+.forgeHead b{font-size:13px;letter-spacing:1.5px;color:#ffe1a0}
+.forgeHead p{font:11px/1.5 'Courier New',monospace;color:#acbfdb;margin:4px 0 0!important;max-width:620px}
+.forgeKey{border:1px solid #54719c;padding:6px 9px;color:#a9e7d8;font:900 10px monospace;white-space:nowrap}
+.forgeLayout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.04fr);gap:10px;align-items:start}
+.forgeChoices{display:grid;gap:10px;min-width:0}
+.forgeWeaponCard{padding:9px;background:#13213a;border:2px solid #526b91;box-shadow:inset 0 0 0 1px #263b5c;min-width:0}
+.forgeWeaponCard.focused{border-color:#cfaf76}
+.forgeWeaponTop{display:flex;align-items:end;gap:6px}
+.forgeSelectWrap{display:grid;flex:1;gap:5px;min-width:0;color:#b8cde8;font:900 10px monospace;letter-spacing:.9px}
+.forgeSelectWrap select,.forgeEditor select{width:100%;min-width:0;padding:7px 8px;background:#182a47;border:1px solid #708db8;color:#fff0ce;font:11px monospace}
+.forgeFocusBtn{flex:none;padding:7px 9px!important;font:900 10px monospace!important;white-space:nowrap}
+.forgeSlotHeader{font:900 10px monospace;color:#91a9ca;letter-spacing:1px;margin:9px 0 6px}
+.forgeAttachGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#pause .forgeAttachSlot{display:flex;flex-direction:column;align-items:center;justify-content:space-between;min-width:0;min-height:67px;height:67px;padding:6px 3px!important;background:#1b2c4b!important;border:2px solid #6c89b5!important;box-shadow:inset 0 0 0 1px #293f60!important;gap:3px}
+#pause .forgeAttachSlot .attachLabel{font:900 9px monospace;color:#aabfdb}
+#pause .forgeAttachSlot .attachValue{display:grid;place-items:center;min-height:34px;width:100%;font:900 17px/1.1 monospace;color:#ffdf9b;text-align:center;overflow:hidden;overflow-wrap:anywhere}
+#pause .forgeAttachSlot.filled{background:#2b3e37!important;border-color:#a5dba1!important}
+#pause .forgeAttachSlot.filled .attachValue{font-size:9px;color:#d7f3d0}
+#pause .forgeAttachSlot.active{border-color:#ffe1a0!important;outline:2px solid #b9904e;outline-offset:1px}
+#pause .forgeAttachSlot.locked,#pause .forgeAttachSlot:disabled{opacity:.55;background:#26263a!important;border-color:#68617c!important;cursor:not-allowed}
+#pause .forgeAttachSlot.locked .attachValue{font-size:10px;color:#bdabc6}
+#pause .forgeAttachSlot:not(:disabled):hover{background:#2a4168!important;border-color:#ffdd8c!important;transform:translateY(-1px)}
+.forgeEditor{border:1px solid #7393ba;background:#0d192b;padding:9px;margin-top:8px}
+.forgeEditorTop{display:flex;justify-content:space-between;align-items:center;gap:5px}
+.forgeEditorTop strong{color:#ffe0a1;font:900 11px monospace}
+#pause .forgeEditorClose{padding:1px 6px!important;font-size:13px!important;line-height:1.15}
+.forgeEditor p{color:#a5b9d7!important;font-size:10px!important;margin:4px 0 7px!important}
+.forgeHiddenInputs{display:none!important}
+#pause .forgePreviewLarge{display:block;margin:0;min-width:0;padding:10px;border:2px solid #58749f;background:#111e37}
+.forgePreviewVisual{display:grid;justify-items:center;gap:7px;padding:12px 8px;background:radial-gradient(circle at 50% 46%,#284666,#0c172b 75%);border:1px solid #3e5a7e}
+.forgeBadge{color:#b5e0f0;font:900 10px monospace;letter-spacing:.5px}
+#pause .forgePreviewVisual img{display:block;width:min(100%,250px);height:98px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 4px 0 #060b16)}
+.forgePreviewInfo{min-width:0}
+.forgePreviewInfo>b{display:block;margin:9px 0 3px;font:900 16px monospace;color:#ffe2a3}
+.forgePreviewInfo>small{display:block;color:#b0c4dd;font:10px/1.4 monospace}
+.forgePreviewInfo .xpMeta{margin:7px 0 3px}
+.forgeModList{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.forgeChip{padding:4px 6px;background:#22384b;border:1px solid #6f9b86;color:#d0efd9;font:900 9px monospace}
+.forgeChip.empty{background:#192641;border-color:#455d7f;color:#92a7c4}
+.forgeStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.forgeStat{min-width:0;background:#0d182b;border:1px solid #3b5478;padding:6px 4px}
+.forgeStat label{display:block;color:#9eb2d1;font:900 8px monospace;margin-bottom:3px}
+.forgeStat strong{color:#fff0ca;font:900 15px monospace}
+#pause .forgePreviewInfo>.weaponStats{padding:6px!important;margin-top:8px;max-height:152px;overflow-y:auto}
+#pause .forgePreviewInfo .weaponStatRow{font-size:10px;padding:3px 0}
+#pause #forgeMastery{display:block;margin:9px 0 0;font:10px/1.4 monospace;color:#a6d9ba}
+@media(max-width:820px){.forgeLayout{grid-template-columns:1fr}.forgeChoices{grid-template-columns:1fr 1fr}.forgeAttachGrid{grid-template-columns:repeat(2,minmax(0,1fr))}#pause .forgePreviewVisual img{height:70px}#pause .forgePreviewInfo>.weaponStats{max-height:100px}}
+@media(max-width:575px){.forgeHead{display:block}.forgeKey{display:none}.forgeChoices{grid-template-columns:1fr}.forgeAttachGrid{grid-template-columns:repeat(4,minmax(0,1fr))}#pause .forgePreviewVisual img{height:80px}#pause .forgePreviewInfo>.weaponStats{max-height:140px}}
