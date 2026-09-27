@@ -139,7 +139,7 @@ test('expanded map is 41 rooms, downward, with three ordered bosses', () => {
 test('boss victory is gated to stage three, and map reveals inactive nodes', () => {
   const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
   assert.match(source,/room\.type==='boss'&&room\.bossStage===3/);
-  assert.match(source,/const known=room\.discovered\|\|room\.visited/);
+  assert.match(source,/known=room\.discovered\|\|room\.visited/);
   assert.match(source,/known\?room\.type==='boss'/);
   assert.match(html,/id="mapCanvas" width="900" height="920"/);
 });
