@@ -80,7 +80,7 @@ test('game script parses and combat systems are wired', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.doesNotThrow(()=>new Function(source));
   assert.match(source,/function addFlow\(/);
-  assert.match(source,/e\.windup=e\.type==='boss'/);
+  assert.match(readFileSync('src/enemy-ai.js','utf8'),/e\.windup=e\.type==='boss'/);
   assert.match(source,/function hitGenerator\(/);
   assert.match(source,/function weaponStatHTML\(/);
   assert.match(source,/synergyNote/);
@@ -140,8 +140,8 @@ test('four five-room regions form a boss-gated downward tree', () => {
 test('victory is gated to fourth boss, and map reveals inactive nodes', () => {
   const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
   assert.match(source,/room\.type==='boss'&&room\.bossStage===4/);
-  assert.match(source,/known=room\.discovered\|\|room\.visited/);
-  assert.match(source,/known\?room\.type==='boss'/);
+  assert.match(readFileSync('src/map-view.js','utf8'),/known=room\.discovered\|\|room\.visited/);
+  assert.match(readFileSync('src/map-view.js','utf8'),/known\?room\.type==='boss'/);
   assert.match(html,/id="mapCanvas" width="900" height="920"/);
 });
 
@@ -172,7 +172,7 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
  assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
- assert.match(source,/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
 
@@ -264,7 +264,7 @@ test('shock chain and burning effects are applied to enemy hits', () => {
  assert.match(source,/b\.mods\?\.includes\('burnCore'\)/);
  assert.match(source,/applyProjectileModEffects\(room,e,bullet\)/);
  assert.match(source,/applyProjectileModEffects\(room,e,b\)/);
- assert.match(source,/if\(e\.burnTime>0\)/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/if\(e\.burnTime>0\)/);
 });
 
 test('merchant can sell an alternative for an occupied mod slot', () => {
@@ -484,7 +484,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
  assert.match(source,/game\.player\.kills%5===0\)earnLegacy\(1\)/);
  assert.match(source,/e\.type==='boss'\)earnLegacy\(3\)/);
  assert.match(source,/room\.merchant=\{x:857,y:FLOOR,permanent:true\}/);
- assert.match(source,/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
  assert.match(source,/p\.gold-=price/);
  assert.match(source,/legacy\.marks-=price;saveLegacy\(\)/);
  assert.match(source,/grantMastery\(p\.weapon,90,true\)/);
