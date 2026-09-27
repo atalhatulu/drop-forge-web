@@ -19,3 +19,6 @@
 
 /* Four visible starting attachment slots and biome enemy catalog. */
 #forgePanel .forgeGrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}#forgePanel .forgeGrid label{min-width:0}#forgePanel .forgeGrid select:disabled{color:#8291a5;opacity:.85;border-color:#394559;background:#141b29}.enemyCodex{grid-column:1/-1;text-align:left}.enemyCodex p{font-size:12px;color:#b7c8d8}.codexBiome{border-top:1px solid #39495f;padding:10px 0}.codexBiome>strong{font:900 12px 'Courier New',monospace;color:#efc784}.codexBiome>div{display:flex;flex-wrap:wrap;gap:7px;margin-top:7px}.codexBiome span{border:1px solid #53627c;background:#1e2a3d;padding:6px 8px;font:700 11px 'Courier New',monospace}.codexBiome small{color:#82a1bc;font-size:9px}
+
+/* Route choices and synergistic attachment details. */
+.routeLegend{font:700 11px/1.7 'Courier New',monospace;color:#b0e6cd!important;background:#0b1727;border:1px solid #344860;padding:9px 12px;text-align:left}.synergyNote{margin-top:9px;border-left:3px solid #a1e4b4;background:#183b38;color:#bbf6ce;padding:8px;font:800 11px/1.6 'Courier New',monospace}
