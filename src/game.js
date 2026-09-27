@@ -270,21 +270,7 @@ function addFlow(points,label){if(!game||game.dead)return;game.flow=clamp((game.
 function hitGenerator(room,damage){const g=room.generator;if(!g||g.failed||g.time<=0)return;g.hp=Math.max(0,g.hp-damage);burst(room,g.x,g.y-18,'#ffaf80',7,95);if(!g.hp){g.failed=true;g.time=0;for(const q of room.portals)q.alive=false;announce('JENERATÖR KAYBEDİLDİ · ÖDÜL İPTAL',2.6);damagePlayer(18);}}
 function damagePlayer(amount){const p=game.player;if(p.invuln>0||game.dead)return;if(p.activeAccessory==='shield'&&p.accessoryTime>0){burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#a4e7ff',11,130);p.invuln=.25;return;}amount=Math.max(1,Math.round(amount*game.settings.enemyDamage));p.hp=Math.max(0,p.hp-amount);if(p.hp>0&&p.hp<p.maxHp*.5&&p.kits>0&&!nearbyGroundKit(currentRoom(),p))useKit(true);game.flow=Math.max(0,(game.flow||0)-18);game.flowChain=0;p.invuln=.8;shake=12;flash=.22;flashTint='255,95,109';hitStop=.045;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#ff7c85',16,205);floating(p.x,p.y-25,'-'+amount+' CAN','#ff9292');sound(130,.18,'sawtooth');if(p.hp===0){game.dead=true;paused=true;showEnd(false);}updateHud();}
 function killEnemy(room,e){e.alive=false;if(e.hunted){for(const portal of room.portals)if(portal.alive){portal.alive=false;burst(room,portal.x,portal.y,'#ffe69f',25,210);}announce('HEDEF ETKİSİZ · PORTALLAR KAPANDI',2.3);}const coins=e.type==='boss'?120+e.level*35:e.type==='purple'?16+e.level*5:8+e.level*5;dropPickup(room,'gold',e.x+e.w/2,e.y+e.h/2,true,coins);if(e.type==='boss'||Math.random()<.6)dropPickup(room,'ammo',e.x+e.w/2+16,e.y+e.h/2,true);if(e.type!=='boss'&&Math.random()<.13)dropPickup(room,'health',e.x+e.w/2-14,e.y+e.h/2,true);game.player.kills++;if(game.player.kills%5===0)earnLegacy(1);if(e.type==='boss')earnLegacy(3);addFlow(e.type==='boss'?35:17,'KILL');burst(room,e.x+e.w/2,e.y+e.h/2,e.type==='red'?'#ff6278':e.type==='blue'?'#73d7ff':'#d29dff',22,280);if(e.type==='boss')dropPickup(room,'health',e.x+e.w/2-25,e.y+e.h/2,true);floating(e.x,e.y-27,coins+' ALTIN DÜŞTÜ','#ffd78a');shake=Math.max(shake,5);sound(185,.13,'triangle');updateHud();}
-function collideRect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
-function floorPhysics(o,dt,platforms,prevX=o.x){
- const room=game?currentRoom():null,prevY=o.y,prevBottom=o.y+o.h,wasGrounded=o.grounded;
- o.vy+=GRAVITY*dt;o.y+=o.vy*dt;o.grounded=false;
- if(o.vy>=0&&!(game&&o===game.player&&(o.dropThrough||0)>0))for(const q of platforms){
-  if(prevBottom<=q.y+9&&o.y+o.h>=q.y&&o.x+o.w>q.x+5&&o.x<q.x+q.w-5){
-   o.y=q.y-o.h;o.vy=0;o.grounded=true;
-   if(game&&o===game.player){o.jumps=0;o.spin=0;o.spinDuration=0;}break;
-  }
- }
- if(room){terrainCollision(room,o,prevX,prevY);}
- else if(o.y+o.h>FLOOR){o.y=FLOOR-o.h;o.vy=0;o.grounded=true;}
- o.x=clamp(o.x,24,W-24-o.w);
-}
-
+const {collideRect,floorPhysics}=window.DropForgePhysics.createPhysics({getGame:()=>game,currentRoom,GRAVITY,terrainCollision,FLOOR,clamp,W});
 const enemyUpdate=window.DropForgeEnemyAI.createEnemyUpdate({getGame:()=>game,W,FLOOR,GRAVITY,clamp,burst,floating,sound,killEnemy,floorPhysics,damagePlayer,hitGenerator,collideRect});
 function update(dt){
  if(!game||paused||mapOpen||game.dead||game.won)return;dt=Math.min(dt,.035);game.elapsed+=dt;
