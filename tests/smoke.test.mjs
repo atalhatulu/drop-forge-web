@@ -302,3 +302,50 @@ test('shock chains once and burn core applies a timed effect', () => {
  apply(room,e,shock);
  assert.equal(hits.length,1,'a projectile cannot shock the same target twice');
 });
+
+test('720p canvas, viewport HUD and grounded props are configured',()=>{
+ const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),js=readFileSync('src/game.js','utf8');
+ assert.match(html,/id="game" width="1280" height="720"/);
+ assert.match(js,/ctx\.setTransform\(canvas\.width\/W,0,0,canvas\.height\/H,0,0\)/);
+ assert.match(css,/max-height:min\(calc\(100dvh - 182px\)/);
+ assert.match(css,/object-fit:fill/);
+ assert.match(js,/y:FLOOR-5\}:null;room\.wheel/);
+ assert.match(js,/\?\{x:805,y:FLOOR-20,used:false/);
+});
+test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},openHubForge,applyHubForge,enterExpedition,fire,hitEnemy,update,draw};})();');
+ const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
+ class Node{
+  constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
+  getContext(){return ctx}toDataURL(){return 'data:image/png;base64,'}
+  append(element){this.children.push(element);if(element.id)nodes.set(element.id,element)}
+  after(element){for(const child of element.children||[])if(child.id)nodes.set(child.id,child)}
+  closest(){return new Node('label','LABEL')}querySelector(){return new Node()}addEventListener(){}
+  focus(){}getBoundingClientRect(){return {left:0,top:0,width:1280,height:720}}insertAdjacentHTML(){}
+ }
+ Object.defineProperty(Node.prototype,'innerHTML',{get(){return this._html||''},set(html){this._html=html;if(this.tagName==='SELECT'){this.options=[...String(html).matchAll(/<option\b([^>]*)>/g)].map(m=>({value:(m[1].match(/value="([^"]*)"/)||[])[1]||'',disabled:/disabled/.test(m[1])}));this.value=this.options.find(item=>!item.disabled)?.value||'';}}});
+ const grid=new Node('grid');
+ const doc={getElementById(id){if(!nodes.has(id)){if(/^forgeMod[12]_[234]$/.test(id))return null;nodes.set(id,new Node(id,['forgeGun1','forgeGun2','forgeMod1','forgeMod2','difficulty'].includes(id)?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:null},createElement(tag){return new Node('',tag.toUpperCase())}};
+ const win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(){}};
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
+ assert.equal(game.inHub,true);assert.equal(game.roomId,0);
+ assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant,null);
+ assert.ok(nodes.get('forgeGun1').options.length>=2);
+ assert.doesNotThrow(()=>api.draw());
+ const initialXP=api.mastery[player.weapon]||0;
+ player.x=room.dummy.x-110;player.y=548-player.h;api.mouse.x=room.dummy.x+25;api.mouse.y=room.dummy.y+30;api.fire();
+ for(let i=0;i<20;i++)api.update(.016);
+ assert.ok(room.dummy.total>0,'training dummy registers actual bullet damage');
+ assert.equal(api.mastery[player.weapon]||0,initialXP,'training ammunition cannot farm persistent mastery');
+ api.openHubForge();
+ assert.ok(nodes.get('pause').classList);
+ api.applyHubForge();
+ assert.equal(game.inHub,true);
+ api.enterExpedition();
+ assert.equal(game.inHub,false);assert.equal(game.roomId,1);
+ assert.ok(room.doors.down,'normal return door restored after leaving training hub');
+ const target=game.rooms[1].enemies[0];api.hitEnemy(game.rooms[1],target,9,'bullet',player.weapon);
+ assert.ok(target.stagger>0&&Math.abs(target.knockVx)>0,'enemy hit feedback includes controlled recoil');
+ assert.doesNotThrow(()=>api.draw());
+});
