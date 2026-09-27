@@ -313,7 +313,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(js,/\?\{x:805,y:FLOOR-20,used:false/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useWeaponAbility,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -326,11 +326,17 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  Object.defineProperty(Node.prototype,'innerHTML',{get(){return this._html||''},set(html){this._html=html;if(this.tagName==='SELECT'){this.options=[...String(html).matchAll(/<option\b([^>]*)>/g)].map(m=>({value:(m[1].match(/value="([^"]*)"/)||[])[1]||'',disabled:/disabled/.test(m[1])}));this.value=this.options.find(item=>!item.disabled)?.value||'';}}});
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
- const win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(){}};
+ const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
  new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
+ assert.match(nodes.get('statusMessage').textContent,/HAZIRLIK/);
+ api.legacy.marks=10;player.x=room.merchant.x-player.w/2;player.y=548-player.h;api.update(.016);
+ assert.equal(room.interact.nearMerchant,true,'permanent hub merchant is reachable');api.interact();assert.equal(api.shopOpen,true);
+ assert.equal(api.buyShopItem('hp'),true);assert.equal(api.legacy.hp,1);assert.equal(player.maxHp,110);
+ assert.equal(api.buyShopItem('kits'),true);assert.equal(api.legacy.kits,1);assert.equal(player.kits,2);
+ assert.match(storeWrites['dropForge.permanentForge.v1'],/"hp":1/,'permanent upgrades are saved to localStorage');api.closeShop();
  assert.ok(nodes.get('forgeGun1').options.length>=2);
  assert.doesNotThrow(()=>api.draw());
  api.openHelp();assert.equal(api.helpOpen,true);api.closeHelp();assert.equal(api.helpOpen,false);
@@ -354,10 +360,16 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
  api.interact();
- assert.equal(game.inHub,false);assert.equal(game.roomId,1);
+ assert.equal(game.inHub,false);assert.equal(game.roomId,1);assert.equal(player.kits,2,'starter kit upgrade survives portal transition');
  assert.ok(room.doors.down,'normal return door restored after leaving training hub');
  const target=game.rooms[1].enemies[0];api.hitEnemy(game.rooms[1],target,9,'bullet',player.weapon);
  assert.ok(target.stagger>0&&Math.abs(target.knockVx)>0,'enemy hit feedback includes controlled recoil');
+ const combat=game.rooms[1],gold={kind:'gold',artifact:25,x:500,y:FLOOR-14,grounded:true,vx:0,vy:0,taken:false};combat.loot.push(gold);
+ player.x=120;player.y=548-player.h;api.update(.016);assert.equal(gold.x,500,'coins must stay where they land; no magnet');
+ const wallet=player.gold;player.x=gold.x-player.w/2;player.y=548-player.h;api.update(.016);assert.equal(player.gold,wallet+25,'touching the coin collects it');assert.equal(gold.taken,true);
+ player.abilityCooldowns=Array(13).fill(0);player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
+ for(let id=0;id<13;id++){player.weapon=id;player.activeSlot=0;player.slots[0]={weapon:id,mods:[],ammo:40,reserve:100};game.bullets=[];assert.equal(api.useWeaponAbility(),true,'special ability for gun '+id+' activates');assert.ok(player.abilityCooldowns[id]>0,'special ability '+id+' enters its own cooldown');assert.equal(api.useWeaponAbility(),false,'ability cannot fire again before cooldown');}
+ combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:FLOOR};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
  assert.doesNotThrow(()=>api.draw());
 });
 
