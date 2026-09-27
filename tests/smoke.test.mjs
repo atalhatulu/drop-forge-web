@@ -72,3 +72,44 @@ test('more initial ammunition and biome enemy codex are enabled', () => {
   assert.match(source,/function enemyCodexHTML\(\)/);
   assert.match(source,/root\.insertAdjacentHTML\('beforeend',enemyCodexHTML\(\)\)/);
 });
+
+test('game script parses and combat systems are wired', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.doesNotThrow(()=>new Function(source));
+  assert.match(source,/function addFlow\(/);
+  assert.match(source,/e\.windup=e\.type==='boss'/);
+  assert.match(source,/function hitGenerator\(/);
+  assert.match(source,/function weaponStatHTML\(/);
+  assert.match(source,/synergyNote/);
+  assert.match(source,/function roomRouteLabel\(/);
+});
+
+test('seeded map includes defense, hunt, and meaningful route rewards', () => {
+  const source=readFileSync('src/game.js','utf8');
+  const rngStart=source.indexOf('function rng(seed)');
+  const rngEnd=source.indexOf('function announce(',rngStart);
+  const hashStart=source.indexOf('function hash2(');
+  const hashEnd=source.indexOf('const BIOMES=',hashStart);
+  const mapStart=source.indexOf('function makeMap(seed)');
+  const mapEnd=source.indexOf('function buildGame(seed)',mapStart);
+  assert.ok(rngStart>=0 && rngEnd>rngStart && hashStart>=0 && hashEnd>hashStart && mapStart>=0 && mapEnd>mapStart);
+  const mapFactory=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+  const back={left:'right',right:'left',up:'down',down:'up'};
+  for(const seed of [1,42,97321,382711,12345678]){
+    const rooms=mapFactory(seed);
+    assert.ok(rooms.some(r=>r.type==='defense'), 'defense room in seed '+seed);
+    assert.ok(rooms.some(r=>r.type==='hunt'), 'hunt room in seed '+seed);
+    assert.ok(rooms.every(r=>['ammo','xp','mod','health'].includes(r.reward)));
+    assert.ok(rooms.every(r=>Object.entries(r.links).every(([dir,id])=>rooms[id].links[back[dir]]===r.id)));
+    assert.deepEqual(mapFactory(seed).map(r=>[r.x,r.y,r.type,r.reward]),rooms.map(r=>[r.x,r.y,r.type,r.reward]));
+  }
+});
+
+test('defense completion and route reward markup are present', () => {
+  const source=readFileSync('src/game.js','utf8');
+  const html=readFileSync('index.html','utf8');
+  assert.match(source,/room\.generator\.time===0/);
+  assert.match(source,/room\.generator\.failed/);
+  assert.match(source,/awardRoomReward\(room\)/);
+  assert.match(html,/id="mapRoute"/);
+});
