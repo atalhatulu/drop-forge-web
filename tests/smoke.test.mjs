@@ -364,12 +364,12 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.ok(room.doors.down,'normal return door restored after leaving training hub');
  const target=game.rooms[1].enemies[0];api.hitEnemy(game.rooms[1],target,9,'bullet',player.weapon);
  assert.ok(target.stagger>0&&Math.abs(target.knockVx)>0,'enemy hit feedback includes controlled recoil');
- const combat=game.rooms[1],gold={kind:'gold',artifact:25,x:500,y:FLOOR-14,grounded:true,vx:0,vy:0,taken:false};combat.loot.push(gold);
+ const combat=game.rooms[1],gold={kind:'gold',artifact:25,x:500,y:548-14,grounded:true,vx:0,vy:0,taken:false};combat.loot.push(gold);
  player.x=120;player.y=548-player.h;api.update(.016);assert.equal(gold.x,500,'coins must stay where they land; no magnet');
  const wallet=player.gold;player.x=gold.x-player.w/2;player.y=548-player.h;api.update(.016);assert.equal(player.gold,wallet+25,'touching the coin collects it');assert.equal(gold.taken,true);
  player.abilityCooldowns=Array(13).fill(0);player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
  for(let id=0;id<13;id++){player.weapon=id;player.activeSlot=0;player.slots[0]={weapon:id,mods:[],ammo:40,reserve:100};game.bullets=[];assert.equal(api.useWeaponAbility(),true,'special ability for gun '+id+' activates');assert.ok(player.abilityCooldowns[id]>0,'special ability '+id+' enters its own cooldown');assert.equal(api.useWeaponAbility(),false,'ability cannot fire again before cooldown');}
- combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:FLOOR};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
+ combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:548};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
  assert.doesNotThrow(()=>api.draw());
 });
 
