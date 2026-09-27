@@ -7,6 +7,7 @@ const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,
 // Seven projectile families are shared by the 13 weapons; each weapon selects one family.
 const {PROJECTILE_FAMILIES,MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
 const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons}=window.DropForgeProgression;
+const WEAPON_ABILITIES=window.DropForgeAbilities;
 function earnLegacy(amount){if(game?.inHub||amount<=0)return;legacy.marks=Math.min(9999,legacy.marks+amount);saveLegacy();floating(game.player.x,game.player.y-48,'+'+amount+' KALICI ÇEKİRDEK','#abf7e0');}
 function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
 function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
@@ -278,7 +279,6 @@ function weaponStats(slot){const id=slot.weapon,mods=slot.mods||[],family=WEAPON
  return {areaBonus,staggerBonus,damage,baseDamage,fireRate:1/interval,baseFireRate:1/baseInterval,interval,reload,baseReload:.85,speed,baseSpeed,pierce,basePierce:family==='pierce'?1:0,spread,mag,baseMag,pellets,shotDamage:damage*pellets,baseShotDamage:baseDamage*pellets,dps:damage*pellets/interval,baseDps:baseDamage*pellets/baseInterval,recoil,movementBonus,ammoSave,mods,family};
 }
 // Each of the 13 guns owns its own right-click ability and cooldown.
-const WEAPON_ABILITIES=window.DropForgeAbilities;
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
