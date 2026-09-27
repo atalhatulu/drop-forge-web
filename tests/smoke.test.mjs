@@ -504,3 +504,29 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
  assert.match(html,/id="shopTitle"/);
  assert.match(html,/id="shopDescription"/);
 });
+
+test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
+ const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ assert.ok(order.every(position=>position>=0));
+ assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
+ assert.match(runtime,/\}=window\.DropForgeCatalog/);
+ const root={};new Function('window',catalog)(root);
+ const data=root.DropForgeCatalog;
+ assert.equal(Object.keys(data.MODs||data.MODS).length,12);
+ assert.equal(data.WEAPON_PROJECTILES.length,13);
+ assert.equal(data.WEAPON_TYPES.length,13);
+ assert.equal(data.WEAPON_FIRE_RATES.length,13);
+ assert.equal(data.WEAPON_DAMAGE.length,13);
+ assert.equal(Object.keys(data.PROJECTILE_FAMILIES).length,7);
+ assert.equal(Object.isFrozen(data),true);
+});
+test('split stylesheets have clear non-overlapping responsibilities',()=>{
+ const base=readFileSync('styles/game.css','utf8'),quickbar=readFileSync('styles/quickbar.css','utf8'),workbench=readFileSync('styles/workbench.css','utf8');
+ assert.ok(base.length>5000&&quickbar.length>2000&&workbench.length>4000);
+ assert.match(base,/\.forgePanel/);
+ assert.doesNotThrow(()=>{if(base.includes('/* Compact, illustrated quick bar:'))throw Error('quickbar still embedded in base')});
+ assert.match(quickbar,/\.inventorySlots\{display:flex/);
+ assert.match(workbench,/\.forgeAttachGrid\{display:grid/);
+ assert.match(workbench,/#statusStrip\{display:flex/);
+});
