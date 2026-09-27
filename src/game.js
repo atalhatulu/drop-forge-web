@@ -158,7 +158,7 @@ function spawnEnemy(room,type,x,y){
  room.enemies.push(e);return e;
 }
 function awardRoomReward(room){if(room.type==='start'||room.type==='boss')return;const p=game.player,kind=room.reward||'ammo';if(kind==='xp'){for(const slot of p.slots)if(slot)grantMastery(slot.weapon,55);announce('ROTA ÖDÜLÜ · +55 SİLAH XP',2.2);}else if(kind==='mod'){const eligible=Object.keys(MODS).filter(id=>p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[id].level&&!q.mods.includes(id))),mods=eligible.length?eligible:Object.keys(MODS),id=mods[hash2(room.x,room.y,game.seed)%mods.length];dropPickup(room,'mod',W*.42,FLOOR-110,true,id);}else if(kind==='health')dropPickup(room,'health',W*.42,FLOOR-110,true);else dropPickup(room,'ammo',W*.42,FLOOR-110,true);}
-{if(!room.chest)room.chest={x:W*.5,y:75,vy:0,opened:false,grounded:false};}
+function dropChest(room){if(!room.chest)room.chest={x:W*.5,y:75,vy:0,opened:false,grounded:false};}
 function startArena(room){
  if(room.arenaStarted||room.cleared)return;room.arenaStarted=true;
  if(room.type==='treasure'){room.cleared=true;awardRoomReward(room);dropChest(room);announce('HAZİNE ODASI · SANDIK VE ŞANS ÇARKI');return;}

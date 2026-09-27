@@ -113,3 +113,10 @@ test('defense completion and route reward markup are present', () => {
   assert.match(source,/awardRoomReward\(room\)/);
   assert.match(html,/id="mapRoute"/);
 });
+
+test('game boot keeps chest helper in a function and populates both starter selects', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.match(source,/function dropChest\(room\)\{/);
+  assert.match(source,/for\(let i=1;i<=2;i\+\+\)\$\('forgeGun'\+i\)\.onchange=refreshForge/);
+  assert.match(source,/refreshForge\(\);\s*function weaponName/);
+});
