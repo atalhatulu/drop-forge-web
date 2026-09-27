@@ -1,8 +1,120 @@
-function drawBiome(room){if(room.biome==='forest'){
-  for(const h of room.hazards){const sway=Math.sin(room.time*2+h.phase)*4;
-   ctx.save();ctx.translate(h.x,h.y);ctx.shadowColor='#6ee596';ctx.shadowBlur=13;ctx.fillStyle='#274f36';ctx.fillRect(-3,-h.h+5,6,h.h+12);
-   for(let i=0;i<3;i++){ctx.fillStyle=i===1?'#9cfc8e':'#4cba75';ctx.beginPath();ctx.ellipse(sway+(i-1)*9,-h.h+9+i*7,12,6,(i-1)*.5,0,Math.PI*2);ctx.fill();}ctx.shadowBlur=0;ctx.restore();}
- }else if(room.biome==='lava'){for(const h of room.hazards){ctx.save();ctx.shadowColor='#ff733f';ctx.shadowBlur=22;ctx.fillStyle='#e85a2a';ctx.fillRect(h.x-h.w/2,h.y-h.h,h.w,h.h+13);ctx.fillStyle='#ffd283';ctx.fillRect(h.x-h.w/2+5,h.y-h.h+3,h.w-10,4);ctx.restore();}}else if(room.biome==='crystal')for(const c of room.crystals)if(c.alive){ctx.save();ctx.translate(c.x,c.y);ctx.shadowColor='#be6fff';ctx.shadowBlur=22;ctx.fillStyle=c.flash>0?'#fff5ff':'#a460ec';ctx.beginPath();ctx.moveTo(0,-c.r*1.65);ctx.lineTo(c.r*.83,-c.r*.2);ctx.lineTo(c.r*.5,c.r*.85);ctx.lineTo(-c.r*.62,c.r*.6);ctx.lineTo(-c.r,-c.r*.28);ctx.closePath();ctx.fill();ctx.strokeStyle='#e8baff';ctx.lineWidth=2;ctx.stroke();ctx.shadowBlur=0;ctx.restore();}}
+'use strict';
+/* Drop Forge Web — dependency-free seeded procedural platform shooter. */
+(() => {
+const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
+const mapCanvas=document.getElementById('mapCanvas'),mctx=mapCanvas.getContext('2d');
+const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,170,110,360,180,48,220],MAG_SIZE=[15,30,6,30,5,7,30,8,5,25,24,4,18];
+// Seven projectile families are shared by the 13 weapons; each weapon selects one family.
+const {PROJECTILE_FAMILIES,MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
+const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons}=window.DropForgeProgression;
+const WEAPON_ABILITIES=window.DropForgeAbilities;
+function earnLegacy(amount){if(game?.inHub||amount<=0)return;legacy.marks=Math.min(9999,legacy.marks+amount);saveLegacy();floating(game.player.x,game.player.y-48,'+'+amount+' KALICI ÇEKİRDEK','#abf7e0');}
+function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
+function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
+function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0)return;const old=masteryLevel(weapon);mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+amount);if(masteryLevel(weapon)>old){announce(weaponName(weapon)+' USTALIK '+masteryLevel(weapon)+' · YENİ EKLENTİ YUVASI!',2.6);levelUpToast(weapon,masteryLevel(weapon));burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);}saveMastery();updateHud();}
+function getModSlots(weapon){const lv=masteryLevel(weapon);return lv>=8?4:lv>=6?3:lv>=4?2:lv>=2?1:0;}
+function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
+function installMod(slot,mod){const spec=MODS[mod];if(!slot||!spec||masteryLevel(slot.weapon)<spec.level||spec.slot>=getModSlots(slot.weapon)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
+function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce(MODS[m].name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
+const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
+let forgeFocusGun=1,forgeEditors={1:-1,2:-1};
+function ensureForgeModSlots(){/* Four dedicated hidden selectors are part of the workbench markup. */}
+function forgeMods(n){return Array.from({length:4},(_,j)=>$(j===0?'forgeMod'+n:'forgeMod'+n+'_'+(j+1))).filter(Boolean);}
+function chosenForgeMods(n){const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);return forgeMods(n).map((el,j)=>j<limit&&MODS[el.value]?.slot===j&&MODS[el.value].level<=masteryLevel(weapon)?el.value:undefined);}
+// Weapon-specific explanations are generated from the same ballistics model as the shots.
+const {MOD_ICONS,modNameForWeapon,modEffectForWeapon,modTradeoff}=window.DropForgeModPresentation;
+function modDiffHTML(id,currentMods,mod,slot){const before=[...currentMods],after=[...before];after[slot]=mod||undefined;const a=weaponStats({weapon:id,mods:before}),b=weaponStats({weapon:id,mods:after});
+ const fields=[['HASAR',a.damage,b.damage,0],['ATIŞ/SN',a.fireRate,b.fireRate,2],['ŞARJÖR',a.mag,b.mag,0],['DELME',a.pierce,b.pierce,0],['ALAN',a.areaBonus*100,b.areaBonus*100,0],['SAÇILMA',a.spread*100,b.spread*100,0],['GERİ TEPME',a.recoil*100,b.recoil*100,0],['SARSILMA',a.staggerBonus*100,b.staggerBonus*100,0],['HAREKET +%',a.movementBonus*100,b.movementBonus*100,0]];
+ return fields.filter(([,x,y])=>Math.abs(x-y)>.001).map(([name,x,y,prec])=>'<span class="modDelta"><span>'+name+'</span><b>'+x.toFixed(prec)+' → '+y.toFixed(prec)+'</b></span>').join('')||'<span class="modDelta"><span>ÖZEL ETKİ</span><b>'+((mod&&MODS[mod]?.name)||'BOŞ')+'</b></span>';
+}
+function renderForgeChoices(n){const list=$('forgeEditorChoices'+n),j=forgeEditors[n];if(!list||j<0)return;const id=Number($('forgeGun'+n).value),current=chosenForgeMods(n);list.innerHTML=([{id:'',name:'BOŞ YUVA',description:'Takılı eklentiyi çıkar.'},...Object.entries(MODS).filter(([,m])=>m.slot===j&&m.level<=masteryLevel(id)).map(([key,m])=>({id:key,...m}))]).map(m=>{const selected=(current[j]||'')===m.id,mod=m.id;return '<button type="button" class="forgeModChoice'+(selected?' chosen':'')+'" data-mod-choice="'+mod+'" data-mod-gun="'+n+'" aria-pressed="'+selected+'"><span class="modChoiceHead"><span class="modChoiceIcon">'+(MOD_ICONS[mod]||'+')+'</span><span class="modChoiceName">'+(mod?modNameForWeapon(id,mod):m.name)+'</span><span class="modChoiceState">'+(selected?'TAKILI':'SEÇ')+'</span></span><span class="modChoiceDescription">'+(mod?modEffectForWeapon(id,mod):m.description)+'</span><span class="modChoiceDeltas">'+modDiffHTML(id,current,mod,j)+'</span><small>'+(!mod?'Boş yuvada eklenti bonusu yok.':modTradeoff(id,mod))+'</small></button>';}).join('');}
+function syncForgeWorkbench(){
+ if(!document.getElementById('forgeGun1'))return;
+ for(let n=1;n<=2;n++){
+  const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);
+  const card=document.querySelector('[data-weapon-card="'+n+'"]');
+  if(card)card.classList.toggle('focused',forgeFocusGun===n);
+  const focusButton=card?.querySelector('[data-focus-gun]');if(focusButton)focusButton.textContent=forgeFocusGun===n?'İNCELEMEDE ✓':'İNCELE →';
+  for(let j=0;j<4;j++){
+   const node=card?.querySelector('[data-slot="'+j+'"]'),value=forgeMods(n)[j]?.value||'',locked=j>=limit;
+   if(!node)continue;
+   node.disabled=locked;node.classList.toggle('locked',locked);node.classList.toggle('filled',!locked&&!!value);node.classList.toggle('active',forgeEditors[n]===j&&!locked);
+   node.setAttribute('aria-label',n+'. silah '+FORGE_SLOT_LABELS[j]+': '+(locked?'ustalık '+[2,4,6,8][j]+' gerekli':value?MODS[value].name:'eklentiyi seç'));
+   node.querySelector('.attachLabel').textContent=FORGE_SLOT_LABELS[j];
+   node.querySelector('.attachValue').textContent=locked?'UST '+[2,4,6,8][j]:value?modNameForWeapon(weapon,value):'+';
+  }
+  const editor=$('forgeEditor'+n),j=forgeEditors[n],chosen=forgeMods(n)[j];
+  if(j<0||j>=limit||!chosen){editor.classList.add('hidden');continue;}
+  editor.classList.remove('hidden');$('forgeEditorLabel'+n).textContent=FORGE_SLOT_LABELS[j];
+  $('forgeEditorHint'+n).textContent='Bu yuvaya yalnızca bir eklenti takılabilir.';
+  const picker=$('forgeEditorSelect'+n);picker.innerHTML=chosen.innerHTML;picker.value=chosen.value;renderForgeChoices(n);
+ }
+ const weapon=Number($('forgeGun'+forgeFocusGun).value);
+ $('forgeMastery').textContent='USTALIK '+masteryLevel(weapon)+' · '+weaponName(weapon)+' · '+getModSlots(weapon)+'/4 AÇIK YUVA · Silah ustalığı kalıcıdır.';
+}
+function refreshForge(){
+ if(!document.getElementById('forgeGun1')||typeof WEAPON_NAMES==='undefined')return;
+ for(let n=1;n<=2;n++){
+  const gun=$('forgeGun'+n),prev=gun.value||String(n-1);
+  gun.innerHTML=WEAPON_NAMES.map((name,i)=>unlockedWeapons.has(i)?'<option value="'+i+'">'+WEAPON_TYPES[i]+' · '+name+' · UST '+masteryLevel(i)+'</option>':'<option value="locked-'+i+'" disabled>??? · KİLİTLİ SİLAH</option>').join('');
+  gun.value=unlockedWeapons.has(Number(prev))?prev:String(n-1);
+  const weapon=Number(gun.value),limit=getModSlots(weapon),lv=masteryLevel(weapon);
+  for(const [j,el] of forgeMods(n).entries()){
+   const old=el.value;el.disabled=j>=limit;
+   el.innerHTML='<option value="">'+(el.disabled?'KİLİTLİ · USTALIK '+[2,4,6,8][j]:'BOŞ EKLENTİ')+'</option>'+Object.entries(MODS).filter(([,m])=>m.level<=lv&&m.slot===j).map(([id,m])=>'<option value="'+id+'">'+m.name+' · '+m.description+'</option>').join('');
+   if(!el.disabled&&[...el.options].some(o=>o.value===old))el.value=old;
+  }
+ }
+ syncForgeWorkbench();renderForgePreview();
+}
+function unlockWeapon(id){if(unlockedWeapons.has(id))return false;unlockedWeapons.add(id);saveUnlockedWeapons();refreshForge();return true;}
+/* Immutable weapon stats live in catalog.js. */
+const DIFFICULTY={easy:{cap:3,initial:[1,2],portalMax:1,enemyHp:.75,enemyDamage:.65,spawnDelay:5.2},normal:{cap:4,initial:[2,3],portalMax:2,enemyHp:.9,enemyDamage:.85,spawnDelay:4.5},hard:{cap:6,initial:[3,4],portalMax:3,enemyHp:1.1,enemyDamage:1,spawnDelay:3.8}};
+const $=id=>document.getElementById(id),keys=new Set();let mouse={x:W*.68,y:H*.5,down:false};
+const WEAPON_SPRITES={};
+let game=null,paused=true,mapOpen=false,shopOpen=false,muted=false,last=0,announcement=0,announcementText='',shootTimer=0,shake=0,flash=0,flashTint='255,235,211',hitStop=0;const floats=[];
+// Weapons are generated as original pixel art below.
+const {rng,ri,clamp}=window.DropForgeWorld;
+function announce(s,t=2.1){announcementText=s;announcement=t;}
+// Four straight arena walls. No noise, solid-cell terrain or destructible rock.
+// The floor and all wall collisions use these same exact coordinates.
+const WALL=32;
+const {hash2}=window.DropForgeWorld;
+const BIOMES={cave:{name:'TERK EDİLMİŞ MADEN',rock:['#3b485a','#455266','#4b596a','#36475a'],accent:'#92afc5',enemy:['red','blue','purple','healer'],color:'#b7a487'},forest:{name:'ZEHİRLİ ORMAN',rock:['#293f39','#345449','#3c6051','#283c35'],accent:'#8ee4a0',enemy:['red','blue','purple','healer'],color:'#8af0a0'},crystal:{name:'MOR KRİSTAL',rock:['#3e345c','#4b416d','#58487c','#342d50'],accent:'#cda5ff',enemy:['red','blue','purple','healer'],color:'#cda5ff'},lava:{name:'LAV ÇEKİRDEĞİ',rock:['#49342f','#6a3c34','#70483a','#33252b'],accent:'#ffa36a',enemy:['red','blue','purple','healer'],color:'#ff9c62'}};
+const VARIANTS={cave:{red:'KAZMACI',blue:'SONDAJ DRONE',purple:'DİNAMİTÇİ',healer:'TAMİRCİ',boss:'MADEN MUHAFIZI'},forest:{red:'KABUKLU TANK',blue:'SPOR BÖCEĞİ',purple:'MANTAR ŞAMANI',healer:'ORMAN ŞİFACISI',boss:'MANTAR ANA'},crystal:{red:'KRİSTAL GOLEM',blue:'PRİZMA NİŞANCI',purple:'YANKI BÜYÜCÜSÜ',healer:'REZONANS RUHU',boss:'REZONANS GOLEM'},lava:{red:'MAGMA DEVİ',blue:'KÜL RUHU',purple:'LAV BÜYÜCÜSÜ',healer:'KOR DESTEKÇİSİ',boss:'MAGMA LORDU'}};
+const ACCESSORIES={shield:{name:'KORUYUCU KALKAN',color:'#8bdfff',duration:5,cooldown:22},stim:{name:'ADRENALİN SERUMU',color:'#ffcd77',duration:7,cooldown:24},filter:{name:'SPOR FİLTRESİ',color:'#a3f3b3',duration:9,cooldown:25},coil:{name:'PRİZMA BOBİNİ',color:'#d6a4ff',duration:8,cooldown:27}};
+function terrainSurfaceY(room,x,w=1){return FLOOR;}
+function buildTerrain(room){room.terrain=null;}
+function solidTile(){return null;}
+function tileRects(){return [];}
+function terrainCollision(room,obj,prevX,prevY){
+ obj.x=clamp(obj.x,WALL,W-WALL-obj.w);
+ if(obj.y<WALL){obj.y=WALL;if(obj.vy<0)obj.vy=0;}
+ if(obj.y+obj.h>=FLOOR){obj.y=FLOOR-obj.h;if(obj.vy>0)obj.vy=0;obj.grounded=true;
+  if(game&&obj===game.player){obj.jumps=0;obj.spin=0;obj.spinDuration=0;}}
+}
+const {drawTerrain,drawBiome}=window.DropForgeBiomeView.createBiomeRenderer({ctx,W,H,FLOOR,WALL,BIOMES});
+function breakableSurface(room){return room.platforms;}
+function hitBreakable(room,b,amount){if(!b.alive)return;b.hp-=amount;b.hit=.18;burst(room,b.x+b.w/2,b.y+b.h/2,'#b7dbeb',8,165);floating(b.x+b.w/2,b.y-12,String(Math.ceil(Math.max(0,b.hp)))+' / '+b.maxHp,'#d6e9f4');shake=Math.max(shake,3);sound(135,.1,'sawtooth',.024);if(b.hp<=0){b.alive=false;burst(room,b.x+b.w/2,b.y+b.h/2,'#9bc9d7',23,240);dropPickup(room,Math.random()<.5?'health':'ammo',b.x+b.w/2,b.y,Math.random()<.08);announce('KAYA PARÇALANDI',1.1);}}
+function buildBiome(room){const rr=rng((room.cave.seed^0x5d8b4b3d)>>>0);room.hazards=[];room.crystals=[];
+ if(room.biome==='forest'){
+  for(let i=0;i<5;i++){const x=ri(rr,140,970),y=FLOOR-22;
+   if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<110&&Math.abs(d.y-y)<110))continue;
+   room.hazards.push({x,y,w:ri(rr,24,43),h:ri(rr,24,42),phase:rr()*6.28});}
+ }
+ if(room.biome==='lava'){for(let i=0;i<4;i++){const x=ri(rr,165,945);if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<115))continue;room.hazards.push({x,y:FLOOR-12,w:ri(rr,24,45),h:14,phase:rr()*6.28,lava:true});}}
+ if(room.biome==='crystal'){
+  for(let i=0;i<5;i++){const x=ri(rr,155,955),y=FLOOR-ri(rr,30,58);
+   if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<115&&Math.abs(d.y-y)<105))continue;
+   room.crystals.push({x,y,r:ri(rr,15,22),hp:ri(rr,22,38),alive:true,flash:0});}
+ }
+}
+function explodeCrystal(room,c){if(!c.alive)return;c.alive=false;burst(room,c.x,c.y,'#d49aff',30,280);shake=Math.max(shake,7);sound(180,.19,'sawtooth',.035);floating(c.x,c.y-37,'KRİSTAL PATLAMASI','#eabaff');
+ for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-c.x,e.y+e.h/2-c.y)<123)hitEnemy(room,e,40,'crystal');
+ for(const q of room.portals)if(q.alive&&Math.hypot(q.x-c.x,q.y-c.y)<123)hitPortal(room,q,36);
+ const p=game.player;if(Math.hypot(p.x+p.w/2-c.x,p.y+p.h/2-c.y)<105)damagePlayer(13);
+ for(const other of room.crystals)if(other.alive&&Math.hypot(other.x-c.x,other.y-c.y)<96){other.hp-=26;if(other.hp<=0)explodeCrystal(room,other);}
+}
 const makeMap=window.DropForgeWorld.createMapGenerator({W,FLOOR,buildTerrain,buildBiome});
 function buildGame(seed){const difficulty=$('difficulty').value in DIFFICULTY?$('difficulty').value:'normal',settings=DIFFICULTY[difficulty];const rooms=makeMap(seed),chosen=[Number($('forgeGun1').value),Number($('forgeGun2').value)],valid=chosen[0]!==chosen[1]&&chosen.every(n=>Number.isInteger(n)&&unlockedWeapons.has(n));if(!valid){announce('İKİ FARKLI SİLAH SEÇ');$('forgeGun2').focus();return;}const p={x:W/2,y:terrainSurfaceY(rooms[0],W/2,25)-44,w:25,h:43,vx:0,vy:0,hp:100+legacy.hp*10,maxHp:100+legacy.hp*10,grounded:true,jumps:0,grapple:null,grappleCooldown:0,face:1,dash:0,dashCooldown:0,invuln:0,weapon:chosen[0],ammo:MAG_SIZE[chosen[0]],reserve:Math.min(AMMO_MAX[chosen[0]],MAG_SIZE[chosen[0]]*7),slots:chosen.map((weapon,i)=>{const slot={weapon,ammo:MAG_SIZE[weapon],reserve:Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*7),mods:chosenForgeMods(i+1)};slot.ammo=weaponStats(slot).mag;return slot;}),activeSlot:0,abilityCooldowns:Array(13).fill(0),abilityBuff:null,kits:Math.min(5,1+legacy.kits),ammoBoxes:0,grenades:1,accessories:[null],moveCharge:0,wallSide:0,wallKick:0,reloadTime:0,reloadDuration:0,accessoryTime:0,activeAccessory:null,gold:0,kills:0,spin:0,spinDuration:0};p.ammo=p.slots[0].ammo;game={seed,rooms,difficulty,settings,roomId:0,player:p,transitionCooldown:.9,bullets:[],enemyBullets:[],grenades:[],stashedMods:[],flow:0,flowChain:0,flowTime:0,motionTrails:[],trailClock:0,elapsed:0,won:false,dead:false};rooms[0].visited=true;rooms[0].discovered=true;for(const id of Object.values(rooms[0].links))rooms[id].discovered=true;paused=false;mapOpen=false;shopOpen=false;loadoutOpen=false;$('shopOverlay').classList.add('hidden');$('gamePauseMenu').classList.add('hidden');$('loadoutOverlay').classList.add('hidden');$('levelToast').classList.add('hidden');$('pause').classList.add('hidden');$('pauseLoadoutBtn').classList.add('hidden');$('mapOverlay').classList.add('hidden');$('seedLabel').textContent='SEED '+seed+' · '+({easy:'KOLAY',normal:'NORMAL',hard:'ZOR'}[difficulty]);announce('BAŞLANGIÇ ATÖLYESİ · BUILD HAZIR · GEÇİTTEN MAĞARAYA GİR');updateHud();canvas.focus();}
 // Physical training hub: the existing starting room becomes a safe, playable staging area.
@@ -30,8 +142,10 @@ function startArena(room){
  const r=rng((game.seed+room.id*29033)>>>0),cfg=game.settings,n=room.type==='boss'?1:room.type==='elite'?Math.min(cfg.cap,cfg.initial[1]+1):ri(r,...cfg.initial);room.enemyCap=cfg.cap;if(room.type==='defense')room.generator={x:W*.5,y:FLOOR-63,hp:100,maxHp:100,time:19,failed:false};
  if(room.type==='boss'){const boss=spawnEnemy(room,'boss',790,FLOOR-89);boss.hp=Math.round(boss.hp*(1+((room.bossStage||1)-1)*.12));boss.maxHp=boss.hp;}
  else for(let i=0;i<Math.min(n,cfg.cap);i++){const type=(i===n-1&&n>=3&&r()<.13)?'healer':BIOMES[room.biome].enemy[i%3===0?ri(r,0,2):i%3],x=clamp(210+i*146+ri(r,-40,40),135,960);spawnEnemy(room,type,x,type==='blue'?ri(r,190,305):FLOOR-(type==='red'?57:type==='purple'?37:type==='healer'?40:33));}
- if(room.type==='hunt'){const target=room.enemies[0];if(target){target.hunted=true;target.maxHp=Math.round(target.maxHp*1.75);target.const {drawTerrain,drawBiome}=window.DropForgeBiomeView.createBiomeRenderer({ctx,W,H,FLOOR,WALL,BIOMES});
-from){
+ if(room.type==='hunt'){const target=room.enemies[0];if(target){target.hunted=true;target.maxHp=Math.round(target.maxHp*1.75);target.hp=target.maxHp;}}if(room.type!=='treasure'){const portalCount=room.type==='boss'?1:2;for(let i=0;i<portalCount;i++){const portalType=room.type==='boss'?'red':(i===1&&room.id%9===0?'healer':BIOMES[room.biome].enemy[(room.id+i)%3]);const px=i?905:210,highPlatforms=room.platforms.filter(p=>p.x+18<=px&&px<=p.x+p.w-18&&p.y>190&&p.y<FLOOR-75),platform=highPlatforms.length&&r()<.65?highPlatforms[ri(r,0,highPlatforms.length-1)]:null;room.portals.push({type:portalType,biome:room.biome,x:platform?clamp(px,platform.x+22,platform.x+platform.w-22):px,y:platform?platform.y-27:FLOOR-27,produced:0,max:portalType==='healer'?1:room.type==='boss'?Math.max(1,cfg.portalMax):cfg.portalMax,time:3.3+i,spawnDuration:3.3+i,alive:true,hp:190,maxHp:190,hit:0,shield:0,shieldCooldown:0,burstHits:0,burstWindow:0,regenDelay:5,regenBase:190,regenCap:190});}}
+ announce(room.type==='boss'?'BOSS '+room.bossStage+'/4 · '+VARIANTS[room.biome].boss+' · LV '+room.level:room.type==='defense'?'JENERATÖRÜ 19 SANİYE KORU!':room.type==='hunt'?'İŞARETLİ HEDEFİ YOK ET · PORTALLAR SÖNSÜN':room.type==='elite'?'ELİT ARENA · GEÇİTLER KİLİTLİ':'ARENA · PORTALLARI VE DÜŞMANLARI TEMİZLE');
+}
+function enterRoom(id,from){
  const room=game.rooms[id],p=game.player;saveSlot();game.roomId=id;game.transitionCooldown=.9;
  room.visited=true;room.discovered=true;for(const neighbor of Object.values(room.links))game.rooms[neighbor].discovered=true;
  game.bullets.length=0;game.enemyBullets.length=0;p.vx=0;p.vy=0;p.dash=0;p.grapple=null;p.grappleCooldown=0;p.jumps=0;p.spin=0;
@@ -44,7 +158,11 @@ from){
 function sound(freq=330,dur=.08,type='square',vol=.035){if(muted)return;try{const ac=sound.ac||(sound.ac=new (window.AudioContext||window.webkitAudioContext)()),o=ac.createOscillator(),g=ac.createGain();o.type=type;o.frequency.setValueAtTime(freq,ac.currentTime);o.frequency.exponentialRampToValueAtTime(Math.max(65,freq*.55),ac.currentTime+dur);g.gain.setValueAtTime(vol,ac.currentTime);g.gain.exponentialRampToValueAtTime(.001,ac.currentTime+dur);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+dur);}catch(e){}}
 function burst(room,x,y,color,n=11,power=215){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=40+Math.random()*power;room.particles.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,life:.2+Math.random()*.48,maxLife:.68,color,size:2+Math.random()*4});}}
 function floating(x,y,label,color='#fff3bf'){floats.push({x,y,label,color,life:.95});}
-function dropPickup(room,kind,x,y,force=false,artifact=null){if(!force&&Math.random()>.075)return;if(!force&&room.loot.filter(i=>i.kind).length>=3)return;if(!force&&!['artifact','mod','gold'].includes(kind)&&Math.random()<.12)kind='grenade';room.loot.push({kind,artifact,x,y,vy:-290-Math.random()*160,vx:(Math.random()-.5)*2n true;}
+function dropPickup(room,kind,x,y,force=false,artifact=null){if(!force&&Math.random()>.075)return;if(!force&&room.loot.filter(i=>i.kind).length>=3)return;if(!force&&!['artifact','mod','gold'].includes(kind)&&Math.random()<.12)kind='grenade';room.loot.push({kind,artifact,x,y,vy:-290-Math.random()*160,vx:(Math.random()-.5)*250,grounded:false});burst(room,x,y,kind==='health'?'#75ef96':kind==='artifact'?'#bca3ff':'#ffd36d',8,140);}
+function saveSlot(){const p=game.player;if(p.activeSlot<0)return;if(p.weapon!==null)p.slots[p.activeSlot]={...p.slots[p.activeSlot],weapon:p.weapon,ammo:p.ammo,reserve:p.reserve,mods:p.slots[p.activeSlot]?.mods||[]};else p.slots[p.activeSlot]=null;}
+function equipSlot(index){const p=game.player;if(index===p.activeSlot)return;cancelReload(p);saveSlot();p.activeSlot=index;const slot=index<0?null:p.slots[index];p.weapon=slot?.weapon??null;p.ammo=slot?.ammo??0;p.reserve=slot?.reserve??0;shootTimer=.15;announce(index<0?'BIÇAK HAZIR':(index+1)+'. SLOT · '+weaponName(p.weapon),.8);updateHud();}
+function nearbyGroundKit(room,p){return room?.loot?.find(item=>item.kind==='health'&&!item.taken&&Math.abs(p.x+p.w/2-item.x)<38&&Math.abs(p.y+p.h/2-item.y)<55);}
+function consumeGroundKit(room,item,p){if(!item||item.taken||p.hp<=0||p.hp>=p.maxHp)return false;const gained=Math.min(45,p.maxHp-p.hp);p.hp+=gained;item.taken=true;burst(room,item.x,item.y,'#84ffbb',25,165);floating(item.x,item.y-30,'YERDEN KİT · +'+gained+' CAN','#b9ffdb');sound(790,.19,'sine');updateHud();return true;}
 function useKit(auto=false){if(!game||paused||mapOpen)return;const p=game.player;if(!p.kits||p.hp>=p.maxHp){announce(p.kits?'CANIN ZATEN DOLU':'SAĞLIK KİTİN YOK',.9);return;}p.kits--;p.hp=Math.min(p.maxHp,p.hp+45);burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#8cf8b0',auto?35:22,170);floating(p.x,p.y-24,auto?'OTOMATİK KİT · +45 CAN':'+45 CAN','#8cf8b0');sound(735,.18,'sine');updateHud();}
 function useAmmoBox(){if(!game||paused||mapOpen)return;const p=game.player;if(!p.ammoBoxes){announce('MERMİ KUTUN YOK',.9);return;}saveSlot();const targets=p.slots.filter(q=>q&&q.reserve<AMMO_MAX[q.weapon]);if(!targets.length){announce('TÜM YEDEK MERMİLER DOLU',.9);return;}p.ammoBoxes--;for(const q of targets)q.reserve=Math.min(AMMO_MAX[q.weapon],q.reserve+Math.max(MAG_SIZE[q.weapon]*4,Math.ceil(AMMO_MAX[q.weapon]*.35)));if(p.activeSlot>=0)p.reserve=p.slots[p.activeSlot]?.reserve??0;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#ffd36d',17,130);floating(p.x,p.y-24,'+ MERMİ','#ffd36d');sound(790,.14,'triangle');updateHud();}
 function throwGrenade(){if(!game||paused||mapOpen||game.dead||game.won)return;const p=game.player;if(!p.grenades){announce('BOMBAN KALMADI',.8);return;}p.grenades--;const dx=mouse.x-(p.x+p.w/2),dy=mouse.y-(p.y+p.h/2),angle=Math.atan2(dy,dx);game.grenades.push({x:p.x+p.w/2,y:p.y+p.h*.4,vx:Math.cos(angle)*450,vy:Math.sin(angle)*360-210,time:1.2});sound(390,.12,'triangle');updateHud();}
