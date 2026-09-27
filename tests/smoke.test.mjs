@@ -366,3 +366,29 @@ test('forced boss ammunition and health never reroll into grenades',()=>{
  drop(room,'ammo',120,100,false);
  assert.equal(room.loot[2].kind,'grenade','only ordinary, non-guaranteed pickups can reroll');
 });
+
+test('icon quick bar renders real weapon sprites, item art and readable counts',()=>{
+ const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),source=readFileSync('src/game.js','utf8');
+ assert.match(html,/<nav class="inventory" aria-label="Hızlı envanter">/);
+ for(let i=1;i<=5;i++)assert.match(html,new RegExp('id="slot'+i+'" class="invSlot'));
+ assert.match(css,/\.inventorySlots\{display:flex/);
+ assert.match(css,/\.inventory \.invSlot\.selected\{/);
+ assert.match(css,/calc\(\(100dvh - 207px\)\*16\/9\)/);
+ const start=source.indexOf('const HUD_SPRITE_URLS='),end=source.indexOf('function masteryProgress(',start);
+ assert.ok(start>=0&&end>start);
+ const elements=Array.from({length:5},()=>({dataset:{},innerHTML:'',className:'',ariaLabel:'',ariaPressed:'',title:''}));
+ const render=new Function('$','WEAPON_SPRITES',source.slice(start,end)+'return renderQuickSlot;')(
+ id=>elements[Number(id.slice(-1))-1],[{toDataURL:()=> 'data:image/png;base64,weapon0'},{toDataURL:()=> 'data:image/png;base64,weapon1'}]);
+ render(1,{weapon:0,name:'KIVILCIM-15',sub:'15 / 120 MERMİ',selected:true});
+ assert.match(elements[0].innerHTML,/weapon0/);
+ assert.match(elements[0].innerHTML,/15 \/ 120 MERMİ/);
+ assert.match(elements[0].className,/selected/);
+ render(3,{name:'SAĞLIK KİTİ',sub:'Kullanıma hazır',icon:'kit',count:'2\/5'});
+ assert.match(elements[2].innerHTML,/<svg class="itemIcon"/);
+ assert.match(elements[2].innerHTML,/2\/5/);
+ render(5,{name:'ÖZEL EŞYA',sub:'Boş',icon:'empty',empty:true});
+ assert.match(elements[4].className,/empty/);
+ assert.match(elements[4].ariaLabel,/ÖZEL EŞYA/);
+ assert.match(source,/function setupHub\(\)/);
+ assert.match(source,/function enterExpedition\(\)/);
+});
