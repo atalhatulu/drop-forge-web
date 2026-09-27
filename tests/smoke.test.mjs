@@ -353,3 +353,16 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.ok(target.stagger>0&&Math.abs(target.knockVx)>0,'enemy hit feedback includes controlled recoil');
  assert.doesNotThrow(()=>api.draw());
 });
+
+test('forced boss ammunition and health never reroll into grenades',()=>{
+ const source=readFileSync('src/game.js','utf8');
+ const a=source.indexOf('function dropPickup(room,kind,x,y,force=false,artifact=null)'),b=source.indexOf('function saveSlot()',a);
+ assert.ok(a>=0&&b>a);
+ const drop=new Function('Math','burst',source.slice(a,b)+'return dropPickup;')({random:()=>.01},()=>{});
+ const room={loot:[]};
+ drop(room,'ammo',100,100,true);
+ drop(room,'health',110,100,true);
+ assert.deepEqual(room.loot.map(item=>item.kind),['ammo','health']);
+ drop(room,'ammo',120,100,false);
+ assert.equal(room.loot[2].kind,'grenade','only ordinary, non-guaranteed pickups can reroll');
+});
