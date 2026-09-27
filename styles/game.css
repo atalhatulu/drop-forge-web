@@ -88,3 +88,14 @@ footer .hint{max-width:24%;overflow:hidden;text-overflow:ellipsis;white-space:no
 main{max-height:none;min-height:unset}
 @media(max-width:850px){#game{width:min(100%,calc((100dvh - 206px)*16/9));max-height:none}main{max-height:none}}
 @media(max-height:570px){#game{width:min(100%,calc((100dvh - 142px)*16/9))}header{min-height:35px}footer{min-height:37px}.inventory{padding:2px}}
+
+/* Single compact, scrollable help panel for controls and the roguelite loop. */
+#helpOverlay{z-index:20}
+#helpOverlay .helpPanel{width:min(940px,100%);text-align:left}
+.helpGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:13px}
+.helpGrid section{background:#101d36;border:2px solid #425d83;padding:12px;min-width:0}
+.helpGrid h3{font:900 13px 'Courier New',monospace;color:#ffe0a1;margin:0 0 7px}
+.helpGrid p{font:12px/1.55 'Courier New',monospace;color:#bfd4e3;margin:0 0 6px}
+.helpGrid strong{color:#acffd1}
+.helpFoot{font:11px/1.5 'Courier New',monospace;color:#b2d9c7!important}
+@media(max-width:650px){.helpGrid{grid-template-columns:1fr;gap:6px}.helpGrid section{padding:8px}}
