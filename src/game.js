@@ -236,7 +236,7 @@ function weaponStats(slot){const id=slot.weapon,mods=slot.mods||[],family=WEAPON
  const interval=baseInterval*(mods.includes('loader')?.8:1)/(mods.includes('rapidBarrel')?1.12:1);
  const reload=.85*(mods.includes('loader')?.8:1);
  const mag=mods.includes('extendedMag')?Math.ceil(baseMag*1.35):baseMag;
- const speed=baseSpeed*(mods.includes('core')?1.25:1);
+ const speed=Math.round(baseSpeed*(mods.includes('core')?1.25:1));
  const pierce=(family==='pierce'?1:0)+(mods.includes('core')?1:0)+(mods.includes('pierceBarrel')?1:0);
  const spread=(mods.includes('stabilizer')?.7:1)*(mods.includes('heavyGrip')?.82:1);
  const recoil=mods.includes('heavyGrip')?.65:1,movementBonus=mods.includes('lightGrip')?.25:.13,ammoSave=mods.includes('efficientMechanism')?.15:0;
@@ -402,6 +402,7 @@ function interact(){
  }
 }
 const SHOP_ITEMS={ammo:{name:'MÜHİMMAT KASASI',price:40,description:'Her iki silaha +5 şarjörlük yedek mermi.'},kit:{name:'SAĞLIK KİTİ',price:55,description:'+1 sağlık kiti. Çanta sınırı 5.'},grenade:{name:'EL BOMBASI',price:35,description:'+1 bomba. Çanta sınırı 3.'},xp:{name:'USTALIK EĞİTİMİ',price:85,description:'Aktif silaha +90 ustalık XP.'},barrel:{name:'GÜÇ NAMLU',price:100,description:'+%18 hasar · Namlu yuvası'},loader:{name:'HIZLI MEKANİZMA',price:130,description:'%20 hızlı atış ve doldurma · Mekanizma yuvası'},core:{name:'FAZ ÇEKİRDEĞİ',price:165,description:'+%25 mermi hızı, +1 delme · Çekirdek yuvası'},stabilizer:{name:'DENGELEYİCİ',price:195,description:'%30 az saçılma · Kabza yuvası'}};
+for(const [id,mod] of Object.entries(MODS)){const initial=SHOP_ITEMS[id];SHOP_ITEMS[id]={name:mod.name,price:initial?.price??({0:110,1:145,2:175,3:205}[mod.slot]+(Object.keys(MODS).filter(key=>MODS[key].slot===mod.slot).indexOf(id)*15)),description:mod.description+' · '+MOD_SLOT_NAMES[mod.slot]};}
 function shopCanBuy(id){if(!game||!SHOP_ITEMS[id])return false;const p=game.player;if(p.gold<SHOP_ITEMS[id].price)return false;if(id==='kit')return p.kits<5;if(id==='grenade')return p.grenades<3;if(id==='ammo')return p.slots.some(q=>q&&q.reserve<AMMO_MAX[q.weapon]);if(id==='xp')return p.weapon!==null&&p.weapon!==undefined&&masteryLevel(p.weapon)<10;if(MODS[id])return game.stashedMods.length<12&&p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[id].level&&!q.mods[MODS[id].slot]);return false;}
 function renderShop(){if(!game)return;$('shopGold').textContent='CÜZDAN · '+game.player.gold+' ALTIN';$('shopItems').innerHTML=Object.entries(SHOP_ITEMS).map(([id,item])=>'<button class="shopItem" data-shop-item="'+id+'" '+(shopCanBuy(id)?'':'disabled')+'><span class="shopName">'+item.name+'</span><span class="shopDescription">'+item.description+'</span><strong>◆ '+item.price+' ALTIN</strong></button>').join('');}
 function openShop(){if(!game||shopOpen||loadoutOpen||mapOpen||paused||!currentRoom().cleared||!currentRoom().merchant||game.dead||game.won)return;shopOpen=true;paused=true;mouse.down=false;$('shopOverlay').classList.remove('hidden');renderShop();}
