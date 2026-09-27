@@ -409,11 +409,9 @@ test('icon quick bar renders real weapon sprites, item art and readable counts',
 });
 
 test('weapon families give the same attachment different real combat effects',()=>{
- const source=readFileSync('src/game.js','utf8'),start=source.indexOf('function weaponStats(slot)'),end=source.indexOf('function fire(){',start);
- assert.ok(start>=0&&end>start);
+ const root={};new Function('window',readFileSync('src/weapon-stats.js','utf8'))(root);
  const types=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
- const stats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')(
- types.map(()=>25),types.map(()=>.2),types,types.map(()=>12));
+ const stats=root.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:types.map(()=>25),WEAPON_FIRE_RATES:types.map(()=>.2),WEAPON_PROJECTILES:types,MAG_SIZE:types.map(()=>12)});
  const kinetic=stats({weapon:0,mods:['pierceBarrel']});
  const scatter=stats({weapon:2,mods:['pierceBarrel']});
  const explosive=stats({weapon:11,mods:['pierceBarrel']});
