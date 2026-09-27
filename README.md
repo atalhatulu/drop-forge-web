@@ -31,3 +31,11 @@ Sonraki aşamada oyun mantığı bağımsız modüllere ayrılabilir.
 `npm run check` sözdizimini, `npm test` regresyon testlerini kontrol eder. GitHub Actions, `main` dalına gönderilen değişikliklerde ve pull request'lerde aynı kontrolleri çalıştırır.
 
 Bu ilk entegrasyon sürümüdür. Hasar, Forge Flow kazanımı ve yeni görev sürelerinin oynanışta dengelenmesi gereklidir.
+
+## Uzun sefer güncellemesi
+
+- Yeni seferler 41 odadan oluşur; ana rota genel olarak yüzeyden derine doğru ilerler. B1/B2/B3 olmak üzere 3 boss vardır ve zafer yalnızca son boss yenilince gelir. İlk iki boss sonrası sağlık kitleri ve mühimmat verilir.
+- M haritası tüm oda bağlantılarını baştan gösterir. Ulaşılmamış odalar gri `?` olarak etkin değildir; keşfedilince oda türleri ve rota ödülleri görünür.
+- Sağlık %50'nin altına inince oyuncu hayattaysa ve çantada kit bulunuyorsa kit otomatik kullanılır (manuel `3/H` de kullanılabilir).
+- `V` yakın dövüş kısa zaman penceresinde üç vuruşluk komboya dönüşür; üçüncü vuruş daha geniş alan, daha yüksek hasar ve geri itme uygular.
+- Geri tepme, namlu ışığı, isabet kıvılcımları, hasarda kırmızı ekran parlaması ve boss aşaması göstergesi eklendi.
