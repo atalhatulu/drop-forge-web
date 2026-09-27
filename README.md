@@ -50,3 +50,9 @@ Bu ilk entegrasyon sürümüdür. Hasar, Forge Flow kazanımı ve yeni görev s�
 Biyom ve düşman seviyesi odanın derinliğine bağlıdır; yan dallarda da aynı bölgede kalır. Dallar yalnızca ana rotanın normal odalarına bağlanır ve ödül/hazine odalarında sonlanır. Boss kapılarını yan dallardan atlamak mümkün değildir. Düşman canı, saldırı hasarı ve ateş sıklığı LV 2–3'te artar. Harita dört bölgeyi ve henüz keşfedilmemiş odaları gösterir.
 
 Sağlık %50'nin altındayken yakında yerde bir sağlık kiti bulunursa önce o kit doğrudan kullanılır; kit çantası dolu olsa bile çantadaki mevcut kitler harcanmaz. Yakında kit yoksa çantadaki kit otomatik kullanılır.
+
+## Stat eklentileri ve gezgin tüccar
+
+Silahların dört ayrı eklenti yuvası vardır; her kategori yalnızca kendi yuvasına takılır ve aynı silaha iki kopya takılamaz. Güç Namlu (ustalık 2) hasarı %18; Hızlı Mekanizma (ustalık 4) atış ve doldurma hızını %20; Faz Çekirdeği (ustalık 6) mermi hızını %25 ve delmeyi +1; Dengeleyici (ustalık 8) saçılmayı %30 iyileştirir. TAB çantasında eklentiler takılıp çıkarılabilir, istatistik farkları anlık güncellenir. Yere bırakılan veya başka bir silahla değiştirilen silah, takılı eklentilerini korur.
+
+Düşmanlar garantili altın ve sıkça mühimmat bırakır. Altın karakter yaklaştığında mıknatıs gibi çekilir ve yerden toplanınca cüzdana eklenir. Başlangıç, hazine ve ara boss odalarında arena temiz olduğunda gezgin tüccara yaklaşarak E ile mağazayı açabilirsiniz. Mermi, kit, bomba, aktif silaha ustalık XP'si ve ustalığı açık stat eklentileri altınla alınır. Mağaza, çanta kapasitesini ve yetersiz altın durumunu kontrol eder; ESC ile kapanır.
