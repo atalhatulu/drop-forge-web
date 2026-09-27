@@ -1,0 +1,11 @@
+'use strict';
+/* Enemy, portal and destructible prop damage resolution. */
+(function(root){
+function createDamageSystem({getGame,grantMastery,addFlow,burst,floating,setHitStop,getShake,setShake,sound,killEnemy,dropPickup}){
+function hitEnemy(room,e,amount,source='bullet',weapon=null){if(weapon!==null)grantMastery(weapon,3+(getGame().flow>=65?1:0));if(source==='bullet')addFlow(4,'HIT');e.hp-=amount;e.hit=.18;const knockDir=getGame().player.x+getGame().player.w/2<e.x+e.w/2?1:-1;e.stagger=e.type==='boss'?.045:.105;e.knockVx=knockDir*Math.min(e.type==='boss'?75:210,60+amount*2.2);e.hitFacing=knockDir;burst(room,e.x+e.w/2,e.y+e.h*.45,e.type==='red'?'#ff6c79':e.type==='blue'?'#69d5ff':'#d595ff',10,175);burst(room,e.x+e.w/2,e.y+e.h*.45,'#fff4da',5,95);floating(e.x+e.w/2,e.y-10,String(amount),'#ffe9b1');setHitStop(.025);setShake(Math.max(getShake(),3));sound(95,.045,'triangle',.025);if(e.hp<=0){if(weapon!==null)grantMastery(weapon,18);killEnemy(room,e);}}
+function hitPortal(room,q,amount){if(q.shield>0){burst(room,q.x,q.y,'#8bdeff',4,100);floating(q.x,q.y-45,'KALKAN','#a9eaff');return;}q.hp=Math.max(0,q.hp-amount);q.regenDelay=5;q.regenBase=q.hp;q.regenCap=Math.min(q.maxHp,q.regenBase*1.3);q.burstHits=q.burstWindow>0?q.burstHits+1:1;q.burstWindow=2.2;if(q.burstHits>=4&&q.hp>0&&q.shieldCooldown<=0){q.shield=2.7;q.shieldCooldown=15;q.burstHits=0;floating(q.x,q.y-64,'KALKAN AKTİF · 15sn BEKLEME','#a9eaff');sound(690,.16,'triangle');}q.hit=.18;burst(room,q.x,q.y,'#d59cff',8,125);floating(q.x,q.y-40,String(amount),'#d9b8ff');setShake(Math.max(getShake(),3));if(q.hp<=0){q.alive=false;burst(room,q.x,q.y,'#b889fb',25,300);dropPickup(room,Math.random()<.78?'health':'ammo',q.x,q.y,Math.random()<.08);floating(q.x,q.y-60,'PORTAL KIRILDI','#d6b7ff');sound(135,.24,'sawtooth');}}
+function hitProp(room,o,amount){o.hp-=amount;o.hit=.13;burst(room,o.x+o.w/2,o.y+o.h/2,o.kind==='crystal'?'#a8f0fc':'#c6a37c',7,125);if(o.hp<=0){o.alive=false;burst(room,o.x+o.w/2,o.y+o.h/2,o.kind==='crystal'?'#78daee':'#d5ae7a',19,245);dropPickup(room,Math.random()<.55?'ammo':'health',o.x+o.w/2,o.y,Math.random()<.04);sound(165,.16,'sawtooth');}}
+return {hitEnemy,hitPortal,hitProp};
+}
+root.DropForgeDamage=Object.freeze({createDamageSystem});
+})(window);
