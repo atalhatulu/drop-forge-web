@@ -201,7 +201,7 @@ test('gold and ammo enemy drops feed a real purchase panel', () => {
  assert.match(source,/if\(item\.kind==='gold'\)\{p\.gold\+=/);
  assert.match(source,/function buyShopItem\(id\)/);
  assert.match(source,/p\.gold-=price/);
- assert.match(source,/function shopCanBuy\(id\)/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/function shopCanBuy\(id\)/);
  assert.match(html,/id="shopOverlay"/);
  assert.match(html,/id="shopItems"/);
 });
