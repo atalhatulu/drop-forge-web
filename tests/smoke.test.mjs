@@ -51,3 +51,24 @@ test('attachment stats reflect actual game modifiers', () => {
   assert.equal(upgraded.pierce,1);
   assert.equal(upgraded.spread,.7);
 });
+
+test('starter loadout exposes four attachment slots for both weapons', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.match(source,/function ensureForgeModSlots\(\)/);
+  assert.match(source,/for\(let j=2;j<=4;j\+\+\)/);
+  assert.match(source,/mods:chosenForgeMods\(i\+1\)/);
+});
+
+test('empty weapon warning is throttled while mouse is held', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.match(source,/p\.emptyWarningTime=2\.8/);
+  assert.match(source,/emptyWarningTime\|\|0/);
+  assert.match(source,/emptyWarningTime=Math\.max\(0/);
+});
+
+test('more initial ammunition and biome enemy codex are enabled', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.match(source,/MAG_SIZE\[weapon\]\*7/);
+  assert.match(source,/function enemyCodexHTML\(\)/);
+  assert.match(source,/root\.insertAdjacentHTML\('beforeend',enemyCodexHTML\(\)\)/);
+});
