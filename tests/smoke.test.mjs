@@ -325,7 +325,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  }
  Object.defineProperty(Node.prototype,'innerHTML',{get(){return this._html||''},set(html){this._html=html;if(this.tagName==='SELECT'){this.options=[...String(html).matchAll(/<option\b([^>]*)>/g)].map(m=>({value:(m[1].match(/value="([^"]*)"/)||[])[1]||'',disabled:/disabled/.test(m[1])}));this.value=this.options.find(item=>!item.disabled)?.value||'';}}});
  const grid=new Node('grid'),workbenchNodes=new Map();
- const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
+ const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(){}};
  new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
@@ -344,8 +344,10 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
  const firstSocket=workbenchNodes.get('.forgeAttachSlot')[0];firstSocket.onclick();
  assert.equal(nodes.get('forgeEditor1').classList!==undefined,true);
- nodes.get('forgeEditorSelect1').onchange({target:{value:'barrel'}});
- assert.equal(api.chosenForgeMods(1)[0],'barrel','clicking an unlocked + slot equips its category mod');
+ assert.match(nodes.get('forgeEditorChoices1').innerHTML,/data-mod-choice="barrel"/,'three mod cards appear in the chosen socket');
+ assert.match(nodes.get('forgeEditorChoices1').innerHTML,/HASAR/,'the choice card shows the real before/after stat');
+ nodes.get('forgeEditorChoices1').onclick({target:{closest(){return {dataset:{modChoice:'barrel',modGun:'1'}}}}});
+ assert.equal(api.chosenForgeMods(1)[0],'barrel','clicking a mod card equips its category mod');
  nodes.get('startBtn').onclick();assert.equal(api.hubForgeOpen,false,'save button returns to testing');
  assert.equal(player.slots[0].mods[0],'barrel','hub saves the selected attachment into the real weapon');
  assert.equal(game.inHub,true);
