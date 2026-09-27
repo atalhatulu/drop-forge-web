@@ -517,3 +517,20 @@ test('split stylesheets have clear non-overlapping responsibilities',()=>{
  assert.match(workbench,/\.forgeAttachGrid\{display:grid/);
  assert.match(workbench,/#statusStrip\{display:flex/);
 });
+
+
+test('extracted physics resolves floor collisions and resets player jump state', () => {
+ const window={};
+ new Function('window',readFileSync('src/physics.js','utf8'))(window);
+ const player={x:50,y:90,w:20,h:20,vy:100,grounded:false,jumps:2,spin:1,spinDuration:1};
+ const game={player};
+ const {collideRect,floorPhysics}=window.DropForgePhysics.createPhysics({getGame:()=>game,currentRoom:()=>({}),GRAVITY:0,terrainCollision:()=>{},FLOOR:200,clamp:(n,min,max)=>Math.min(max,Math.max(min,n)),W:400});
+ assert.equal(collideRect({x:0,y:0,w:10,h:10},{x:9,y:9,w:10,h:10}),true);
+ assert.equal(collideRect({x:0,y:0,w:10,h:10},{x:10,y:0,w:10,h:10}),false);
+ floorPhysics(player,.2,[{x:0,y:120,w:200,h:10}]);
+ assert.equal(player.y,100);
+ assert.equal(player.grounded,true);
+ assert.equal(player.vy,0);
+ assert.equal(player.jumps,0);
+ assert.equal(player.spin,0);
+});
