@@ -53,6 +53,8 @@ Sağlık %50'nin altındayken yakında yerde bir sağlık kiti bulunursa önce o
 
 ## Stat eklentileri ve gezgin tüccar
 
-Silahların dört ayrı eklenti yuvası vardır; her kategori yalnızca kendi yuvasına takılır ve aynı silaha iki kopya takılamaz. Güç Namlu (ustalık 2) hasarı %18; Hızlı Mekanizma (ustalık 4) atış ve doldurma hızını %20; Faz Çekirdeği (ustalık 6) mermi hızını %25 ve delmeyi +1; Dengeleyici (ustalık 8) saçılmayı %30 iyileştirir. TAB çantasında eklentiler takılıp çıkarılabilir, istatistik farkları anlık güncellenir. Yere bırakılan veya başka bir silahla değiştirilen silah, takılı eklentilerini korur.
+Her silahın ustalık 2 / 4 / 6 / 8'de açılan dört kategorik yuvası vardır. Her yuvada **üç farklı eklentiden yalnızca biri** takılabilir (toplam 12 seçenek): namluda Güç / Seri / Delici; mekanizmada Hızlı / Geniş Şarjör / Verimli; çekirdekte Faz / Şok / Yanıcı; kabzada Dengeleyici / Hafif / Ağır. Şok Çekirdeği isabetten yakın hedefe %35 zincir hasarı verir; Yanıcı Çekirdek 3 saniyelik yanma uygular. Başlangıç atölyesi, TAB çantası ve tüccar bu alternatifleri destekler. Yere bırakılan silah eklentilerini korur.
+
+Atış, reload ve stat kartları aynı `weaponStats` hesaplamasını kullanır. Silah kartında hasar / mermi, pompalıda tam isabet hasarı, teorik DPS, atış hızı, doldurma, hız, delme, saçılma, gerçek şarjör, mühimmat tasarrufu, hareket bonusu ve geri tepme görünür. Teorik DPS yenileme ve şartlı etkileri hesaba katmaz.
 
 Düşmanlar garantili altın ve sıkça mühimmat bırakır. Altın karakter yaklaştığında mıknatıs gibi çekilir ve yerden toplanınca cüzdana eklenir. Başlangıç, hazine ve ara boss odalarında arena temiz olduğunda gezgin tüccara yaklaşarak E ile mağazayı açabilirsiniz. Mermi, kit, bomba, aktif silaha ustalık XP'si ve ustalığı açık stat eklentileri altınla alınır. Mağaza, çanta kapasitesini ve yetersiz altın durumunu kontrol eder; ESC ile kapanır.
