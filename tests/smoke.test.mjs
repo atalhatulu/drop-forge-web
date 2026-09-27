@@ -313,7 +313,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(js,/\?\{x:805,y:FLOOR-20,used:false/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},openHubForge,applyHubForge,enterExpedition,fire,hitEnemy,update,draw};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -333,16 +333,20 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant,null);
  assert.ok(nodes.get('forgeGun1').options.length>=2);
  assert.doesNotThrow(()=>api.draw());
+ api.openHelp();assert.equal(api.helpOpen,true);api.closeHelp();assert.equal(api.helpOpen,false);
  const initialXP=api.mastery[player.weapon]||0;
  player.x=room.dummy.x-110;player.y=548-player.h;api.mouse.x=room.dummy.x+25;api.mouse.y=room.dummy.y+30;api.fire();
  for(let i=0;i<20;i++)api.update(.016);
  assert.ok(room.dummy.total>0,'training dummy registers actual bullet damage');
  assert.equal(api.mastery[player.weapon]||0,initialXP,'training ammunition cannot farm persistent mastery');
- api.openHubForge();
- assert.ok(nodes.get('pause').classList);
- api.applyHubForge();
+ player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
+ assert.equal(room.interact.nearForge,true,'forge becomes interactive when approached');
+ api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
+ nodes.get('startBtn').onclick();assert.equal(api.hubForgeOpen,false,'save button returns to testing');
  assert.equal(game.inHub,true);
- api.enterExpedition();
+ player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
+ assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
+ api.interact();
  assert.equal(game.inHub,false);assert.equal(game.roomId,1);
  assert.ok(room.doors.down,'normal return door restored after leaving training hub');
  const target=game.rooms[1].enemies[0];api.hitEnemy(game.rooms[1],target,9,'bullet',player.weapon);
