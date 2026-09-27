@@ -38,3 +38,47 @@
 .statExplanation{display:block;margin-top:9px;color:#86a4ba;font:10px/1.5 'Courier New',monospace}
 @media(max-width:720px){.forgePreview{grid-template-columns:1fr}.forgePreviewCard .weaponStatRow{grid-template-columns:minmax(90px,1fr) auto minmax(98px,auto)}}
 @media(max-width:410px){.forgePreviewCard .weaponStatRow{grid-template-columns:1fr auto}.forgePreviewCard .weaponStatRow small{grid-column:1/-1}}
+
+
+/* 720p game surface: chrome remains usable at 1280 × 720 and smaller browser viewports. */
+#shell{width:min(1410px,100%);max-width:1410px;padding:5px 10px;margin:auto}
+body{align-items:flex-start;min-height:100dvh}
+header{min-height:46px;padding:6px 10px;margin-bottom:5px;gap:8px}
+header .brand{font-size:18px;white-space:nowrap}
+.top-right{gap:6px;min-width:0}
+.top-right button{padding:5px 8px;font-size:10px}
+#game{width:100%;max-height:calc(100dvh - 169px);object-fit:contain;aspect-ratio:16/9}
+main{width:100%;max-height:calc(100dvh - 164px);min-height:220px;overflow:hidden}
+footer{min-height:47px;padding:6px 8px;gap:8px;margin:5px 0;font-size:11px;flex-wrap:nowrap}
+footer .stat{min-width:0;gap:5px}
+footer .stat.ammo{flex:1 1 330px;overflow:hidden;white-space:nowrap}
+#ammoText{display:inline-block;overflow:hidden;text-overflow:ellipsis;max-width:min(27vw,400px);vertical-align:middle}
+#weaponLabel{white-space:nowrap}
+footer .hint{max-width:24%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.inventory{display:flex;flex-wrap:nowrap;justify-content:flex-start;overflow-x:auto;overflow-y:hidden;gap:5px;padding:5px;margin:0}
+.inventory button{min-width:0;flex:0 0 auto;padding:5px 7px;font-size:10px}
+.inventory .invLabel:last-child{display:none}
+.veil{padding:8px;overflow:auto;align-items:center}
+.veil>.panel{width:min(1020px,100%);max-height:min(calc(100dvh - 182px),calc(100% - 12px));overflow-y:auto;overscroll-behavior:contain;padding:12px 15px}
+#pause>.panel{width:min(1020px,100%)}
+#pause .panel h1{font-size:clamp(22px,3vw,37px);margin:3px 0 7px}
+#pause .panel p{font-size:11px;line-height:1.4;margin:5px 0}
+#pause .seedInput,#pause .difficultyPicker{margin:4px 0 7px;max-width:none;display:inline-flex;width:calc(50% - 7px);vertical-align:top}
+#pause .seedInput{margin-right:8px}
+#pause .seedInput input,#pause .difficultyPicker select{padding:7px;font-size:11px}
+#pause .forgePanel{margin:7px 0;padding:9px}
+#pause .forgeGrid{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+#pause .forgeGrid select{font-size:10px;padding:5px}
+#pause .forgePreview{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+#pause .forgePreviewCard{padding:6px}
+#pause .forgePreviewCard .weaponStats{max-height:150px;overflow-y:auto}
+#pause .forgePreviewCard .weaponStatRow{font-size:10px;padding:3px 0}
+#pause .controls{margin:7px 0 0;font-size:10px;line-height:1.35}
+#pause .primary{padding:9px 15px;width:auto}
+.shopPanel{width:min(850px,100%)!important}
+.shopItems{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.shopItem{min-height:77px;padding:8px;gap:3px}
+#loadoutPanel{width:min(1030px,100%)}
+#loadoutContent{min-width:0}
+@media(max-width:850px){header{flex-wrap:wrap;height:auto}.top-right{width:100%;justify-content:space-between}.top-right button{padding:4px 6px}#game{max-height:calc(100dvh - 206px)}main{max-height:calc(100dvh - 203px)}footer .hint{display:none}.veil>.panel{max-height:min(calc(100dvh - 218px),calc(100% - 10px))}#pause .forgeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.shopItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:540px){#shell{padding:3px}footer{flex-wrap:wrap}#pause .seedInput,#pause .difficultyPicker{display:flex;width:100%;margin:3px 0}#pause .forgePreview{grid-template-columns:1fr}.shopItems{grid-template-columns:1fr}.veil>.panel{padding:8px}#ammoText{max-width:50vw}}
