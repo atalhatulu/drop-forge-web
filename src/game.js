@@ -357,6 +357,7 @@ document.querySelectorAll('.forgeAttachSlot').forEach(node=>node.onclick=()=>{co
 document.querySelectorAll('.forgeEditorChoices').forEach(list=>list.onclick=e=>{const card=e.target.closest('[data-mod-choice]');if(!card)return;const n=Number(card.dataset.modGun),j=forgeEditors[n],hidden=forgeMods(n)[j];if(!hidden||hidden.disabled)return;hidden.value=card.dataset.modChoice;syncForgeWorkbench();renderForgePreview();});
 document.querySelectorAll('[data-close-editor]').forEach(node=>node.onclick=()=>{forgeEditors[Number(node.dataset.closeEditor)]=-1;syncForgeWorkbench();});
 document.querySelectorAll('[data-focus-gun]').forEach(node=>node.onclick=()=>{forgeFocusGun=Number(node.dataset.focusGun);syncForgeWorkbench();renderForgePreview();});
+const {statRow,weaponStatHTML,enemyCodexHTML}=window.DropForgeLoadoutPresentation.createLoadoutPresentation({weaponStats,BIOMES,VARIANTS});
 refreshForge();
 function weaponName(id){return id===null?'BIÇAK':WEAPON_NAMES[id]||'SİLAH';}
 function weaponType(id){return WEAPON_TYPES[id]||'YAKIN DÖVÜŞ';}
@@ -385,7 +386,6 @@ function renderQuickSlot(number,{weapon=null,name,sub='',count='',icon='empty',s
 
 function masteryProgress(id){if(id===null||id===undefined)return {fraction:0,earned:0,need:0};const level=masteryLevel(id),xp=mastery[id]||0,base=90*(level-1)*(level-1),next=masteryNeeded(id);return level>=10?{fraction:1,earned:xp,need:xp}:{fraction:clamp((xp-base)/(next-base),0,1),earned:xp-base,need:next-base};}
 function xpBarHTML(id){const xp=masteryProgress(id);return '<div class="xpMeta"><span>USTALIK '+masteryLevel(id)+'</span><span>'+(masteryLevel(id)>=10?'MAKSİMUM':Math.floor(xp.earned)+' / '+xp.need+' XP')+'</span></div><div class="xpTrack" role="progressbar" aria-label="'+weaponName(id)+' ustalık XP" aria-valuenow="'+Math.floor(xp.fraction*100)+'" aria-valuemin="0" aria-valuemax="100"><div style="width:'+(xp.fraction*100).toFixed(1)+'%"></div></div>';}
-const {statRow,weaponStatHTML,enemyCodexHTML}=window.DropForgeLoadoutPresentation.createLoadoutPresentation({weaponStats,BIOMES,VARIANTS});
 function renderForgePreview(){
  const el=$('forgePreview');if(!el||!WEAPON_SPRITES[0])return;
  const n=forgeFocusGun,id=Number($('forgeGun'+n).value)||0,mods=chosenForgeMods(n),st=weaponStats({weapon:id,mods});
