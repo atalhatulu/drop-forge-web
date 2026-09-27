@@ -72,7 +72,7 @@ test('empty weapon warning is throttled while mouse is held', () => {
 test('more initial ammunition and biome enemy codex are enabled', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.match(source,/MAG_SIZE\[weapon\]\*7/);
-  assert.match(source,/function enemyCodexHTML\(\)/);
+  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/function enemyCodexHTML\(\)/);
   assert.match(source,/root\.insertAdjacentHTML\('beforeend',enemyCodexHTML\(\)\)/);
 });
 
@@ -253,9 +253,9 @@ test('shot simulation, reload, and live panels reuse the same weaponStats functi
  assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
  assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
  assert.match(source,/weaponStatHTML\(\{weapon:id,mods\}\)/);
- assert.match(source,/statRow\('TAM İSABET'/);
- assert.match(source,/statRow\('TEORİK DPS'/);
- assert.match(source,/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TAM İSABET'/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TEORİK DPS'/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
 });
 test('shock chain and burning effects are applied to enemy hits', () => {
  const source=readFileSync('src/game.js','utf8');
