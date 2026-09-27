@@ -199,3 +199,6 @@ footer .stat.ammo{flex:0 1 auto!important;min-width:0!important}
 #pause .forgeEditor{max-height:min(350px,48vh);overflow-y:auto}
 #pause .forgeEditorChoices{max-height:245px}
 @media(min-width:1100px){#pause .forgeEditorChoices{grid-template-columns:repeat(2,minmax(0,1fr));max-height:310px}#pause .forgeEditor{max-height:345px}}
+
+/* TAB inventory also explains why a chosen mod behaves differently on this weapon. */
+.modRow .modBagHint{display:block;width:100%;color:#a9c6db;font:10px/1.45 'Courier New',monospace;margin-top:4px;white-space:normal}
