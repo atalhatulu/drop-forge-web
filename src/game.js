@@ -96,19 +96,7 @@ function terrainCollision(room,obj,prevX,prevY){
 const {drawTerrain,drawBiome}=window.DropForgeBiomeView.createBiomeRenderer({ctx,W,H,FLOOR,WALL,BIOMES});
 function breakableSurface(room){return room.platforms;}
 function hitBreakable(room,b,amount){if(!b.alive)return;b.hp-=amount;b.hit=.18;burst(room,b.x+b.w/2,b.y+b.h/2,'#b7dbeb',8,165);floating(b.x+b.w/2,b.y-12,String(Math.ceil(Math.max(0,b.hp)))+' / '+b.maxHp,'#d6e9f4');shake=Math.max(shake,3);sound(135,.1,'sawtooth',.024);if(b.hp<=0){b.alive=false;burst(room,b.x+b.w/2,b.y+b.h/2,'#9bc9d7',23,240);dropPickup(room,Math.random()<.5?'health':'ammo',b.x+b.w/2,b.y,Math.random()<.08);announce('KAYA PARÇALANDI',1.1);}}
-function buildBiome(room){const rr=rng((room.cave.seed^0x5d8b4b3d)>>>0);room.hazards=[];room.crystals=[];
- if(room.biome==='forest'){
-  for(let i=0;i<5;i++){const x=ri(rr,140,970),y=FLOOR-22;
-   if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<110&&Math.abs(d.y-y)<110))continue;
-   room.hazards.push({x,y,w:ri(rr,24,43),h:ri(rr,24,42),phase:rr()*6.28});}
- }
- if(room.biome==='lava'){for(let i=0;i<4;i++){const x=ri(rr,165,945);if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<115))continue;room.hazards.push({x,y:FLOOR-12,w:ri(rr,24,45),h:14,phase:rr()*6.28,lava:true});}}
- if(room.biome==='crystal'){
-  for(let i=0;i<5;i++){const x=ri(rr,155,955),y=FLOOR-ri(rr,30,58);
-   if(Object.values(room.doors).some(d=>Math.abs(d.x-x)<115&&Math.abs(d.y-y)<105))continue;
-   room.crystals.push({x,y,r:ri(rr,15,22),hp:ri(rr,22,38),alive:true,flash:0});}
- }
-}
+const buildBiome=window.DropForgeBiomeHazards.createBiomeHazards({rng,ri,FLOOR});
 function explodeCrystal(room,c){if(!c.alive)return;c.alive=false;burst(room,c.x,c.y,'#d49aff',30,280);shake=Math.max(shake,7);sound(180,.19,'sawtooth',.035);floating(c.x,c.y-37,'KRİSTAL PATLAMASI','#eabaff');
  for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-c.x,e.y+e.h/2-c.y)<123)hitEnemy(room,e,40,'crystal');
  for(const q of room.portals)if(q.alive&&Math.hypot(q.x-c.x,q.y-c.y)<123)hitPortal(room,q,36);
