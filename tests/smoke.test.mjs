@@ -270,3 +270,35 @@ test('shock chain and burning effects are applied to enemy hits', () => {
  assert.match(source,/applyProjectileModEffects\(room,e,b\)/);
  assert.match(source,/if\(e\.burnTime>0\)/);
 });
+
+test('merchant can sell an alternative for an occupied mod slot', () => {
+ const source=readFileSync('src/game.js','utf8');
+ const a=source.indexOf('function shopCanBuy(id)'),b=source.indexOf('function renderShop()',a);
+ assert.ok(a>=0&&b>a);
+ const player={gold:1000,kits:1,grenades:0,slots:[{weapon:0,mods:[undefined,undefined,'shockCore']}],weapon:0};
+ const canBuy=new Function('game','SHOP_ITEMS','MODS','AMMO_MAX','masteryLevel',source.slice(a,b)+'return shopCanBuy;')(
+ {player,stashedMods:[]},{shockCore:{price:175},burnCore:{price:205}},
+ {shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},[240],()=>9);
+ assert.equal(canBuy('burnCore'),true);
+ assert.equal(canBuy('shockCore'),false);
+ player.gold=100;
+ assert.equal(canBuy('burnCore'),false);
+});
+test('shock chains once and burn core applies a timed effect', () => {
+ const source=readFileSync('src/game.js','utf8');
+ const a=source.indexOf('function applyProjectileModEffects(room,e,b)'),b=source.indexOf('function projectileImpact(',a);
+ assert.ok(a>=0&&b>a);
+ const hits=[],apply=new Function('burst','hitEnemy',source.slice(a,b)+'return applyProjectileModEffects;')(
+ ()=>{},(room,e,damage)=>{hits.push([e,damage]);e.hp-=damage;});
+ const e={alive:true,x:100,y:100,w:20,h:20,hp:100},other={alive:true,x:160,y:100,w:20,h:20,hp:100},room={enemies:[e,other]};
+ apply(room,e,{mods:['burnCore'],damage:50,hitTargets:new Set([e]),weapon:0});
+ assert.equal(e.burnTime,3);
+ assert.equal(e.burnDamage,6);
+ const shock={mods:['shockCore'],damage:50,hitTargets:new Set([e]),weapon:0};
+ apply(room,e,shock);
+ assert.equal(hits.length,1);
+ assert.equal(hits[0][0],other);
+ assert.equal(hits[0][1],18);
+ apply(room,e,shock);
+ assert.equal(hits.length,1,'a projectile cannot shock the same target twice');
+});
