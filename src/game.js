@@ -329,7 +329,7 @@ const WEAPON_ABILITIES=[
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
- if(status)status.textContent=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y)+' · '+($('hint').textContent||'E ATÖLYE · PORTAL');
+ if(status)status.textContent=announcement>0?announcementText:(game.inHub?'HAZIRLIK · '+legacy.marks+' ÇEKİRDEK':'DERİNLİK '+room.y)+' · '+($('hint').textContent||'E ATÖLYE · PORTAL');
  if(ability){const spec=WEAPON_ABILITIES[p.weapon];ability.textContent=spec?'SAĞ TIK · '+spec.name+' · '+(abilityCooldown(p,p.weapon)>0?abilityCooldown(p,p.weapon).toFixed(1)+'sn':'HAZIR'):'SAĞ TIK · SİLAH YOK';}
 }
 function specialBullet(p,st,angle,{family=st.family,damage=st.damage,speed=st.speed,pierces=st.pierce,areaBonus=st.areaBonus,impactStagger=st.staggerBonus,shotEffects={shockRemaining:1}}={}){
