@@ -517,3 +517,15 @@ test('split stylesheets have clear non-overlapping responsibilities',()=>{
  assert.match(workbench,/\.forgeAttachGrid\{display:grid/);
  assert.match(workbench,/#statusStrip\{display:flex/);
 });
+
+
+test('fourth region uses level four enemies with a separate shield pool', () => {
+ const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(world,/room\.level=Math\.min\(4,room\.stage\)/);
+ assert.match(game,/shield:\(room\.level===4&&type!=='boss'/);
+ assert.match(game,/const shieldAbsorbed=Math\.min\(e\.shield\|\|0,amount\)/);
+ assert.match(game,/e\.shield-=shieldAbsorbed/);
+ assert.match(game,/const segments=e\.type==='boss'\?1:Math\.min\(3,e\.level\|\|1\)/);
+ assert.match(game,/if\(e\.maxShield>0\)/);
+ assert.match(ai,/e\.shield=\(e\.shield\|\|0\)-absorbed/);
+});
