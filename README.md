@@ -74,3 +74,9 @@ Dash görüntü izleri ve enerji çemberi bırakır; kancanın hattı animasyonl
 - **Yalnızca o sefere ait:** Altın, satın alınan ve takılı/çantadaki eklentiler, iki silahın mevcut mühimmatı, ganimet, sağlık kitleri, bombalar, özel eşyalar ve oda ilerlemesi. Ölümden sonra hazırlık alanında yeni sefer sıfır kaynakla başlar; ustalık ve açılmış silahlar kalır.
 
 Her ölüm otomatik güç artışı getirmez: gerçek savaşta silah XP'si kazanıldıysa veya yeni silah açıldıysa sonraki sefere daha fazla seçenekle başlanır. Şu anda kalıcı altın, karakter seviyesi veya ayrı bir kalıcı yetenek ağacı yoktur. Kalıcı kayıtlar tarayıcının yerel depolamasındadır; başka cihazlara otomatik taşınmaz.
+
+## Silah sınıfına özgü eklentiler ve karşılaştırmalı atölye
+
+Başlangıç arenasındaki tezgâhta açık bir `+` eklenti yuvasına tıklayınca o kategorinin üç seçeneği kartlar halinde görünür. Kartlar **gerçek atış hesaplarından gelen önce → sonra stat değişimlerini**, silaha özel etki açıklamasını ve varsa oynanış bedelini gösterir. Takılan eklentinin adı, seçili silah görseli ve özellikleri anında güncellenir. Aynı açıklamalar TAB envanterindeki takılı eklentilerin altında bulunur.
+
+Eklentiler farklı silahlarda aynı sonucu vermeyebilir: Delici Namlu kinetikte +1 delme, pompalıda %25 sıkı dağılım, patlayıcıda %20 geniş etki alanı sağlar. Faz Çekirdeği kinetikte +1 delme, alan etkili enerji silahlarında %25 geniş etki alanı sağlar; her ikisinde de %25 hız verir. Pompalıdaki Dengeleyici saçılmayı %42 azaltırken Ağır Kabza artık Dengeleyici'nin kopyası değildir: %35 daha az geri tepme ve düşmana %50 uzun sarsılma verir. Şok zinciri özellikle pompalılarda dengeli kalması için **atış başına en fazla bir ek hedefe** sıçrar. Çekirdeklerin Yanma ve Şok etkileri mevcut özel etkiler olarak korunur.
