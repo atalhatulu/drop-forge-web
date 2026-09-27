@@ -450,6 +450,7 @@ for(const stone of room.rocks){ctx.fillStyle=['#263242','#303a49','#394251'][sto
  for(let x=plat.x+18;x<plat.x+plat.w-15;x+=39){ctx.fillStyle=bi.rock[(pi+2)%4];ctx.fillRect(x,plat.y+11,15,4);}
 }for(let i=0;i<16;i++){const x=ri(r,40,W-40),h=ri(r,6,26);ctx.fillStyle='#39465a';ctx.beginPath();ctx.moveTo(x,29);ctx.lineTo(x+10,29);ctx.lineTo(x+4,29+h);ctx.fill();}drawBiome(room);drawDoors(room);ctx.fillStyle='#a8b6c9';ctx.font='800 12px system-ui';ctx.fillText('DERİNLİK '+String(room.y).padStart(2,'0')+' · BÖLGE '+room.stage+'/4 · LV '+room.level+'  //  '+BIOMES[room.biome].name+' · '+roomName(room),55,58);}
 function drawDoors(room){
+ if(game?.inHub&&room.training)return;
  for(const [d,id] of Object.entries(room.links)){
    const locked=!room.cleared,color=locked?'#dd6570':'#6ee3c7',q=room.doors[d],side=d==='left'||d==='right';
    ctx.fillStyle='#111924';ctx.fillRect(q.x-(side?12:45),q.y-(side?41:11),side?24:90,side?82:22);
