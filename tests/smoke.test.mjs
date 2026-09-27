@@ -180,3 +180,33 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  assert.match(source,/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
+
+test('each stat attachment occupies its own dedicated weapon slot', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/barrel:\{name:'GÜÇ NAMLU',level:2,slot:0/);
+ assert.match(source,/loader:\{name:'HIZLI MEKANİZMA',level:4,slot:1/);
+ assert.match(source,/core:\{name:'FAZ ÇEKİRDEĞİ',level:6,slot:2/);
+ assert.match(source,/stabilizer:\{name:'DENGELEYİCİ',level:8,slot:3/);
+ const start=source.indexOf('function installMod(slot,mod)'),end=source.indexOf('function applyStashedMods(',start);
+ assert.ok(start>=0&&end>start);
+ const install=new Function('MODS','masteryLevel','getModSlots',source.slice(start,end)+'return installMod;')(
+ {barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},()=>9,()=>4);
+ const weapon={weapon:0,mods:[]};
+ assert.equal(install(weapon,'loader'),true);
+ assert.equal(weapon.mods[0],undefined);
+ assert.equal(weapon.mods[1],'loader');
+ assert.equal(install(weapon,'loader'),false);
+ assert.equal(install(weapon,'barrel'),true);
+ assert.equal(weapon.mods[0],'barrel');
+});
+test('gold and ammo enemy drops feed a real purchase panel', () => {
+ const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
+ assert.match(source,/dropPickup\(room,'gold',e\.x\+e\.w\/2/);
+ assert.match(source,/Math\.random\(\)<\.44\)dropPickup\(room,'ammo'/);
+ assert.match(source,/if\(item\.kind==='gold'\)\{p\.gold\+=/);
+ assert.match(source,/function buyShopItem\(id\)/);
+ assert.match(source,/p\.gold-=price/);
+ assert.match(source,/function shopCanBuy\(id\)/);
+ assert.match(html,/id="shopOverlay"/);
+ assert.match(html,/id="shopItems"/);
+});
