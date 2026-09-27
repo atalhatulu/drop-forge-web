@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/actors-view.js','src/physics.js','src/biome-hazards.js','src/damage.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
@@ -173,7 +173,7 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
  assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
  assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
- assert.match(source,/LV '\+\(e\.level\|\|1\)/);
+ assert.match(readFileSync('src/actors-view.js','utf8'),/LV '\+\(e\.level\|\|1\)/);
 });
 
 test('each stat attachment occupies its own dedicated weapon slot', () => {
@@ -319,7 +319,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/actors-view.js','src/physics.js','src/biome-hazards.js','src/damage.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -494,7 +494,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/actors-view.js','src/physics.js','src/biome-hazards.js','src/damage.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);
@@ -516,4 +516,46 @@ test('split stylesheets have clear non-overlapping responsibilities',()=>{
  assert.match(quickbar,/\.inventorySlots\{display:flex/);
  assert.match(workbench,/\.forgeAttachGrid\{display:grid/);
  assert.match(workbench,/#statusStrip\{display:flex/);
+});
+
+
+test('extracted physics resolves floor collisions and resets player jump state', () => {
+ const window={};
+ new Function('window',readFileSync('src/physics.js','utf8'))(window);
+ const player={x:50,y:90,w:20,h:20,vy:100,grounded:false,jumps:2,spin:1,spinDuration:1};
+ const game={player};
+ const {collideRect,floorPhysics}=window.DropForgePhysics.createPhysics({getGame:()=>game,currentRoom:()=>({}),GRAVITY:0,terrainCollision:()=>{},FLOOR:200,clamp:(n,min,max)=>Math.min(max,Math.max(min,n)),W:400});
+ assert.equal(collideRect({x:0,y:0,w:10,h:10},{x:9,y:9,w:10,h:10}),true);
+ assert.equal(collideRect({x:0,y:0,w:10,h:10},{x:10,y:0,w:10,h:10}),false);
+ floorPhysics(player,.2,[{x:0,y:120,w:200,h:10}]);
+ assert.equal(player.y,100);
+ assert.equal(player.grounded,true);
+ assert.equal(player.vy,0);
+ assert.equal(player.jumps,0);
+ assert.equal(player.spin,0);
+});
+
+
+test('extracted biome hazards generate deterministic seeded layouts', () => {
+ const window={};new Function('window',readFileSync('src/biome-hazards.js','utf8'))(window);
+ const rng=seed=>{let state=seed>>>0;return ()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);};
+ const build=window.DropForgeBiomeHazards.createBiomeHazards({rng,ri:(random,min,max)=>min+Math.floor(random()*(max-min+1)),FLOOR:548});
+ const makeRoom=biome=>({biome,cave:{seed:1234},doors:{}});
+ const forest=makeRoom('forest'),repeat=makeRoom('forest');build(forest);build(repeat);
+ assert.deepEqual(forest.hazards,repeat.hazards);
+ assert.equal(forest.hazards.length,5);
+ assert.equal(forest.crystals.length,0);
+ const crystal=makeRoom('crystal');build(crystal);
+ assert.equal(crystal.crystals.length,5);
+ assert.equal(crystal.hazards.length,0);
+});
+
+
+test('extracted damage respects portal shields and destroys unshielded portals', () => {
+ const window={};new Function('window',readFileSync('src/damage.js','utf8'))(window);
+ const drops=[],events=[];let shake=0;
+ const {hitPortal}=window.DropForgeDamage.createDamageSystem({getGame:()=>({player:{x:0,w:10},flow:0}),grantMastery:()=>{},addFlow:()=>{},burst:()=>{},floating:(...args)=>events.push(args),setHitStop:()=>{},getShake:()=>shake,setShake:v=>{shake=v;},sound:()=>{},killEnemy:()=>{},dropPickup:(...args)=>drops.push(args)});
+ const room={};const portal={x:40,y:50,hp:20,maxHp:20,shield:1,shieldCooldown:0,burstWindow:0,alive:true};
+ hitPortal(room,portal,30);assert.equal(portal.hp,20);assert.equal(portal.alive,true);
+ portal.shield=0;hitPortal(room,portal,30);assert.equal(portal.hp,0);assert.equal(portal.alive,false);assert.equal(drops.length,1);
 });
