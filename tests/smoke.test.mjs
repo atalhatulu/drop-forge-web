@@ -202,11 +202,19 @@ test('each stat attachment occupies its own dedicated weapon slot', () => {
 test('gold and ammo enemy drops feed a real purchase panel', () => {
  const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
  assert.match(source,/dropPickup\(room,'gold',e\.x\+e\.w\/2/);
- assert.match(source,/Math\.random\(\)<\.44\)dropPickup\(room,'ammo'/);
+ assert.match(source,/Math\.random\(\)<\.6\)dropPickup\(room,'ammo'/);
  assert.match(source,/if\(item\.kind==='gold'\)\{p\.gold\+=/);
  assert.match(source,/function buyShopItem\(id\)/);
  assert.match(source,/p\.gold-=price/);
  assert.match(source,/function shopCanBuy\(id\)/);
  assert.match(html,/id="shopOverlay"/);
  assert.match(html,/id="shopItems"/);
+});
+
+test('dropping or replacing a weapon preserves installed attachments', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/room\.loot\.push\(\{weapon,ammo,reserve,mods:\[\.\.\.mods\]/);
+ assert.match(source,/mods:\[\.\.\.\(item\.mods\|\|\[\]\)\]/);
+ assert.match(source,/old\.ammo,old\.reserve,old\.mods\|\|\[\]/);
+ assert.match(source,/p\.reserve,p\.slots\[p\.activeSlot\]\?\.mods\|\|\[\]/);
 });
