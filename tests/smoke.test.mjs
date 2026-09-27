@@ -186,11 +186,11 @@ test('enemy level scales HP, attack damage and fire rate', () => {
 });
 
 test('each stat attachment occupies its own dedicated weapon slot', () => {
- const source=readFileSync('src/game.js','utf8');
- assert.match(source,/barrel:\{name:'GÜÇ NAMLU',level:2,slot:0/);
- assert.match(source,/loader:\{name:'HIZLI MEKANİZMA',level:4,slot:1/);
- assert.match(source,/core:\{name:'FAZ ÇEKİRDEĞİ',level:6,slot:2/);
- assert.match(source,/stabilizer:\{name:'DENGELEYİCİ',level:8,slot:3/);
+ const source=readFileSync('src/game.js','utf8'),catalog=readFileSync('src/catalog.js','utf8');
+ assert.match(catalog,/barrel:\{name:'GÜÇ NAMLU',level:2,slot:0/);
+ assert.match(catalog,/loader:\{name:'HIZLI MEKANİZMA',level:4,slot:1/);
+ assert.match(catalog,/core:\{name:'FAZ ÇEKİRDEĞİ',level:6,slot:2/);
+ assert.match(catalog,/stabilizer:\{name:'DENGELEYİCİ',level:8,slot:3/);
  const start=source.indexOf('function installMod(slot,mod)'),end=source.indexOf('function applyStashedMods(',start);
  assert.ok(start>=0&&end>start);
  const install=new Function('MODS','masteryLevel','getModSlots',source.slice(start,end)+'return installMod;')(
@@ -230,9 +230,10 @@ test('twelve attachment alternatives are grouped three per slot', () => {
  assert.equal(Object.keys(mods).length,12);
  for(let slot=0;slot<4;slot++)assert.equal(Object.values(mods).filter(mod=>mod.slot===slot).length,3);
  assert.ok(Object.values(mods).every(mod=>mod.level===[2,4,6,8][mod.slot]));
- assert.match(source,/m\.slot===j/);
- assert.match(source,/MODS\[next\]\.slot!==j/);
- assert.match(source,/for\(const \[id,mod\] of Object\.entries\(MODS\)\)/);
+ const runtime=readFileSync('src/game.js','utf8');
+ assert.match(runtime,/m\.slot===j/);
+ assert.match(runtime,/MODS\[next\]\.slot!==j/);
+ assert.match(runtime,/for\(const \[id,mod\] of Object\.entries\(MODS\)\)/);
 });
 test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
  const source=readFileSync('src/game.js','utf8');
