@@ -2,16 +2,20 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
+const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
+
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
   assert.match(html, /href="\.\/styles\/game\.css"/);
-  assert.match(html, /src="\.\/src\/game\.js"/);
+  assert.match(html, /src="\.\/src\/catalog\.js"[^]*src="\.\/src\/game\.js"/);
+  assert.match(html, /href="\.\/styles\/quickbar\.css"/);
+  assert.match(html, /href="\.\/styles\/workbench\.css"/);
   assert.match(html, /<canvas\b/i);
 });
 
 test('source files contain game logic and styles', () => {
   const js = readFileSync('src/game.js', 'utf8');
-  const css = readFileSync('styles/game.css', 'utf8');
+  const css = readProjectCss();
   assert.ok(js.length > 50000);
   assert.ok(css.length > 5000);
 });
@@ -220,7 +224,7 @@ test('dropping or replacing a weapon preserves installed attachments', () => {
 });
 
 test('twelve attachment alternatives are grouped three per slot', () => {
- const source=readFileSync('src/game.js','utf8'),begin=source.indexOf('const MODS='),end=source.indexOf('const MOD_SLOT_NAMES=',begin);
+ const source=readFileSync('src/catalog.js','utf8'),begin=source.indexOf('const MODS='),end=source.indexOf('const MOD_SLOT_NAMES=',begin);
  assert.ok(begin>=0&&end>begin);
  const mods=new Function(source.slice(begin,end)+'return MODS;')();
  assert.equal(Object.keys(mods).length,12);
@@ -304,7 +308,7 @@ test('shock chains once and burn core applies a timed effect', () => {
 });
 
 test('720p canvas, viewport HUD and grounded props are configured',()=>{
- const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),js=readFileSync('src/game.js','utf8');
+ const html=readFileSync('index.html','utf8'),css=readProjectCss(),js=readFileSync('src/game.js','utf8');
  assert.match(html,/id="game" width="1280" height="720"/);
  assert.match(js,/ctx\.setTransform\(canvas\.width\/W,0,0,canvas\.height\/H,0,0\)/);
  assert.match(css,/max-height:min\(calc\(100dvh - 182px\)/);
@@ -327,7 +331,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',readFileSync('src/catalog.js','utf8')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -387,7 +391,7 @@ test('forced boss ammunition and health never reroll into grenades',()=>{
 });
 
 test('icon quick bar renders real weapon sprites, item art and readable counts',()=>{
- const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),source=readFileSync('src/game.js','utf8');
+ const html=readFileSync('index.html','utf8'),css=readProjectCss(),source=readFileSync('src/game.js','utf8');
  assert.match(html,/<nav class="inventory" aria-label="Hızlı envanter">/);
  for(let i=1;i<=5;i++)assert.match(html,new RegExp('id="slot'+i+'" class="invSlot'));
  assert.match(css,/\.inventorySlots\{display:flex/);
@@ -445,7 +449,7 @@ test('each shot can trigger at most one shock chain across shotgun pellets',()=>
  assert.equal(shotEffects.shockRemaining,0);
 });
 test('attachment cards display class-specific names, precise deltas and are available in the TAB inventory',()=>{
- const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),source=readFileSync('src/game.js','utf8');
+ const html=readFileSync('index.html','utf8'),css=readProjectCss(),source=readFileSync('src/game.js','utf8');
  for(let i=1;i<=2;i++)assert.match(html,new RegExp('id="forgeEditorChoices'+i+'"'));
  assert.match(css,/\.forgeModChoice\.chosen/);
  assert.match(source,/function modNameForWeapon\(id,mod\)/);
@@ -475,7 +479,7 @@ test('every weapon has a distinct right-click ability with an independent cooldo
  assert.match(source,/bullet\.weapon===8&&e\.markTime>0\?1\.35:1/);
 });
 test('preparation announcements are under the arena and gold requires player contact',()=>{
- const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8');
+ const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8'),css=readProjectCss();
  const canvasEnd=html.indexOf('</main>'),status=html.indexOf('id="statusStrip"'),inventory=html.indexOf('class="inventory"');
  assert.ok(canvasEnd>=0&&status>canvasEnd&&inventory>status);
  assert.match(css,/#statusStrip\{display:flex/);
