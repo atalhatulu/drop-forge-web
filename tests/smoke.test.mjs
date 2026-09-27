@@ -172,7 +172,7 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
  assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
- assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82,\.74\]\[\(e\.level\|\|1\)-1\]/);
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
 
