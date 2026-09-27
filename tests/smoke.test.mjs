@@ -330,7 +330,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
- assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant,null);
+ assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
  assert.ok(nodes.get('forgeGun1').options.length>=2);
  assert.doesNotThrow(()=>api.draw());
  api.openHelp();assert.equal(api.helpOpen,true);api.closeHelp();assert.equal(api.helpOpen,false);
