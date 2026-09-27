@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
@@ -72,7 +72,7 @@ test('empty weapon warning is throttled while mouse is held', () => {
 test('more initial ammunition and biome enemy codex are enabled', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.match(source,/MAG_SIZE\[weapon\]\*7/);
-  assert.match(source,/function enemyCodexHTML\(\)/);
+  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/function enemyCodexHTML\(\)/);
   assert.match(source,/root\.insertAdjacentHTML\('beforeend',enemyCodexHTML\(\)\)/);
 });
 
@@ -82,8 +82,8 @@ test('game script parses and combat systems are wired', () => {
   assert.match(source,/function addFlow\(/);
   assert.match(readFileSync('src/enemy-ai.js','utf8'),/e\.windup=e\.type==='boss'/);
   assert.match(source,/function hitGenerator\(/);
-  assert.match(source,/function weaponStatHTML\(/);
-  assert.match(source,/synergyNote/);
+  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/function weaponStatHTML\(/);
+  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/synergyNote/);
   assert.match(source,/function roomRouteLabel\(/);
 });
 
@@ -253,9 +253,9 @@ test('shot simulation, reload, and live panels reuse the same weaponStats functi
  assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
  assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
  assert.match(source,/weaponStatHTML\(\{weapon:id,mods\}\)/);
- assert.match(source,/statRow\('TAM İSABET'/);
- assert.match(source,/statRow\('TEORİK DPS'/);
- assert.match(source,/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TAM İSABET'/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TEORİK DPS'/);
+ assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
 });
 test('shock chain and burning effects are applied to enemy hits', () => {
  const source=readFileSync('src/game.js','utf8');
@@ -319,7 +319,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -494,7 +494,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);
