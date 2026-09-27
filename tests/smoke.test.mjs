@@ -121,24 +121,30 @@ test('game boot keeps chest helper in a function and populates both starter sele
   assert.match(source,/refreshForge\(\);\s*function weaponName/);
 });
 
-test('expanded map is 41 rooms, downward, with three ordered bosses', () => {
-  const source=readFileSync('src/game.js','utf8');
-  const rngStart=source.indexOf('function rng(seed)'),rngEnd=source.indexOf('function announce(',rngStart);
-  const hashStart=source.indexOf('function hash2('),hashEnd=source.indexOf('const BIOMES=',hashStart);
-  const mapStart=source.indexOf('function makeMap(seed)'),mapEnd=source.indexOf('function buildGame(seed)',mapStart);
-  const makeMap=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
-  for(const seed of [1,42,97321,382711,12345678,333333,999999]){
-    const rooms=makeMap(seed),bosses=rooms.filter(r=>r.type==='boss');
-    assert.equal(rooms.length,41);
-    assert.deepEqual(bosses.map(r=>r.bossStage),[1,2,3]);
-    assert.ok(bosses[0].y<bosses[1].y && bosses[1].y<bosses[2].y);
-    assert.equal(Math.min(...rooms.map(r=>r.y)),0);
-  }
+test('four five-room regions form a boss-gated downward tree', () => {
+ const source=readFileSync('src/game.js','utf8');
+ const rngStart=source.indexOf('function rng(seed)'),rngEnd=source.indexOf('function announce(',rngStart);
+ const hashStart=source.indexOf('function hash2('),hashEnd=source.indexOf('const BIOMES=',hashStart);
+ const mapStart=source.indexOf('function makeMap(seed)'),mapEnd=source.indexOf('function buildGame(seed)',mapStart);
+ const makeMap=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+ const biomeNames=['cave','forest','crystal','lava'],back={left:'right',right:'left',up:'down',down:'up'};
+ for(const seed of [1,42,97321,382711,12345678,333333,999999]){
+  const rooms=makeMap(seed),bosses=rooms.filter(r=>r.type==='boss'),spine=rooms.filter(r=>r.spine);
+  assert.deepEqual(bosses.map(r=>r.y),[5,10,15,20]);
+  assert.deepEqual(bosses.map(r=>r.bossStage),[1,2,3,4]);
+  assert.equal(spine.length,21);
+  assert.ok(rooms.length>45 && rooms.some(r=>r.branchEnd&&r.type==='treasure'));
+  assert.ok(rooms.every(r=>r.biome===biomeNames[r.stage-1]));
+  assert.ok(rooms.every(r=>r.level===Math.min(3,r.stage)));
+  assert.ok(rooms.every(r=>Object.entries(r.links).every(([dir,id])=>rooms[id].links[back[dir]]===r.id)));
+  assert.deepEqual(makeMap(seed).map(r=>[r.x,r.y,r.type,r.biome,r.level]),rooms.map(r=>[r.x,r.y,r.type,r.biome,r.level]));
+  for(const boss of bosses)assert.equal(boss.links.down,spine[boss.y+1]?.id,'boss has the sole route to next biome');
+ }
 });
 
-test('boss victory is gated to stage three, and map reveals inactive nodes', () => {
+test('victory is gated to fourth boss, and map reveals inactive nodes', () => {
   const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
-  assert.match(source,/room\.type==='boss'&&room\.bossStage===3/);
+  assert.match(source,/room\.type==='boss'&&room\.bossStage===4/);
   assert.match(source,/known=room\.discovered\|\|room\.visited/);
   assert.match(source,/known\?room\.type==='boss'/);
   assert.match(html,/id="mapCanvas" width="900" height="920"/);
@@ -146,10 +152,31 @@ test('boss victory is gated to stage three, and map reveals inactive nodes', () 
 
 test('automatic kit and three-hit melee have visible feedback', () => {
   const source=readFileSync('src/game.js','utf8');
-  assert.match(source,/p\.hp>0&&p\.hp<p\.maxHp\*\.5&&p\.kits>0\)useKit\(true\)/);
+  assert.match(source,/p\.hp>0&&p\.hp<p\.maxHp\*\.5&&p\.kits>0&&!nearbyGroundKit\(currentRoom\(\),p\)\)useKit\(true\)/);
   assert.match(source,/function useKit\(auto=false\)/);
   assert.match(source,/p\.meleeCombo=now</);
   assert.match(source,/combo===3\?57/);
   assert.match(source,/game\.muzzleFlash=/);
   assert.match(source,/flashTint='255,95,109'/);
+});
+
+test('ground healing works with a full bag without spending inventory', () => {
+ const source=readFileSync('src/game.js','utf8');
+ const start=source.indexOf('function nearbyGroundKit(room,p)'),end=source.indexOf('function useKit(auto=false)',start);
+ assert.ok(start>=0&&end>start);
+ const helpers=new Function('burst','floating','sound','updateHud',source.slice(start,end)+'return {nearbyGroundKit,consumeGroundKit};')(()=>{},()=>{},()=>{},()=>{});
+ const player={x:90,y:80,w:25,h:43,hp:28,maxHp:100,kits:5},item={kind:'health',x:103,y:100,grounded:true,taken:false},room={loot:[item]};
+ assert.equal(helpers.nearbyGroundKit(room,player),item);
+ assert.equal(helpers.consumeGroundKit(room,item,player),true);
+ assert.equal(player.hp,73);
+ assert.equal(player.kits,5);
+ assert.equal(item.taken,true);
+ assert.equal(helpers.consumeGroundKit(room,item,player),false,'ground kit cannot be consumed twice');
+});
+test('enemy level scales HP, attack damage and fire rate', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
+ assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
+ assert.match(source,/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
+ assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
