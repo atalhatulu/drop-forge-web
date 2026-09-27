@@ -460,3 +460,42 @@ test('attachment cards display class-specific names, precise deltas and are avai
  assert.equal(naming.modNameForWeapon(2,'pierceBarrel'),'GENİŞ ETKİ NAMLU');
  assert.match(naming.modEffectForWeapon(2,'core'),/alanını %25/);
 });
+
+test('every weapon has a distinct right-click ability with an independent cooldown',()=>{
+ const source=readFileSync('src/game.js','utf8'),a=source.indexOf('const WEAPON_ABILITIES='),b=source.indexOf('function abilityCooldown(',a);
+ assert.ok(a>=0&&b>a);
+ const abilities=new Function(source.slice(a,b)+'return WEAPON_ABILITIES;')();
+ assert.equal(abilities.length,13);
+ assert.equal(new Set(abilities.map(ability=>ability.name)).size,13);
+ assert.ok(abilities.every(ability=>ability.cooldown>=8&&ability.cooldown<=15));
+ assert.match(source,/canvas\.addEventListener\('mousedown',e=>\{if\(e\.button===0\)/);
+ assert.match(source,/else if\(e\.button===2\)\{e\.preventDefault\(\);canvas\.focus\(\);useWeaponAbility\(\)/);
+ assert.match(source,/p\.abilityCooldowns\[id\]=spec\.cooldown/);
+ assert.match(source,/p\.abilityCooldowns=Array\(13\)\.fill\(0\);p\.abilityBuff=null;game\.inHub=false/);
+ assert.match(source,/bullet\.weapon===8&&e\.markTime>0\?1\.35:1/);
+});
+test('preparation announcements are under the arena and gold requires player contact',()=>{
+ const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8');
+ const canvasEnd=html.indexOf('</main>'),status=html.indexOf('id="statusStrip"'),inventory=html.indexOf('class="inventory"');
+ assert.ok(canvasEnd>=0&&status>canvasEnd&&inventory>status);
+ assert.match(css,/#statusStrip\{display:flex/);
+ assert.match(source,/function drawGameHud\(\)\{const room=currentRoom\(\);if\(game\.inHub\)return/);
+ assert.match(source,/\$\('banner'\)\.classList\.add\('hidden'\)/);
+ assert.match(source,/Gold remains physical: no magnet or remote collection/);
+ assert.match(source,/item\.kind==='gold'\?Math\.abs\(p\.x\+p\.w\/2-item\.x\)<20/);
+ assert.match(source,/dropPickup\(room,'gold',e\.x\+e\.w\/2/);
+});
+test('legacy merchant and run merchant spend different wallets and persist upgrades',()=>{
+ const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
+ assert.match(source,/LEGACY_KEY='dropForge\.permanentForge\.v1'/);
+ assert.match(source,/function earnLegacy\(amount\)/);
+ assert.match(source,/game\.player\.kills%5===0\)earnLegacy\(1\)/);
+ assert.match(source,/e\.type==='boss'\)earnLegacy\(3\)/);
+ assert.match(source,/room\.merchant=\{x:857,y:FLOOR,permanent:true\}/);
+ assert.match(source,/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
+ assert.match(source,/p\.gold-=price/);
+ assert.match(source,/legacy\.marks-=price;saveLegacy\(\)/);
+ assert.match(source,/grantMastery\(p\.weapon,90,true\)/);
+ assert.match(html,/id="shopTitle"/);
+ assert.match(html,/id="shopDescription"/);
+});
