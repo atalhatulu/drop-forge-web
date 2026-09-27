@@ -13,12 +13,16 @@ Tarayıcıda çalışan 2D procedural arena shooter / roguelite.
 - `styles/quickbar.css` — kare slotlu hızlı envanter ve responsive HUD
 - `styles/workbench.css` — atölye, eklenti kartları, stat karşılaştırmaları ve alt bildirim şeridi
 - `src/catalog.js` — değişmeyen mermi aileleri, 12 eklenti ve silah istatistik tabloları
-- `src/game.js` — halen tek dosyada bulunan oynanış, harita, yapay zekâ, envanter ve sahne döngüsü
+- `src/progression.js` — kalıcı ustalık, silah açma ve yükseltme kayıtları
+- `src/abilities-data.js` — 13 silah yeteneğinin tanımları ve bekleme süreleri
+- `src/shop-data.js` — sefer tüccarı ve kalıcı usta ürün/fiyat katalogları
+- `src/mod-presentation.js` — silaha özgü eklenti adları, açıklamaları ve ödünleşimleri
+- `src/game.js` — oynanış, harita, yapay zekâ, envanter, mağaza arayüzü ve sahne döngüsü
 - `tests/smoke.test.mjs` — katalog ve ana oyun birlikte yüklenerek çalışan regresyon testleri
 
-`npm test` temel testleri, `npm run check` katalog ve ana oyun dosyasının JavaScript sözdizimini kontrol eder. Tarayıcıda `catalog.js`, `game.js` dosyasından önce yüklenmelidir.
+`npm test` regresyon testlerini, `npm run check` tüm `src/*.js` giriş dosyalarının sözdizimini kontrol eder. Tarayıcıda yükleme sırası: `catalog.js` → `progression.js` → `abilities-data.js` → `shop-data.js` → `mod-presentation.js` → `game.js`.
 
-Refaktörün ilk aşaması: oyun davranışını değiştirmeden statik katalog, hızlı envanter ve atölye stilleri ayrıldı. Sonraki aşamalarda `game.js` içindeki kayıt/kalıcı gelişim, silah ve yetenekler, mağazalar, harita/odalar ve düşman sistemleri tek tek ayrılabilir. Her aşamada açılış/hub, mağaza ve silah etkileşimleri test edilmelidir.
+Refaktör durumu: statik silah kataloğu, kalıcı kayıtlar, yetenek tanımları, mağaza katalogları, silaha özgü eklenti sunum metinleri ve arayüz stilleri ayrıldı. `game.js` halen büyük bir çalışma zamanı dosyasıdır; sonraki adaylar harita/oda üretimi, düşman davranışları ve mağaza arayüzüdür. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır.
 
 ## Oynanış döngüsü
 
