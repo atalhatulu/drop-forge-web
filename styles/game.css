@@ -28,3 +28,13 @@
 
 /* Merchant / collectible economy */
 #shopOverlay{z-index:18;background:rgba(5,10,23,.84)}.shopPanel{width:min(760px,96vw);max-height:88vh;overflow:auto;text-align:left;border:3px solid #c7a569;background:linear-gradient(150deg,#26354c,#101927);box-shadow:9px 9px 0 #070c16;padding:22px}.shopPanel .panelTop h2{color:#ffe2a4}.shopPanel>p{color:#b8cadc;font-size:13px}.shopGold{padding:13px 16px;background:#302b25;color:#ffe39e;border:2px solid #a88953;font:900 18px 'Courier New',monospace;margin:14px 0}.shopItems{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.shopItem{display:grid;gap:6px;text-align:left;background:#1a2e42;border:2px solid #5e7790;padding:13px;min-height:104px;cursor:pointer;transition:transform .13s,border-color .13s}.shopItem:hover:not(:disabled){transform:translateY(-2px);border-color:#f6d28b;background:#243b50}.shopItem:disabled{opacity:.43;cursor:not-allowed}.shopItem .shopName{font:900 13px 'Courier New',monospace;color:#f2edc9}.shopItem .shopDescription{font:11px/1.55 'Courier New',monospace;color:#afc6d8}.shopItem strong{font:900 13px 'Courier New',monospace;color:#ffd179;align-self:end}.shopPanel>small{display:block;color:#99b6cb;padding-top:16px}@media(max-width:560px){.shopItems{grid-template-columns:1fr}.shopPanel{padding:15px}}
+
+/* Build preview: the same live stat table used by the TAB inventory. */
+.forgePreviewCard{display:grid;grid-template-columns:112px minmax(0,1fr);align-items:center;gap:8px}
+.forgePreviewCard>img{grid-column:1;grid-row:1}
+.forgePreviewCard>div:not(.weaponStats){grid-column:2;grid-row:1}
+.forgePreviewCard>.weaponStats{grid-column:1/-1;width:100%;margin:4px 0 0;padding:9px}
+.forgePreviewCard .weaponStatRow{font-size:11px;grid-template-columns:minmax(80px,1fr) auto minmax(93px,auto);gap:6px}
+.statExplanation{display:block;margin-top:9px;color:#86a4ba;font:10px/1.5 'Courier New',monospace}
+@media(max-width:720px){.forgePreview{grid-template-columns:1fr}.forgePreviewCard .weaponStatRow{grid-template-columns:minmax(90px,1fr) auto minmax(98px,auto)}}
+@media(max-width:410px){.forgePreviewCard .weaponStatRow{grid-template-columns:1fr auto}.forgePreviewCard .weaponStatRow small{grid-column:1/-1}}
