@@ -8,14 +8,17 @@ Tarayıcıda çalışan 2D procedural arena shooter / roguelite.
 
 ## Dosyalar
 
-- `index.html` — oyun ekranı ve menüler
-- `styles/game.css` — retro arayüz ve görsel stiller
-- `src/game.js` — mevcut oyun mantığı (davranışı korumak için ilk aktarımda tek dosyada)
-- `tests/smoke.test.mjs` — temel doğrulamalar
+- `index.html` — oyun ekranı, menüler ve bağımlılık sırasıyla yüklenen CSS/JS dosyaları
+- `styles/game.css` — ortak oyun ekranı ve temel arayüz stilleri
+- `styles/quickbar.css` — kare slotlu hızlı envanter ve responsive HUD
+- `styles/workbench.css` — atölye, eklenti kartları, stat karşılaştırmaları ve alt bildirim şeridi
+- `src/catalog.js` — değişmeyen mermi aileleri, 12 eklenti ve silah istatistik tabloları
+- `src/game.js` — halen tek dosyada bulunan oynanış, harita, yapay zekâ, envanter ve sahne döngüsü
+- `tests/smoke.test.mjs` — katalog ve ana oyun birlikte yüklenerek çalışan regresyon testleri
 
-`npm test` temel testleri, `npm run check` JavaScript sözdizimini kontrol eder.
+`npm test` temel testleri, `npm run check` katalog ve ana oyun dosyasının JavaScript sözdizimini kontrol eder. Tarayıcıda `catalog.js`, `game.js` dosyasından önce yüklenmelidir.
 
-Sonraki aşamada oyun mantığı bağımsız modüllere ayrılabilir.
+Refaktörün ilk aşaması: oyun davranışını değiştirmeden statik katalog, hızlı envanter ve atölye stilleri ayrıldı. Sonraki aşamalarda `game.js` içindeki kayıt/kalıcı gelişim, silah ve yetenekler, mağazalar, harita/odalar ve düşman sistemleri tek tek ayrılabilir. Her aşamada açılış/hub, mağaza ve silah etkileşimleri test edilmelidir.
 
 ## Oynanış döngüsü
 
