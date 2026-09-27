@@ -301,8 +301,8 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(js,/ctx\.setTransform\(canvas\.width\/W,0,0,canvas\.height\/H,0,0\)/);
  assert.match(css,/max-height:min\(calc\(100dvh - 182px\)/);
  assert.match(css,/object-fit:fill/);
- assert.match(js,/y:FLOOR\}:null;room\.wheel/);
- assert.match(js,/\?\{x:805,y:FLOOR-20,used:false/);
+ assert.match(readFileSync('src/world.js','utf8'),/y:FLOOR\}:null;room\.wheel/);
+ assert.match(readFileSync('src/world.js','utf8'),/\?\{x:805,y:FLOOR-20,used:false/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
  const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useWeaponAbility,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
