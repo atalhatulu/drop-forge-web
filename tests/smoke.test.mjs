@@ -534,3 +534,18 @@ test('extracted physics resolves floor collisions and resets player jump state',
  assert.equal(player.jumps,0);
  assert.equal(player.spin,0);
 });
+
+
+test('extracted biome hazards generate deterministic seeded layouts', () => {
+ const window={};new Function('window',readFileSync('src/biome-hazards.js','utf8'))(window);
+ const rng=seed=>{let state=seed>>>0;return ()=>((state=(Math.imul(state,1664525)+1013904223)>>>0)/4294967296);};
+ const build=window.DropForgeBiomeHazards.createBiomeHazards({rng,ri:(random,min,max)=>min+Math.floor(random()*(max-min+1)),FLOOR:548});
+ const makeRoom=biome=>({biome,cave:{seed:1234},doors:{}});
+ const forest=makeRoom('forest'),repeat=makeRoom('forest');build(forest);build(repeat);
+ assert.deepEqual(forest.hazards,repeat.hazards);
+ assert.equal(forest.hazards.length,5);
+ assert.equal(forest.crystals.length,0);
+ const crystal=makeRoom('crystal');build(crystal);
+ assert.equal(crystal.crystals.length,5);
+ assert.equal(crystal.hazards.length,0);
+});
