@@ -4,7 +4,7 @@
 const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 const mapCanvas=document.getElementById('mapCanvas'),mctx=mapCanvas.getContext('2d');
 const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,170,110,360,180,48,220],MAG_SIZE=[15,30,6,30,5,7,30,8,5,25,24,4,18];
-// Four projectile families are shared across all ten weapons. A weapon selects a family, not an individual sprite.
+// Seven projectile families are shared by the 13 weapons; each weapon selects one family.
 const PROJECTILE_FAMILIES={
  kinetic:{name:'STANDART',color:'#ffe2a1',trail:'#ff985b',radius:3,life:1.1},
  scatter:{name:'SAÇMALI',color:'#ffcd8c',trail:'#ec815a',radius:2,life:.58},
