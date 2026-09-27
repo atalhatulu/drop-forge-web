@@ -22,3 +22,6 @@
 
 /* Route choices and synergistic attachment details. */
 .routeLegend{font:700 11px/1.7 'Courier New',monospace;color:#b0e6cd!important;background:#0b1727;border:1px solid #344860;padding:9px 12px;text-align:left}.synergyNote{margin-top:9px;border-left:3px solid #a1e4b4;background:#183b38;color:#bbf6ce;padding:8px;font:800 11px/1.6 'Courier New',monospace}
+
+/* Long vertical cavern map: all rooms visible, unreached rooms disabled. */
+.mapPanel{width:min(970px,100%);max-height:94vh;overflow-y:auto}.mapPanel canvas{width:100%;height:auto;max-height:none;image-rendering:pixelated}.mapPanel .routeLegend{position:sticky;bottom:0;background:#0b1727eF}
