@@ -268,13 +268,9 @@ test('shock chain and burning effects are applied to enemy hits', () => {
 });
 
 test('merchant can sell an alternative for an occupied mod slot', () => {
- const source=readFileSync('src/game.js','utf8');
- const a=source.indexOf('function shopCanBuy(id)'),b=source.indexOf('function renderShop()',a);
- assert.ok(a>=0&&b>a);
+ const root={};new Function('window',readFileSync('src/shop-view.js','utf8'))(root);
  const player={gold:1000,kits:1,grenades:0,slots:[{weapon:0,mods:[undefined,undefined,'shockCore']}],weapon:0};
- const canBuy=new Function('game','SHOP_ITEMS','MODS','AMMO_MAX','masteryLevel',source.slice(a,b)+'return shopCanBuy;')(
- {player,stashedMods:[]},{shockCore:{price:175},burnCore:{price:205}},
- {shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},[240],()=>9);
+ const {shopCanBuy:canBuy}=root.DropForgeShopView.createShopView({getGame:()=>({player,stashedMods:[]}),getLegacy:()=>({marks:0}),getUnlockedWeapons:()=>new Set(),WEAPON_NAMES:[],PERMANENT_ITEMS:{},SHOP_ITEMS:{shockCore:{price:175},burnCore:{price:205}},MODS:{shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},AMMO_MAX:[240],masteryLevel:()=>9,$:()=>({})});
  assert.equal(canBuy('burnCore'),true);
  assert.equal(canBuy('shockCore'),false);
  player.gold=100;
