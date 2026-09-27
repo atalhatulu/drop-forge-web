@@ -21,12 +21,12 @@ Tarayıcıda çalışan 2D procedural arena shooter / roguelite.
 - `src/weapon-stats.js` — ateş, HUD ve atölyenin ortak silah istatistiği hesaplayıcısı
 - `src/enemy-ai.js` — düşman hareketi, kaçınma, destek ve saldırı davranışları
 - `src/shop-view.js` — mağaza uygunluk kontrolleri ve ürün listesinin sunumu
-- `src/game.js` — oynanış, harita, yapay zekâ, envanter, mağaza arayüzü ve sahne döngüsü
+- `src/game.js` — oyun durumunu, savaş ve envanter etkileşimlerini, mağaza satın alımlarını ve sahne döngüsünü koordine eden çalışma zamanı
 - `tests/smoke.test.mjs` — katalog ve ana oyun birlikte yüklenerek çalışan regresyon testleri
 
 `npm test` regresyon testlerini, `npm run check` tüm `src/*.js` giriş dosyalarının sözdizimini kontrol eder. Tarayıcıda yükleme sırası: `catalog.js` → `progression.js` → `abilities-data.js` → `shop-data.js` → `mod-presentation.js` → `world.js` → `weapon-stats.js` → `enemy-ai.js` → `shop-view.js` → `game.js`.
 
-Refaktör durumu: statik silah kataloğu, kalıcı kayıtlar, yetenek tanımları, mağaza katalogları, silaha özgü eklenti sunum metinleri ve arayüz stilleri ayrıldı. `game.js` halen büyük bir çalışma zamanı dosyasıdır; harita/oda üretimi ve silah istatistiği hesapları da ayrıldı; düşman davranışları da ayrıldı; sonraki adaylar mağaza arayüzü ve çizim sistemidir. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır.
+Refaktör durumu: kataloglar, kayıtlar, yetenek tanımları, eklenti sunumu, harita/oda üretimi, silah istatistikleri, düşman davranışları, mağaza uygunluk/sunumu ve CSS ayrı modüllerdedir. `game.js` hâlâ büyük bir çalışma zamanı dosyasıdır. Sonraki adaylar çizim sistemi, envanter/atölye etkileşimleri ve savaşın yan etkileridir. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır. Her ayrımda açılış/hub, mağaza ve silah etkileşimleri regresyon testleriyle korunmalıdır.
 
 ## Oynanış döngüsü
 
