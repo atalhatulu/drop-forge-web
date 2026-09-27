@@ -39,7 +39,7 @@ test('portals resume spawning after the concurrent enemy dies', () => {
 test('attachment stats reflect actual game modifiers', () => {
   const source = readFileSync('src/game.js', 'utf8');
   const start=source.indexOf('function weaponStats(slot)');
-  const end=source.indexOf('function statRow(',start);
+  const end=source.indexOf('function fire(){',start);
   assert.ok(start>=0 && end>start);
   const getStats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')([30],[.25],['kinetic'],[15]);
   const basic=getStats({weapon:0,mods:[]});
@@ -217,4 +217,56 @@ test('dropping or replacing a weapon preserves installed attachments', () => {
  assert.match(source,/mods:\[\.\.\.\(item\.mods\|\|\[\]\)\]/);
  assert.match(source,/old\.ammo,old\.reserve,old\.mods\|\|\[\]/);
  assert.match(source,/p\.reserve,p\.slots\[p\.activeSlot\]\?\.mods\|\|\[\]/);
+});
+
+test('twelve attachment alternatives are grouped three per slot', () => {
+ const source=readFileSync('src/game.js','utf8'),begin=source.indexOf('const MODS='),end=source.indexOf('const MOD_SLOT_NAMES=',begin);
+ assert.ok(begin>=0&&end>begin);
+ const mods=new Function(source.slice(begin,end)+'return MODS;')();
+ assert.equal(Object.keys(mods).length,12);
+ for(let slot=0;slot<4;slot++)assert.equal(Object.values(mods).filter(mod=>mod.slot===slot).length,3);
+ assert.ok(Object.values(mods).every(mod=>mod.level===[2,4,6,8][mod.slot]));
+ assert.match(source,/m\.slot===j/);
+ assert.match(source,/MODS\[next\]\.slot!==j/);
+ assert.match(source,/for\(const \[id,mod\] of Object\.entries\(MODS\)\)/);
+});
+test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
+ const source=readFileSync('src/game.js','utf8');
+ const start=source.indexOf('function weaponStats(slot)'),end=source.indexOf('function fire(){',start);
+ const stats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')([20,11],[.25,.4],['kinetic','scatter'],[15,6]);
+ const base=stats({weapon:1,mods:[]}),custom=stats({weapon:1,mods:['rapidBarrel','extendedMag','shockCore','lightGrip']});
+ assert.equal(base.shotDamage,55);
+ assert.equal(custom.damage,12);
+ assert.equal(custom.shotDamage,60);
+ assert.equal(custom.mag,9);
+ assert.equal(custom.baseMag,6);
+ assert.equal(custom.ammoSave,0);
+ assert.equal(custom.movementBonus,.25);
+ assert.ok(custom.fireRate>base.fireRate);
+ assert.ok(custom.dps>base.dps);
+ const saver=stats({weapon:0,mods:[undefined,'efficientMechanism']});
+ assert.equal(saver.ammoSave,.15);
+ const piercer=stats({weapon:0,mods:['pierceBarrel',undefined,'core']});
+ assert.equal(piercer.pierce,2);
+});
+test('shot simulation, reload, and live panels reuse the same weaponStats function', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/stForAmmo=weaponStats\(p\.slots\[p\.activeSlot\]\)/);
+ assert.match(source,/shootTimer=stForAmmo\.interval/);
+ assert.match(source,/p\.reloadDuration=st\.reload/);
+ assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
+ assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
+ assert.match(source,/weaponStatHTML\(\{weapon:id,mods:chosenForgeMods\(i\)\}\)/);
+ assert.match(source,/statRow\('TAM İSABET'/);
+ assert.match(source,/statRow\('TEORİK DPS'/);
+ assert.match(source,/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
+});
+test('shock chain and burning effects are applied to enemy hits', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/function applyProjectileModEffects\(room,e,b\)/);
+ assert.match(source,/b\.mods\?\.includes\('shockCore'\)/);
+ assert.match(source,/b\.mods\?\.includes\('burnCore'\)/);
+ assert.match(source,/applyProjectileModEffects\(room,e,bullet\)/);
+ assert.match(source,/applyProjectileModEffects\(room,e,b\)/);
+ assert.match(source,/if\(e\.burnTime>0\)/);
 });
