@@ -82,3 +82,9 @@ footer .hint{max-width:24%;overflow:hidden;text-overflow:ellipsis;white-space:no
 #loadoutContent{min-width:0}
 @media(max-width:850px){header{flex-wrap:wrap;height:auto}.top-right{width:100%;justify-content:space-between}.top-right button{padding:4px 6px}#game{max-height:calc(100dvh - 206px)}main{max-height:calc(100dvh - 203px)}footer .hint{display:none}.veil>.panel{max-height:min(calc(100dvh - 218px),calc(100% - 10px))}#pause .forgeGrid{grid-template-columns:repeat(2,minmax(0,1fr))}.shopItems{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:540px){#shell{padding:3px}footer{flex-wrap:wrap}#pause .seedInput,#pause .difficultyPicker{display:flex;width:100%;margin:3px 0}#pause .forgePreview{grid-template-columns:1fr}.shopItems{grid-template-columns:1fr}.veil>.panel{padding:8px}#ammoText{max-width:50vw}}
+
+/* Keep the canvas' visible rectangle 16:9. Avoid object-fit letterboxing (mouse aim uses its DOM box). */
+#game{display:block;width:min(100%,calc((100dvh - 169px)*16/9));height:auto;max-height:none;object-fit:fill;margin:0 auto;aspect-ratio:16/9}
+main{max-height:none;min-height:unset}
+@media(max-width:850px){#game{width:min(100%,calc((100dvh - 206px)*16/9));max-height:none}main{max-height:none}}
+@media(max-height:570px){#game{width:min(100%,calc((100dvh - 142px)*16/9))}header{min-height:35px}footer{min-height:37px}.inventory{padding:2px}}
