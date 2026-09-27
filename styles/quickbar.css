@@ -1,0 +1,28 @@
+/* Quick inventory slots, loaded after base game styles. */
+/* Compact, illustrated quick bar: one row of five Fortnite-style square slots. */
+.inventory{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:nowrap;min-height:94px;padding:7px 10px!important;margin:5px auto!important;max-width:800px;width:max-content;max-width:min(800px,100%);background:#121e39;border:2px solid #607ba6;box-shadow:inset 0 0 0 2px #263958,4px 4px 0 #090e22}
+.inventory .invLabel{font:900 10px 'Courier New',monospace;white-space:nowrap;color:#aac4e6;letter-spacing:.5px;max-width:62px}
+.inventory .invHelp{font:900 9px/1.4 'Courier New',monospace;color:#9cb1ce;max-width:110px}
+.inventorySlots{display:flex;align-items:center;justify-content:center;gap:6px;min-width:0}
+.inventory .invSlot{position:relative;display:flex;flex-direction:column;justify-content:space-between;align-items:stretch;flex:0 0 83px;width:83px;height:79px;min-width:0!important;margin:0;padding:4px!important;border:2px solid #6a83ae!important;border-radius:3px!important;background:#223553!important;box-shadow:inset 0 0 0 1px #344d74,2px 2px 0 #090e23!important;transition:background .12s,border-color .12s,transform .12s;overflow:hidden;gap:1px}
+.inventory .invSlot:hover{background:#304b6c!important;border-color:#dddbac!important;transform:translateY(-1px)}
+.inventory .invSlot.selected{background:#5e523f!important;border-color:#ffdb86!important;box-shadow:inset 0 0 0 2px #b68c45,0 0 0 2px #a67e45,2px 2px 0 #090e23!important}
+.inventory .invTop{display:flex;align-items:center;justify-content:space-between;gap:2px;font-size:9px;line-height:1;min-height:13px}
+.inventory .invKey{display:grid;place-items:center;width:17px;height:15px;color:#e9f5ff;background:#0e1c36;border:1px solid #6e88b4;font:900 10px monospace;flex-shrink:0}
+.inventory .invCount{color:#ffdd91;font:900 10px monospace;min-width:0;text-align:right}
+.inventory .invIconWrap{display:grid;place-items:center;flex:1;min-height:28px;background:#13233e;border:1px solid #41587b;overflow:hidden}
+.inventory .invIcon{width:62px;height:33px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 2px 0 #060b17)}
+.inventory .itemIcon{width:30px;height:30px;display:block}
+.inventory .invName{font:900 9px monospace;color:#fff1ce;line-height:1.2;text-overflow:ellipsis;overflow:hidden;white-space:nowrap;text-align:center}
+.inventory .invSlot.empty .invIconWrap{opacity:.53}.inventory .invSlot.empty .invName{color:#859dbb}
+.inventory .invSlot.utility .invIconWrap{background:#202d45}
+.inventory .invSlot:focus-visible{outline:3px solid #a4fff3;outline-offset:3px}
+footer{min-height:43px!important;flex-wrap:nowrap!important;padding:5px 8px!important;gap:10px!important}
+footer .stat{gap:5px!important}footer .hint{display:none!important}
+footer #ammoText{display:none!important}footer #weaponTypeLabel{display:none!important}footer #hudXp{display:none!important}
+footer .stat.ammo{flex:0 1 auto!important;min-width:0!important}
+#game{width:min(100%,calc((100dvh - 207px)*16/9));max-height:none}
+@media(max-width:900px){.inventory{gap:7px;min-height:90px}.inventory .invHelp{display:none}.inventory .invLabel{max-width:55px}.inventory .invSlot{flex-basis:76px;width:76px;height:76px}#game{width:min(100%,calc((100dvh - 222px)*16/9))}}
+@media(max-width:580px){.inventory{width:100%;padding:6px!important;min-height:84px;overflow-x:auto;justify-content:flex-start}.inventory .invLabel{display:none}.inventorySlots{gap:4px;min-width:max-content}.inventory .invSlot{flex:0 0 65px;width:65px;height:72px}.inventory .invIcon{width:52px;height:29px}.inventory .itemIcon{width:27px;height:27px}.inventory .invName{font-size:8px}footer{gap:6px!important;font-size:10px}footer .stat.ammo{display:none}#game{width:min(100%,calc((100dvh - 203px)*16/9))}}
+@media(max-height:570px){.inventory{min-height:70px;padding:3px!important}.inventory .invSlot{height:62px}.inventory .invIconWrap{min-height:21px}.inventory .invIcon{height:24px}.inventory .itemIcon{height:23px;width:23px}#game{width:min(100%,calc((100dvh - 169px)*16/9))}}
+
