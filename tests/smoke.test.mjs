@@ -130,7 +130,7 @@ test('four five-room regions form a boss-gated downward tree', () => {
   assert.equal(spine.length,21);
   assert.ok(rooms.length>45 && rooms.some(r=>r.branchEnd&&r.type==='treasure'));
   assert.ok(rooms.every(r=>r.biome===biomeNames[r.stage-1]));
-  assert.ok(rooms.every(r=>r.level===Math.min(3,r.stage)));
+  assert.ok(rooms.every(r=>r.level===Math.min(4,r.stage)));
   assert.ok(rooms.every(r=>Object.entries(r.links).every(([dir,id])=>rooms[id].links[back[dir]]===r.id)));
   assert.deepEqual(makeMap(seed).map(r=>[r.x,r.y,r.type,r.biome,r.level]),rooms.map(r=>[r.x,r.y,r.type,r.biome,r.level]));
   for(const boss of bosses)assert.equal(boss.links.down,spine[boss.y+1]?.id,'boss has the sole route to next biome');
@@ -170,9 +170,9 @@ test('ground healing works with a full bag without spending inventory', () => {
 });
 test('enemy level scales HP, attack damage and fire rate', () => {
  const source=readFileSync('src/game.js','utf8');
- assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
- assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
- assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
+ assert.match(source,/\[1,1\.42,1\.9,2\.35\]\[\(room\.level\|\|1\)-1\]/);
+ assert.match(source,/damageScale:\[1,1\.28,1\.58,1\.85\]/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82,\.74\]\[\(e\.level\|\|1\)-1\]/);
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
 
@@ -516,4 +516,16 @@ test('split stylesheets have clear non-overlapping responsibilities',()=>{
  assert.match(quickbar,/\.inventorySlots\{display:flex/);
  assert.match(workbench,/\.forgeAttachGrid\{display:grid/);
  assert.match(workbench,/#statusStrip\{display:flex/);
+});
+
+
+test('fourth region uses level four enemies with a separate shield pool', () => {
+ const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(world,/room\.level=Math\.min\(4,room\.stage\)/);
+ assert.match(game,/shield:\(room\.level===4&&type!=='boss'/);
+ assert.match(game,/const shieldAbsorbed=Math\.min\(e\.shield\|\|0,amount\)/);
+ assert.match(game,/e\.shield-=shieldAbsorbed/);
+ assert.match(game,/const segments=e\.type==='boss'\?1:Math\.min\(3,e\.level\|\|1\)/);
+ assert.match(game,/if\(e\.maxShield>0\)/);
+ assert.match(ai,/e\.shield=\(e\.shield\|\|0\)-absorbed/);
 });
