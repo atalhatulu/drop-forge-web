@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
   assert.match(html, /href="\.\/styles\/game\.css"/);
-  assert.match(html, /src="\.\/src\/catalog\.js"[^]*src="\.\/src\/game\.js"/);
+  assert.match(html, /src="\.\/src\/catalog\.js"[^]*src="\.\/src\/world\.js"[^]*src="\.\/src\/game\.js"/);
   assert.match(html, /href="\.\/styles\/quickbar\.css"/);
   assert.match(html, /href="\.\/styles\/workbench\.css"/);
   assert.match(html, /<canvas\b/i);
@@ -43,10 +43,8 @@ test('portals resume spawning after the concurrent enemy dies', () => {
 
 test('attachment stats reflect actual game modifiers', () => {
   const source = readFileSync('src/game.js', 'utf8');
-  const start=source.indexOf('function weaponStats(slot)');
-  const end=source.indexOf('function fire(){',start);
-  assert.ok(start>=0 && end>start);
-  const getStats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')([30],[.25],['kinetic'],[15]);
+  const root={};new Function('window',readFileSync('src/weapon-stats.js','utf8'))(root);
+  const getStats=root.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:[30],WEAPON_FIRE_RATES:[.25],WEAPON_PROJECTILES:['kinetic'],MAG_SIZE:[15]});
   const basic=getStats({weapon:0,mods:[]});
   const upgraded=getStats({weapon:0,mods:['barrel','loader','core','stabilizer']});
   assert.equal(basic.damage,30);
@@ -82,7 +80,7 @@ test('game script parses and combat systems are wired', () => {
   const source=readFileSync('src/game.js','utf8');
   assert.doesNotThrow(()=>new Function(source));
   assert.match(source,/function addFlow\(/);
-  assert.match(source,/e\.windup=e\.type==='boss'/);
+  assert.match(readFileSync('src/enemy-ai.js','utf8'),/e\.windup=e\.type==='boss'/);
   assert.match(source,/function hitGenerator\(/);
   assert.match(source,/function weaponStatHTML\(/);
   assert.match(source,/synergyNote/);
@@ -91,14 +89,8 @@ test('game script parses and combat systems are wired', () => {
 
 test('seeded map includes defense, hunt, and meaningful route rewards', () => {
   const source=readFileSync('src/game.js','utf8');
-  const rngStart=source.indexOf('function rng(seed)');
-  const rngEnd=source.indexOf('function announce(',rngStart);
-  const hashStart=source.indexOf('function hash2(');
-  const hashEnd=source.indexOf('const BIOMES=',hashStart);
-  const mapStart=source.indexOf('function makeMap(seed)');
-  const mapEnd=source.indexOf('function buildGame(seed)',mapStart);
-  assert.ok(rngStart>=0 && rngEnd>rngStart && hashStart>=0 && hashEnd>hashStart && mapStart>=0 && mapEnd>mapStart);
-  const mapFactory=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+  const root={};new Function('window',readFileSync('src/world.js','utf8'))(root);
+  const mapFactory=root.DropForgeWorld.createMapGenerator({W:1120,FLOOR:548,buildTerrain:()=>{},buildBiome:()=>{}});
   const back={left:'right',right:'left',up:'down',down:'up'};
   for(const seed of [1,42,97321,382711,12345678]){
     const rooms=mapFactory(seed);
@@ -128,10 +120,8 @@ test('game boot keeps chest helper in a function and populates both starter sele
 
 test('four five-room regions form a boss-gated downward tree', () => {
  const source=readFileSync('src/game.js','utf8');
- const rngStart=source.indexOf('function rng(seed)'),rngEnd=source.indexOf('function announce(',rngStart);
- const hashStart=source.indexOf('function hash2('),hashEnd=source.indexOf('const BIOMES=',hashStart);
- const mapStart=source.indexOf('function makeMap(seed)'),mapEnd=source.indexOf('function buildGame(seed)',mapStart);
- const makeMap=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+ const root={};new Function('window',readFileSync('src/world.js','utf8'))(root);
+ const makeMap=root.DropForgeWorld.createMapGenerator({W:1120,FLOOR:548,buildTerrain:()=>{},buildBiome:()=>{}});
  const biomeNames=['cave','forest','crystal','lava'],back={left:'right',right:'left',up:'down',down:'up'};
  for(const seed of [1,42,97321,382711,12345678,333333,999999]){
   const rooms=makeMap(seed),bosses=rooms.filter(r=>r.type==='boss'),spine=rooms.filter(r=>r.spine);
@@ -150,8 +140,8 @@ test('four five-room regions form a boss-gated downward tree', () => {
 test('victory is gated to fourth boss, and map reveals inactive nodes', () => {
   const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
   assert.match(source,/room\.type==='boss'&&room\.bossStage===4/);
-  assert.match(source,/known=room\.discovered\|\|room\.visited/);
-  assert.match(source,/known\?room\.type==='boss'/);
+  assert.match(readFileSync('src/map-view.js','utf8'),/known=room\.discovered\|\|room\.visited/);
+  assert.match(readFileSync('src/map-view.js','utf8'),/known\?room\.type==='boss'/);
   assert.match(html,/id="mapCanvas" width="900" height="920"/);
 });
 
@@ -182,7 +172,7 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/\[1,1\.42,1\.9\]\[\(room\.level\|\|1\)-1\]/);
  assert.match(source,/damageScale:\[1,1\.28,1\.58\]/);
- assert.match(source,/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/\[1,\.91,\.82\]\[\(e\.level\|\|1\)-1\]/);
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
 
@@ -211,7 +201,7 @@ test('gold and ammo enemy drops feed a real purchase panel', () => {
  assert.match(source,/if\(item\.kind==='gold'\)\{p\.gold\+=/);
  assert.match(source,/function buyShopItem\(id\)/);
  assert.match(source,/p\.gold-=price/);
- assert.match(source,/function shopCanBuy\(id\)/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/function shopCanBuy\(id\)/);
  assert.match(html,/id="shopOverlay"/);
  assert.match(html,/id="shopItems"/);
 });
@@ -238,8 +228,8 @@ test('twelve attachment alternatives are grouped three per slot', () => {
 });
 test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
  const source=readFileSync('src/game.js','utf8');
- const start=source.indexOf('function weaponStats(slot)'),end=source.indexOf('function fire(){',start);
- const stats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')([20,11],[.25,.4],['kinetic','scatter'],[15,6]);
+ const root={};new Function('window',readFileSync('src/weapon-stats.js','utf8'))(root);
+ const stats=root.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:[20,11],WEAPON_FIRE_RATES:[.25,.4],WEAPON_PROJECTILES:['kinetic','scatter'],MAG_SIZE:[15,6]});
  const base=stats({weapon:1,mods:[]}),custom=stats({weapon:1,mods:['rapidBarrel','extendedMag','shockCore','lightGrip']});
  assert.equal(base.shotDamage,55);
  assert.equal(custom.damage,12);
@@ -274,17 +264,13 @@ test('shock chain and burning effects are applied to enemy hits', () => {
  assert.match(source,/b\.mods\?\.includes\('burnCore'\)/);
  assert.match(source,/applyProjectileModEffects\(room,e,bullet\)/);
  assert.match(source,/applyProjectileModEffects\(room,e,b\)/);
- assert.match(source,/if\(e\.burnTime>0\)/);
+ assert.match(readFileSync('src/enemy-ai.js','utf8'),/if\(e\.burnTime>0\)/);
 });
 
 test('merchant can sell an alternative for an occupied mod slot', () => {
- const source=readFileSync('src/game.js','utf8');
- const a=source.indexOf('function shopCanBuy(id)'),b=source.indexOf('function renderShop()',a);
- assert.ok(a>=0&&b>a);
+ const root={};new Function('window',readFileSync('src/shop-view.js','utf8'))(root);
  const player={gold:1000,kits:1,grenades:0,slots:[{weapon:0,mods:[undefined,undefined,'shockCore']}],weapon:0};
- const canBuy=new Function('game','SHOP_ITEMS','MODS','AMMO_MAX','masteryLevel',source.slice(a,b)+'return shopCanBuy;')(
- {player,stashedMods:[]},{shockCore:{price:175},burnCore:{price:205}},
- {shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},[240],()=>9);
+ const {shopCanBuy:canBuy}=root.DropForgeShopView.createShopView({getGame:()=>({player,stashedMods:[]}),getLegacy:()=>({marks:0}),getUnlockedWeapons:()=>new Set(),WEAPON_NAMES:[],PERMANENT_ITEMS:{},SHOP_ITEMS:{shockCore:{price:175},burnCore:{price:205}},MODS:{shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},AMMO_MAX:[240],masteryLevel:()=>9,$:()=>({})});
  assert.equal(canBuy('burnCore'),true);
  assert.equal(canBuy('shockCore'),false);
  player.gold=100;
@@ -315,8 +301,8 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(js,/ctx\.setTransform\(canvas\.width\/W,0,0,canvas\.height\/H,0,0\)/);
  assert.match(css,/max-height:min\(calc\(100dvh - 182px\)/);
  assert.match(css,/object-fit:fill/);
- assert.match(js,/y:FLOOR\}:null;room\.wheel/);
- assert.match(js,/\?\{x:805,y:FLOOR-20,used:false/);
+ assert.match(readFileSync('src/world.js','utf8'),/y:FLOOR\}:null;room\.wheel/);
+ assert.match(readFileSync('src/world.js','utf8'),/\?\{x:805,y:FLOOR-20,used:false/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
  const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useWeaponAbility,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
@@ -333,7 +319,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -419,11 +405,9 @@ test('icon quick bar renders real weapon sprites, item art and readable counts',
 });
 
 test('weapon families give the same attachment different real combat effects',()=>{
- const source=readFileSync('src/game.js','utf8'),start=source.indexOf('function weaponStats(slot)'),end=source.indexOf('function fire(){',start);
- assert.ok(start>=0&&end>start);
+ const root={};new Function('window',readFileSync('src/weapon-stats.js','utf8'))(root);
  const types=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
- const stats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')(
- types.map(()=>25),types.map(()=>.2),types,types.map(()=>12));
+ const stats=root.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:types.map(()=>25),WEAPON_FIRE_RATES:types.map(()=>.2),WEAPON_PROJECTILES:types,MAG_SIZE:types.map(()=>12)});
  const kinetic=stats({weapon:0,mods:['pierceBarrel']});
  const scatter=stats({weapon:2,mods:['pierceBarrel']});
  const explosive=stats({weapon:11,mods:['pierceBarrel']});
@@ -454,13 +438,14 @@ test('attachment cards display class-specific names, precise deltas and are avai
  const html=readFileSync('index.html','utf8'),css=readProjectCss(),source=readFileSync('src/game.js','utf8');
  for(let i=1;i<=2;i++)assert.match(html,new RegExp('id="forgeEditorChoices'+i+'"'));
  assert.match(css,/\.forgeModChoice\.chosen/);
- assert.match(source,/function modNameForWeapon\(id,mod\)/);
+ assert.match(source,/window\.DropForgeModPresentation/);
  assert.match(source,/function modDiffHTML\(id,currentMods,mod,slot\)/);
  assert.match(source,/data-mod-choice=/);
  assert.match(source,/modEffectForWeapon\(w\.weapon,current\)/);
- const a=source.indexOf('function modNameForWeapon(id,mod)'),b=source.indexOf('function modTradeoff(',a);
- const naming=new Function('WEAPON_PROJECTILES','MODS','WEAPON_TYPES',source.slice(a,b)+'return {modNameForWeapon,modEffectForWeapon};')(
- ['kinetic','scatter','explosive','arc'],{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},['TABANCA','POMPALI','PATLAYICI','ARK']);
+ const presentation=readFileSync('src/mod-presentation.js','utf8');
+ const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
+ new Function('window',presentation)(root);
+ const naming=root.DropForgeModPresentation;
  assert.equal(naming.modNameForWeapon(0,'pierceBarrel'),'DELİCİ NAMLU');
  assert.equal(naming.modNameForWeapon(1,'pierceBarrel'),'DARALTICI NAMLU');
  assert.equal(naming.modNameForWeapon(2,'pierceBarrel'),'GENİŞ ETKİ NAMLU');
@@ -499,7 +484,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
  assert.match(source,/game\.player\.kills%5===0\)earnLegacy\(1\)/);
  assert.match(source,/e\.type==='boss'\)earnLegacy\(3\)/);
  assert.match(source,/room\.merchant=\{x:857,y:FLOOR,permanent:true\}/);
- assert.match(source,/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
  assert.match(source,/p\.gold-=price/);
  assert.match(source,/legacy\.marks-=price;saveLegacy\(\)/);
  assert.match(source,/grantMastery\(p\.weapon,90,true\)/);
@@ -509,7 +494,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);

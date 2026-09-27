@@ -22,16 +22,7 @@ function ensureForgeModSlots(){/* Four dedicated hidden selectors are part of th
 function forgeMods(n){return Array.from({length:4},(_,j)=>$(j===0?'forgeMod'+n:'forgeMod'+n+'_'+(j+1))).filter(Boolean);}
 function chosenForgeMods(n){const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);return forgeMods(n).map((el,j)=>j<limit&&MODS[el.value]?.slot===j&&MODS[el.value].level<=masteryLevel(weapon)?el.value:undefined);}
 // Weapon-specific explanations are generated from the same ballistics model as the shots.
-const MOD_ICONS={barrel:'◆',rapidBarrel:'»',pierceBarrel:'➜',loader:'↻',extendedMag:'▤',efficientMechanism:'∞',core:'◇',shockCore:'ϟ',burnCore:'♨',stabilizer:'◎',lightGrip:'↗',heavyGrip:'▣'};
-function modNameForWeapon(id,mod){const family=WEAPON_PROJECTILES[id];if(mod==='pierceBarrel')return family==='scatter'?'DARALTICI NAMLU':family==='explosive'?'GENİŞ ETKİ NAMLU':MODS[mod].name;if(mod==='core'&&['explosive','plasma','arc'].includes(family))return 'ALAN FAZ ÇEKİRDEĞİ';if(mod==='stabilizer'&&family==='scatter')return 'SAÇMA DENGELEYİCİ';if(mod==='heavyGrip')return 'SARSICI KABZA';return MODS[mod]?.name||'';}
-function modEffectForWeapon(id,mod){const family=WEAPON_PROJECTILES[id],type=WEAPON_TYPES[id],energy=['plasma','arc','explosive'].includes(family);
- const common={barrel:'Mermi başına %18 daha fazla hasar.',rapidBarrel:'%12 daha hızlı ateş; şarjör daha çabuk biter.',loader:'%20 daha hızlı ateş ve doldurma.',extendedMag:'%35 daha büyük şarjör; doldurma süresi değişmez.',efficientMechanism:'Her atışta %15 ihtimalle mermi harcamaz.',shockCore:'%12 daha fazla doğrudan hasar; 140 piksel içindeki ikinci düşmana %35 zincir hasarı.',burnCore:'İsabetten sonra 3 saniye yanma; her 0,5 saniyede mermi hasarının %12’si.',lightGrip:'Dash / kanca / duvar zıplaması sonrası hasar bonusu %13 yerine %25.',heavyGrip:'%35 daha az görsel geri tepme; düşman %50 daha uzun sarsılır.'};
- if(mod==='pierceBarrel')return family==='scatter'?'Saçma dağılımını %25 sıkılaştırır. Yakından tam isabet daha kolay.':family==='explosive'?'Patlama yarıçapını %20 büyütür; doğrudan delme vermez.':'+1 hedef delme; aynı atış başka bir düşmana da ulaşabilir.';
- if(mod==='core')return energy?'Mermi hızını %25, '+(family==='explosive'?'patlama':'enerji etki')+' alanını %25 artırır; delme eklemez.':'Mermi hızını %25 artırır ve +1 hedef delme sağlar.';
- if(mod==='stabilizer')return family==='scatter'?'Saçma dağılımını %42 azaltır; yakın mesafe daha tutarlı.':family==='explosive'?'Patlama alanını %25 büyütür; bu silah saçılma kullanıyorsa onu da azaltır.':'Mermi saçılmasını %30 azaltır.';
- return common[mod]||MODS[mod]?.description||'';
-}
-function modTradeoff(id,mod){const family=WEAPON_PROJECTILES[id];if(mod==='rapidBarrel'||mod==='loader')return 'Daha hızlı ateş → mühimmat daha hızlı tüketilir.';if(mod==='extendedMag')return 'Daha uzun seri; yedek mühimmat miktarı artmaz.';if(mod==='lightGrip')return 'Bonus yalnızca hareket penceresi aktifken geçerlidir.';if(mod==='pierceBarrel'&&family==='scatter')return 'Delme yerine dağılım sıkılaşır.';if(mod==='core'&&['explosive','plasma','arc'].includes(family))return 'Delme yerine etki alanı büyür.';return 'Ek kaynak maliyeti yok.';}
+const {MOD_ICONS,modNameForWeapon,modEffectForWeapon,modTradeoff}=window.DropForgeModPresentation;
 function modDiffHTML(id,currentMods,mod,slot){const before=[...currentMods],after=[...before];after[slot]=mod||undefined;const a=weaponStats({weapon:id,mods:before}),b=weaponStats({weapon:id,mods:after});
  const fields=[['HASAR',a.damage,b.damage,0],['ATIŞ/SN',a.fireRate,b.fireRate,2],['ŞARJÖR',a.mag,b.mag,0],['DELME',a.pierce,b.pierce,0],['ALAN',a.areaBonus*100,b.areaBonus*100,0],['SAÇILMA',a.spread*100,b.spread*100,0],['GERİ TEPME',a.recoil*100,b.recoil*100,0],['SARSILMA',a.staggerBonus*100,b.staggerBonus*100,0],['HAREKET +%',a.movementBonus*100,b.movementBonus*100,0]];
  return fields.filter(([,x,y])=>Math.abs(x-y)>.001).map(([name,x,y,prec])=>'<span class="modDelta"><span>'+name+'</span><b>'+x.toFixed(prec)+' → '+y.toFixed(prec)+'</b></span>').join('')||'<span class="modDelta"><span>ÖZEL ETKİ</span><b>'+((mod&&MODS[mod]?.name)||'BOŞ')+'</b></span>';
@@ -83,13 +74,12 @@ const $=id=>document.getElementById(id),keys=new Set();let mouse={x:W*.68,y:H*.5
 const WEAPON_SPRITES={};
 let game=null,paused=true,mapOpen=false,shopOpen=false,muted=false,last=0,announcement=0,announcementText='',shootTimer=0,shake=0,flash=0,flashTint='255,235,211',hitStop=0;const floats=[];
 // Weapons are generated as original pixel art below.
-function rng(seed){let a=(seed>>>0)||1;return()=>{a+=0x6D2B79F5;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return ((t^(t>>>14))>>>0)/4294967296;};}
-const ri=(r,a,b)=>a+Math.floor(r()*(b-a+1)),clamp=(x,a,b)=>Math.max(a,Math.min(b,x));
+const {rng,ri,clamp}=window.DropForgeWorld;
 function announce(s,t=2.1){announcementText=s;announcement=t;}
 // Four straight arena walls. No noise, solid-cell terrain or destructible rock.
 // The floor and all wall collisions use these same exact coordinates.
 const WALL=32;
-function hash2(ix,iy,seed){let h=(seed^Math.imul(ix,374761393)^Math.imul(iy,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;}
+const {hash2}=window.DropForgeWorld;
 const BIOMES={cave:{name:'TERK EDİLMİŞ MADEN',rock:['#3b485a','#455266','#4b596a','#36475a'],accent:'#92afc5',enemy:['red','blue','purple','healer'],color:'#b7a487'},forest:{name:'ZEHİRLİ ORMAN',rock:['#293f39','#345449','#3c6051','#283c35'],accent:'#8ee4a0',enemy:['red','blue','purple','healer'],color:'#8af0a0'},crystal:{name:'MOR KRİSTAL',rock:['#3e345c','#4b416d','#58487c','#342d50'],accent:'#cda5ff',enemy:['red','blue','purple','healer'],color:'#cda5ff'},lava:{name:'LAV ÇEKİRDEĞİ',rock:['#49342f','#6a3c34','#70483a','#33252b'],accent:'#ffa36a',enemy:['red','blue','purple','healer'],color:'#ff9c62'}};
 const VARIANTS={cave:{red:'KAZMACI',blue:'SONDAJ DRONE',purple:'DİNAMİTÇİ',healer:'TAMİRCİ',boss:'MADEN MUHAFIZI'},forest:{red:'KABUKLU TANK',blue:'SPOR BÖCEĞİ',purple:'MANTAR ŞAMANI',healer:'ORMAN ŞİFACISI',boss:'MANTAR ANA'},crystal:{red:'KRİSTAL GOLEM',blue:'PRİZMA NİŞANCI',purple:'YANKI BÜYÜCÜSÜ',healer:'REZONANS RUHU',boss:'REZONANS GOLEM'},lava:{red:'MAGMA DEVİ',blue:'KÜL RUHU',purple:'LAV BÜYÜCÜSÜ',healer:'KOR DESTEKÇİSİ',boss:'MAGMA LORDU'}};
 const ACCESSORIES={shield:{name:'KORUYUCU KALKAN',color:'#8bdfff',duration:5,cooldown:22},stim:{name:'ADRENALİN SERUMU',color:'#ffcd77',duration:7,cooldown:24},filter:{name:'SPOR FİLTRESİ',color:'#a3f3b3',duration:9,cooldown:25},coil:{name:'PRİZMA BOBİNİ',color:'#d6a4ff',duration:8,cooldown:27}};
@@ -103,33 +93,7 @@ function terrainCollision(room,obj,prevX,prevY){
  if(obj.y+obj.h>=FLOOR){obj.y=FLOOR-obj.h;if(obj.vy>0)obj.vy=0;obj.grounded=true;
   if(game&&obj===game.player){obj.jumps=0;obj.spin=0;obj.spinDuration=0;}}
 }
-function drawTerrain(room){
- const bi=BIOMES[room.biome],rock=bi.rock[0],edge=bi.accent;
- ctx.fillStyle=rock;
- ctx.fillRect(0,0,W,WALL);ctx.fillRect(0,FLOOR,W,H-FLOOR);
- ctx.fillRect(0,WALL,WALL,FLOOR-WALL);ctx.fillRect(W-WALL,WALL,WALL,FLOOR-WALL);
- // An opening is only visual; the room-transition logic controls entry.
- ctx.fillStyle=bi.rock[1];ctx.fillRect(WALL,FLOOR,W-2*WALL,7);
- ctx.fillStyle=edge;ctx.globalAlpha=.55;
- ctx.fillRect(WALL,FLOOR,W-2*WALL,3);
- ctx.fillRect(WALL,WALL,3,FLOOR-WALL);
- ctx.fillRect(W-WALL-3,WALL,3,FLOOR-WALL);
- ctx.fillRect(WALL,WALL,W-2*WALL,3);
- ctx.globalAlpha=1;
- // Side door frames are unobstructed even when doors are high up.
- for(const [side,door] of Object.entries(room.doors||{})){
-  if(side==='left'||side==='right'){
-   const dx=side==='left'?0:W-WALL;
-   ctx.fillStyle='#111824';ctx.fillRect(dx,door.y-42,WALL,84);
-   ctx.fillStyle=edge;ctx.globalAlpha=.65;
-   ctx.fillRect(side==='left'?WALL-3:W-WALL,door.y-44,3,88);ctx.globalAlpha=1;
-  }else if(side==='up'){
-   ctx.fillStyle='#111824';ctx.fillRect(door.x-47,0,94,WALL);
-  }else if(side==='down'){
-   ctx.fillStyle='#111824';ctx.fillRect(door.x-47,FLOOR,94,H-FLOOR);
-  }
- }
-}
+const {drawTerrain,drawBiome}=window.DropForgeBiomeView.createBiomeRenderer({ctx,W,H,FLOOR,WALL,BIOMES});
 function breakableSurface(room){return room.platforms;}
 function hitBreakable(room,b,amount){if(!b.alive)return;b.hp-=amount;b.hit=.18;burst(room,b.x+b.w/2,b.y+b.h/2,'#b7dbeb',8,165);floating(b.x+b.w/2,b.y-12,String(Math.ceil(Math.max(0,b.hp)))+' / '+b.maxHp,'#d6e9f4');shake=Math.max(shake,3);sound(135,.1,'sawtooth',.024);if(b.hp<=0){b.alive=false;burst(room,b.x+b.w/2,b.y+b.h/2,'#9bc9d7',23,240);dropPickup(room,Math.random()<.5?'health':'ammo',b.x+b.w/2,b.y,Math.random()<.08);announce('KAYA PARÇALANDI',1.1);}}
 function buildBiome(room){const rr=rng((room.cave.seed^0x5d8b4b3d)>>>0);room.hazards=[];room.crystals=[];
@@ -151,45 +115,7 @@ function explodeCrystal(room,c){if(!c.alive)return;c.alive=false;burst(room,c.x,
  const p=game.player;if(Math.hypot(p.x+p.w/2-c.x,p.y+p.h/2-c.y)<105)damagePlayer(13);
  for(const other of room.crystals)if(other.alive&&Math.hypot(other.x-c.x,other.y-c.y)<96){other.hp-=26;if(other.hp<=0)explodeCrystal(room,other);}
 }
-function drawBiome(room){if(room.biome==='forest'){
-  for(const h of room.hazards){const sway=Math.sin(room.time*2+h.phase)*4;
-   ctx.save();ctx.translate(h.x,h.y);ctx.shadowColor='#6ee596';ctx.shadowBlur=13;ctx.fillStyle='#274f36';ctx.fillRect(-3,-h.h+5,6,h.h+12);
-   for(let i=0;i<3;i++){ctx.fillStyle=i===1?'#9cfc8e':'#4cba75';ctx.beginPath();ctx.ellipse(sway+(i-1)*9,-h.h+9+i*7,12,6,(i-1)*.5,0,Math.PI*2);ctx.fill();}ctx.shadowBlur=0;ctx.restore();}
- }else if(room.biome==='lava'){for(const h of room.hazards){ctx.save();ctx.shadowColor='#ff733f';ctx.shadowBlur=22;ctx.fillStyle='#e85a2a';ctx.fillRect(h.x-h.w/2,h.y-h.h,h.w,h.h+13);ctx.fillStyle='#ffd283';ctx.fillRect(h.x-h.w/2+5,h.y-h.h+3,h.w-10,4);ctx.restore();}}else if(room.biome==='crystal')for(const c of room.crystals)if(c.alive){ctx.save();ctx.translate(c.x,c.y);ctx.shadowColor='#be6fff';ctx.shadowBlur=22;ctx.fillStyle=c.flash>0?'#fff5ff':'#a460ec';ctx.beginPath();ctx.moveTo(0,-c.r*1.65);ctx.lineTo(c.r*.83,-c.r*.2);ctx.lineTo(c.r*.5,c.r*.85);ctx.lineTo(-c.r*.62,c.r*.6);ctx.lineTo(-c.r,-c.r*.28);ctx.closePath();ctx.fill();ctx.strokeStyle='#e8baff';ctx.lineWidth=2;ctx.stroke();ctx.shadowBlur=0;ctx.restore();}}
-function makeMap(seed){const rand=rng(seed);const rooms=[],byPos=new Map();const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-function add(x,y,type){let room={id:rooms.length,x,y,type,links:{},discovered:false,visited:false,cleared:type==='start',enemies:[],projectiles:[],portals:[],particles:[],chest:null,loot:[],rocks:[],props:[],platforms:[],breakables:[],cave:null,time:0,arenaStarted:false};rooms.push(room);byPos.set(x+','+y,room);return room;}
-function connect(a,b){const dx=b.x-a.x,dy=b.y-a.y;let d=dx===1?'right':dx===-1?'left':dy===1?'down':'up',reverse={right:'left',left:'right',up:'down',down:'up'}[d];a.links[d]=b.id;b.links[reverse]=a.id;}
-// One downward spine, four five-room regions; branches are dead ends and cannot bypass bosses.
-const spine=[add(0,0,'start')];spine[0].spine=true;
-for(let depth=1;depth<=20;depth++){const boss=depth%5===0,type=boss?'boss':depth%5===3?'elite':'combat',room=add(0,depth,type);room.spine=true;room.bossStage=boss?depth/5:0;connect(spine[spine.length-1],room);spine.push(room);}
-for(let depth=1;depth<=19;depth++){if(depth%5===0)continue;const anchor=spine[depth],side=rand()<.5?-1:1,count=rand()<.68?2:1;for(let branch=0;branch<count;branch++){const dir=branch===0?side:-side,length=1+(rand()<.55?1:0)+(rand()<.15?1:0);let parent=anchor;for(let distance=1;distance<=length;distance++){const x=dir*distance,y=depth;if(byPos.has(x+','+y))break;const leaf=distance===length,room=add(x,y,leaf?'treasure':rand()<.16?'elite':'combat');room.branch=true;room.branchEnd=leaf;room.branchRoot=depth;connect(parent,room);parent=room;}}}
-for(const room of rooms){const rr=rng((seed^Math.imul(room.id+1,0x9e3779b1))>>>0);room.rocks=[];// Room silhouettes are seeded and vary between terraces, shafts, bridges and split caverns.
-const layouts=[
- // 18 ayrı siluet: basamaklar, yüksek kuleler, köprüler, çatallı yollar ve iniş kuyuları.
- [[92,461,174],[303,404,155],[504,347,149],[710,291,148],[902,231,140]], // yukarı çıkan merdiven
- [[90,229,151],[285,293,152],[495,353,145],[700,410,154],[906,464,142]], // aşağı inen merdiven
- [[105,453,166],[302,353,146],[486,249,150],[674,353,150],[869,453,159]], // merkezi zirve
- [[96,244,157],[301,351,148],[492,457,147],[684,349,153],[890,243,149]], // merkezi çukur
- [[91,461,159],[282,461,150],[464,393,165],[665,393,162],[865,461,164],[463,245,165]], // çift teras
- [[90,452,159],[285,361,139],[480,275,143],[670,362,146],[860,452,153],[479,164,142]], // yüksek kubbe
- [[110,455,155],[295,354,135],[480,451,158],[664,351,139],[851,456,160],[381,243,126],[739,240,127]], // kırık köprü
- [[97,469,176],[306,411,167],[530,411,168],[755,471,165],[435,293,134],[594,218,139]], // asma kat
- [[98,460,159],[290,386,147],[481,311,150],[676,388,150],[866,462,156],[350,208,147],[731,209,142]], // iki galeri
- [[104,452,155],[314,450,141],[513,344,142],[708,450,139],[902,452,145],[420,237,150],[620,231,150]], // sütunlar
- [[93,454,167],[286,346,151],[478,454,159],[681,346,151],[887,454,159],[378,226,147],[776,220,142]], // zikzak
- [[109,470,162],[312,404,154],[517,336,151],[722,404,154],[918,470,121],[307,216,145],[715,216,143]], // kaldera
- [[100,457,180],[333,457,174],[565,457,174],[803,457,173],[220,328,156],[744,328,157],[473,211,171]], // geniş arena
- [[102,459,174],[337,378,161],[578,295,157],[821,213,156],[103,253,155],[819,454,159]], // ters köşe
- [[93,281,158],[297,361,157],[503,453,157],[709,361,157],[914,281,142],[413,188,141],[619,186,141]], // U geçidi
- [[90,464,175],[285,398,158],[480,329,160],[676,262,157],[872,194,156],[101,206,156]], // uzun tırmanış
- [[102,452,165],[306,452,159],[518,452,156],[734,452,153],[928,452,119],[211,317,139],[474,239,151],[759,317,138]], // alçak labirent
- [[94,461,160],[284,387,148],[469,293,156],[674,387,148],[861,461,162],[149,207,141],[832,205,141]] // çatallı kanyon
-].map(pattern=>pattern.map(([x,y,w])=>({x,y,w})));
-room.stage=Math.min(4,Math.max(1,Math.ceil(Math.max(1,room.y)/5)));room.level=Math.min(3,room.stage);room.biome=['cave','forest','crystal','lava'][room.stage-1];room.cave={seed:(seed^Math.imul(room.id+1,0x45d9f3b))>>>0};room.layout=ri(rr,0,layouts.length-1);room.platforms=room.type==='boss'?[{x:112,y:430,w:210},{x:402,y:354,w:310},{x:797,y:430,w:210},{x:463,y:235,w:194}]:layouts[room.layout].map(p=>({...p,x:p.x+ri(rr,-8,8),y:p.y+ri(rr,-6,6)}));
-room.decor=Array.from({length:ri(rr,12,20)},()=>({x:ri(rr,65,W-65),y:ri(rr,90,FLOOR-85),r:ri(rr,5,18),kind:ri(rr,0,2)}));
-room.breakables=[];room.props=Array.from({length:room.type==='boss'?1:ri(rr,4,7)},(_,i)=>({x:ri(rr,120,970),y:FLOOR-30,w:30,h:30,hp:36,maxHp:36,alive:true,hit:0,kind:room.biome==='crystal'?'crystal':room.biome==='forest'?'crate':i%2?'crystal':'crate'}));}
-for(const room of rooms){room.doors={};for(const [d,id] of Object.entries(room.links)){const neighbor=rooms[id],pair=Math.min(room.id,id)*313+Math.max(room.id,id)*47,choice=(pair+seed)>>>0;room.doors[d]=(d==='left'||d==='right')?{x:d==='left'?49:W-49,y:[FLOOR-65,368,257][choice%3]}:{x:[285,560,830][choice%3],y:d==='up'?47:FLOOR-8};if((d==='left'||d==='right')&&room.doors[d].y<FLOOR-110){const x=d==='left'?39:W-222;room.platforms.push({x,y:room.doors[d].y+43,w:183});}}}
-for(const room of rooms){if(room.type==='combat'&&room.spine&&room.y===2)room.type='defense';else if(room.type==='combat'&&room.spine&&room.y===4)room.type='hunt';else if(room.type==='combat'&&room.id>4){const roll=hash2(room.x,room.y,seed+4517)%13;if(roll===0)room.type='defense';else if(roll===1)room.type='hunt';}room.reward=['ammo','xp','mod','health'][hash2(room.x,room.y,seed+671)%4];if(room.branchEnd)room.reward=['mod','xp','health'][hash2(room.x,room.y,seed+223)%3];buildTerrain(room);buildBiome(room);room.merchant=(room.type==='start'||room.type==='treasure'||(room.type==='boss'&&room.bossStage<4))?{x:room.type==='start'?880:room.type==='treasure'?930:890,y:FLOOR}:null;room.wheel=(room.type==='treasure'||(room.type==='combat'&&hash2(room.x,room.y,seed+9823)%5===0))?{x:805,y:FLOOR-20,used:false,spinTime:0}:null;}return rooms;}
+const makeMap=window.DropForgeWorld.createMapGenerator({W,FLOOR,buildTerrain,buildBiome});
 function buildGame(seed){const difficulty=$('difficulty').value in DIFFICULTY?$('difficulty').value:'normal',settings=DIFFICULTY[difficulty];const rooms=makeMap(seed),chosen=[Number($('forgeGun1').value),Number($('forgeGun2').value)],valid=chosen[0]!==chosen[1]&&chosen.every(n=>Number.isInteger(n)&&unlockedWeapons.has(n));if(!valid){announce('İKİ FARKLI SİLAH SEÇ');$('forgeGun2').focus();return;}const p={x:W/2,y:terrainSurfaceY(rooms[0],W/2,25)-44,w:25,h:43,vx:0,vy:0,hp:100+legacy.hp*10,maxHp:100+legacy.hp*10,grounded:true,jumps:0,grapple:null,grappleCooldown:0,face:1,dash:0,dashCooldown:0,invuln:0,weapon:chosen[0],ammo:MAG_SIZE[chosen[0]],reserve:Math.min(AMMO_MAX[chosen[0]],MAG_SIZE[chosen[0]]*7),slots:chosen.map((weapon,i)=>{const slot={weapon,ammo:MAG_SIZE[weapon],reserve:Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*7),mods:chosenForgeMods(i+1)};slot.ammo=weaponStats(slot).mag;return slot;}),activeSlot:0,abilityCooldowns:Array(13).fill(0),abilityBuff:null,kits:Math.min(5,1+legacy.kits),ammoBoxes:0,grenades:1,accessories:[null],moveCharge:0,wallSide:0,wallKick:0,reloadTime:0,reloadDuration:0,accessoryTime:0,activeAccessory:null,gold:0,kills:0,spin:0,spinDuration:0};p.ammo=p.slots[0].ammo;game={seed,rooms,difficulty,settings,roomId:0,player:p,transitionCooldown:.9,bullets:[],enemyBullets:[],grenades:[],stashedMods:[],flow:0,flowChain:0,flowTime:0,motionTrails:[],trailClock:0,elapsed:0,won:false,dead:false};rooms[0].visited=true;rooms[0].discovered=true;for(const id of Object.values(rooms[0].links))rooms[id].discovered=true;paused=false;mapOpen=false;shopOpen=false;loadoutOpen=false;$('shopOverlay').classList.add('hidden');$('gamePauseMenu').classList.add('hidden');$('loadoutOverlay').classList.add('hidden');$('levelToast').classList.add('hidden');$('pause').classList.add('hidden');$('pauseLoadoutBtn').classList.add('hidden');$('mapOverlay').classList.add('hidden');$('seedLabel').textContent='SEED '+seed+' · '+({easy:'KOLAY',normal:'NORMAL',hard:'ZOR'}[difficulty]);announce('BAŞLANGIÇ ATÖLYESİ · BUILD HAZIR · GEÇİTTEN MAĞARAYA GİR');updateHud();canvas.focus();}
 // Physical training hub: the existing starting room becomes a safe, playable staging area.
 function setupHub(){if(!game)return;const room=game.rooms[0],p=game.player;game.inHub=true;game.roomId=0;room.cleared=true;room.arenaStarted=true;room.training=true;room.platforms=[];room.props=[];room.breakables=[];room.hazards=[];room.crystals=[];room.rocks=[];room.decor=[];room.hubDoors=room.doors;room.doors={};room.merchant={x:857,y:FLOOR,permanent:true};room.wheel=null;room.dummy={x:616,y:FLOOR-92,w:46,h:92,hit:0,total:0,lastDamage:0};room.hubGate={x:1018,y:FLOOR-5};room.forge={x:310,y:FLOOR-4};p.x=110;p.y=FLOOR-p.h;p.vx=0;p.vy=0;p.grounded=true;p.invuln=0;p.hp=p.maxHp;game.enemyBullets=[];game.bullets=[];game.grenades=[];game.motionTrails=[];game.trailClock=0;paused=false;shopOpen=false;loadoutOpen=false;hubForgeOpen=false;helpOpen=false;$('helpOverlay').classList.add('hidden');$('pause').classList.add('hidden');$('gamePauseMenu').classList.add('hidden');$('shopOverlay').classList.add('hidden');$('loadoutOverlay').classList.add('hidden');$('seedInput').value=String(game.seed);$('seedLabel').textContent='HAZIRLIK ALANI · SEED '+game.seed;announce('HAZIRLIK ALANI · E: ATÖLYE · KUKLAYI TEST ET · E: PORTAL',4);updateHud();canvas.focus();}
@@ -266,18 +192,7 @@ function melee(){
 }
 
 // Single weapon stat model shared by shot simulation, reload and both build screens.
-function weaponStats(slot){const id=slot.weapon,mods=slot.mods||[],family=WEAPON_PROJECTILES[id],baseDamage=WEAPON_DAMAGE[id],baseInterval=WEAPON_FIRE_RATES[id],baseSpeed=family==='laser'?1750:family==='explosive'?670:family==='arc'?990:family==='scatter'?850:family==='pierce'?1220:family==='plasma'?760:930,baseMag=MAG_SIZE[id],pellets=family==='scatter'?5:1;
- const damage=Math.round(baseDamage*(mods.includes('barrel')?1.18:1)*(mods.includes('shockCore')?1.12:1));
- const interval=baseInterval*(mods.includes('loader')?.8:1)/(mods.includes('rapidBarrel')?1.12:1);
- const reload=.85*(mods.includes('loader')?.8:1);
- const mag=mods.includes('extendedMag')?Math.ceil(baseMag*1.35):baseMag;
- const speed=Math.round(baseSpeed*(mods.includes('core')?1.25:1));
- const areaFamily=['explosive','plasma','arc'].includes(family),pierce=(family==='pierce'?1:0)+(mods.includes('core')&&!areaFamily?1:0)+(mods.includes('pierceBarrel')&&!['scatter','explosive'].includes(family)?1:0);
- const spread=(mods.includes('stabilizer')?(family==='scatter'?.58:.7):1)*(mods.includes('pierceBarrel')&&family==='scatter'?.75:1);
- const recoil=mods.includes('heavyGrip')?.65:1,movementBonus=mods.includes('lightGrip')?.25:.13,ammoSave=mods.includes('efficientMechanism')?.15:0;
- const areaBonus=(mods.includes('core')&&areaFamily?1.25:1)*(mods.includes('pierceBarrel')&&family==='explosive'?1.20:1)*(mods.includes('stabilizer')&&family==='explosive'?1.25:1);const staggerBonus=mods.includes('heavyGrip')?1.5:1;
- return {areaBonus,staggerBonus,damage,baseDamage,fireRate:1/interval,baseFireRate:1/baseInterval,interval,reload,baseReload:.85,speed,baseSpeed,pierce,basePierce:family==='pierce'?1:0,spread,mag,baseMag,pellets,shotDamage:damage*pellets,baseShotDamage:baseDamage*pellets,dps:damage*pellets/interval,baseDps:baseDamage*pellets/baseInterval,recoil,movementBonus,ammoSave,mods,family};
-}
+const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE});
 // Each of the 13 guns owns its own right-click ability and cooldown.
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){
@@ -370,20 +285,7 @@ function floorPhysics(o,dt,platforms,prevX=o.x){
  o.x=clamp(o.x,24,W-24-o.w);
 }
 
-function enemyUpdate(e,room,dt){
- if(!e.alive)return;if(e.burnTime>0){e.burnTime=Math.max(0,e.burnTime-dt);e.burnTick=(e.burnTick||.5)-dt;if(e.burnTick<=0){e.burnTick+=.5;e.hp-=e.burnDamage||1;e.hit=.09;floating(e.x+e.w/2,e.y-12,'YANMA '+(e.burnDamage||1),'#ffb273');if(e.hp<=0){killEnemy(room,e);return;}}}const p=game.player;e.teleportCd=Math.max(0,e.teleportCd-dt);e.healPulse=Math.max(0,e.healPulse-dt);e.hit=Math.max(0,e.hit-dt);e.phase+=dt;e.markTime=Math.max(0,(e.markTime||0)-dt);e.dodgeCd=Math.max(0,e.dodgeCd-dt);e.dodgeTime=Math.max(0,e.dodgeTime-dt);e.stagger=Math.max(0,(e.stagger||0)-dt);e.aiJump-=dt;
- const targetGenerator=room.generator&&!room.generator.failed&&room.generator.time>0&&e.type==='red'?room.generator:null;const dx=(targetGenerator?targetGenerator.x:p.x+p.w/2)-(e.x+e.w/2),dy=(targetGenerator?targetGenerator.y-18:p.y+p.h/2)-(e.y+e.h/2),dist=Math.abs(dx);
- // Dodge only when a bullet is approaching: 10-second per-enemy cooldown.
- if(e.dodgeCd<=0){const threat=game.bullets.find(b=>{const rx=e.x+e.w/2-b.x,ry=e.y+e.h/2-b.y,closing=(rx*b.vx+ry*b.vy)>0,d=Math.hypot(rx,ry),cross=Math.abs(rx*b.vy-ry*b.vx)/(Math.hypot(b.vx,b.vy)||1);return closing&&d<200&&cross<e.h*.65+20;});if(threat){e.dodgeCd=10;e.dodgeTime=.26;e.dodgeDir=Math.random()<.5?-1:1;if(e.type==='blue')e.vy=-e.dodgeDir*310;else {e.vy=-470;e.grounded=false;}burst(room,e.x+e.w/2,e.y+e.h/2,'#bdefff',12,185);floating(e.x,e.y-22,'DODGE','#a3edff');sound(630,.08,'triangle',.018);}}
- if(e.type==='healer'){const allies=room.enemies.filter(a=>a.alive&&a!==e&&a.hp<a.maxHp);if(e.healPulse<=0&&allies.length){allies.sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y));const ally=allies[0];if(Math.hypot(ally.x-e.x,ally.y-e.y)<335){ally.hp=Math.min(ally.maxHp,ally.hp+14);e.healPulse=1.25;burst(room,ally.x+ally.w/2,ally.y,'#81ffbd',7,100);floating(ally.x,ally.y-22,'+14','#82ffbc');}}if(e.hit>0&&e.teleportCd<=0){e.x=clamp(e.x+(dx>0?-245:245),70,W-e.w-70);e.y=FLOOR-e.h;e.vy=-300;e.teleportCd=5;burst(room,e.x,e.y,'#8bffcb',17,150);floating(e.x,e.y-15,'IŞINLANDI','#8bffcb');}}
- if(e.type==='blue'){e.vx=e.stagger>0?e.knockVx:e.dodgeTime>0?e.dodgeDir*410:clamp(dx*1.15,-155,155);e.x=clamp(e.x+e.vx*dt,45,W-e.w-45);e.y=clamp(e.y+(e.dodgeTime>0?e.vy:Math.sin(e.phase*3)*25+clamp(p.y-115-e.y,-75,75))*dt,90,470);}
- else {if(e.stagger>0)e.vx=e.knockVx;else if(e.dodgeTime>0)e.vx=e.dodgeDir*410;else if(e.type==='boss')e.vx=dist>95?Math.sign(dx)*73:0;else if(e.type==='red')e.vx=dist>39?Math.sign(dx)*86:0;else if(e.type==='healer')e.vx=dist<320?-Math.sign(dx)*140:dist>435?Math.sign(dx)*65:0;else e.vx=dist<185?-Math.sign(dx)*83:dist>280?Math.sign(dx)*58:0;
- if(e.aiJump<=0&&e.grounded&&e.type!=='boss'){const higher=room.platforms.filter(q=>q.y<e.y+e.h-45&&q.y>e.y+e.h-225&&Math.abs(q.x+q.w/2-(e.x+e.w/2))<235);if(higher.length&&(Math.random()<.58||p.y+80<e.y)){const target=higher[Math.floor(Math.random()*higher.length)];e.aiTarget=target.x+target.w/2;e.vy=-Math.sqrt(2*GRAVITY*Math.max(95,e.y+e.h-target.y+12));e.grounded=false;e.aiJump=2+Math.random()*2.5;burst(room,e.x+e.w/2,e.y+e.h,'#b6c6d7',5,80);}else e.aiJump=1.2+Math.random()*1.4;}
- if(e.aiTarget!==null&&!e.grounded)e.vx=clamp(e.aiTarget-(e.x+e.w/2),-1,1)*Math.max(Math.abs(e.vx),155);
- const enemyOldX=e.x;e.x+=e.vx*dt;floorPhysics(e,dt,room.platforms,enemyOldX);if(e.grounded)e.aiTarget=null;}
- e.fire-=dt;if(e.windup>0){e.windup=Math.max(0,e.windup-dt);if(e.windup===0){const ax=p.x+p.w/2-(e.x+e.w/2),ay=p.y+p.h/2-(e.y+e.h/2),ad=Math.hypot(ax,ay),aim=Math.atan2(ay,ax);if(e.type==='red'){if(ad<90&&Math.abs(ay)<65)damagePlayer(Math.round(21*(e.damageScale||1)));if(room.generator&&!room.generator.failed&&e.x<room.generator.x+70&&e.x+e.w>room.generator.x-70)hitGenerator(room,10);}else{const n=e.type==='boss'?3:1,speed=e.type==='blue'?390:e.type==='purple'?270:340,g=e.aimGenerator&&room.generator&&!room.generator.failed&&room.generator.time>0?room.generator:null,fireAngle=g?Math.atan2(g.y-18-(e.y+e.h/2),g.x-(e.x+e.w/2)):aim;for(let i=0;i<n;i++){const a=fireAngle+(i-(n-1)/2)*.23;game.enemyBullets.push({x:e.x+e.w/2,y:e.y+e.h/2,vx:Math.cos(a)*speed,vy:Math.sin(a)*speed,life:3,damage:Math.round((e.type==='boss'?14:e.type==='blue'?11:7)*(e.damageScale||1)),color:e.biome==='lava'?'#ff8748':e.biome==='forest'?'#93d879':e.biome==='crystal'?'#cd9dff':e.type==='blue'?'#69bdff':'#c787fa',effect:e.biome});}}e.fire=(e.type==='red'?1.05:e.type==='boss'?1.0:e.type==='blue'?1.8:2.35)*[1,.91,.82][(e.level||1)-1];}}else if(e.fire<=0){if(e.type==='healer')e.fire=1.4;else{e.aimGenerator=!!(room.generator&&!room.generator.failed&&room.generator.time>0&&e.type!=='boss'&&Math.floor(room.time*2+e.phase)%2===0);e.windup=e.type==='boss'?.62:e.type==='purple'?.6:e.type==='blue'?.46:.36;e.fire=1;}}
- if(collideRect(p,e))damagePlayer(Math.round((e.type==='red'?20:e.type==='boss'?23:8)*(e.damageScale||1)));
-}
+const enemyUpdate=window.DropForgeEnemyAI.createEnemyUpdate({getGame:()=>game,W,FLOOR,GRAVITY,clamp,burst,floating,sound,killEnemy,floorPhysics,damagePlayer,hitGenerator,collideRect});
 function update(dt){
  if(!game||paused||mapOpen||game.dead||game.won)return;dt=Math.min(dt,.035);game.elapsed+=dt;
  if(levelToastTime>0){levelToastTime=Math.max(0,levelToastTime-dt);if(levelToastTime===0)$('levelToast').classList.add('hidden');}shootTimer=Math.max(0,shootTimer-dt);for(let i=0;i<(game.player.abilityCooldowns?.length||0);i++)game.player.abilityCooldowns[i]=Math.max(0,game.player.abilityCooldowns[i]-dt);if(game.player.abilityBuff){game.player.abilityBuff.time-=dt;if(game.player.abilityBuff.time<=0)game.player.abilityBuff=null;}if(game.player.kick>0)game.player.kick=Math.max(0,game.player.kick-dt);if(game?.player?.reloadTime>0){const rp=game.player;rp.reloadTime=Math.max(0,rp.reloadTime-dt);if(rp.reloadTime===0)finishReload(rp);}announcement=Math.max(0,announcement-dt);if(game.player.emptyWarningTime>0)game.player.emptyWarningTime=Math.max(0,game.player.emptyWarningTime-dt);shake=Math.max(0,shake-dt*18);flash=Math.max(0,flash-dt);if(game.muzzleFlash)game.muzzleFlash.time=Math.max(0,game.muzzleFlash.time-dt);if(game.slash)game.slash.time-=dt;for(const trail of game.motionTrails||[])trail.life-=dt;game.motionTrails=(game.motionTrails||[]).filter(trail=>trail.life>0);for(const t of floats){t.y-=37*dt;t.life-=dt;}for(let i=floats.length-1;i>=0;i--)if(floats[i].life<=0)floats.splice(i,1);
@@ -514,19 +416,7 @@ function interact(){
  }
 }
 const {SHOP_ITEMS,PERMANENT_ITEMS}=window.DropForgeShopData;
-function nextLockedWeapon(){return WEAPON_NAMES.findIndex((_,id)=>!unlockedWeapons.has(id));}
-function shopCanBuy(id){
- if(!game)return false;
- if(game.inHub){const item=PERMANENT_ITEMS[id];if(!item||legacy.marks<item.price)return false;if(id==='hp')return legacy.hp<3;if(id==='kits')return legacy.kits<2;if(id==='ammo')return legacy.ammo<3;if(id==='xp')return game.player.weapon!==null&&masteryLevel(game.player.weapon)<10;if(id==='unlock')return nextLockedWeapon()>=0;return false;}
- if(!SHOP_ITEMS[id])return false;const p=game.player;if(p.gold<SHOP_ITEMS[id].price)return false;if(id==='kit')return p.kits<5;if(id==='grenade')return p.grenades<3;if(id==='ammo')return p.slots.some(q=>q&&q.reserve<AMMO_MAX[q.weapon]);if(MODS[id])return game.stashedMods.length<12&&p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[id].level&&q.mods[MODS[id].slot]!==id);return false;
-}
-function renderShop(){
- if(!game)return;const permanent=!!game.inHub,items=permanent?PERMANENT_ITEMS:SHOP_ITEMS;
- $('shopTitle').textContent=permanent?'◆ KALICI GELİŞİM USTASI':'◆ SEFER TÜCCARI';
- $('shopDescription').textContent=permanent?'Kalıcı Çekirdek kazan: her 5 düşmanda +1, boss başına +3. Alınan gelişimler ölümden sonra korunur.':'Buradan aldığın kitler, mühimmat, bombalar ve eklentiler yalnızca bu sefere aittir. Takılı eklenti sadece takıldığı silahı etkiler; çantadaki parçayı uyumlu başka bir silaha taşıyabilirsin.';
- $('shopGold').textContent=permanent?'KALICI ÇEKİRDEK · '+legacy.marks:'SEFER ALTINI · '+game.player.gold;
- $('shopItems').innerHTML=Object.entries(items).map(([id,item])=>'<button class="shopItem" data-shop-item="'+id+'" '+(shopCanBuy(id)?'':'disabled')+'><span class="shopName">'+item.name+'</span><span class="shopDescription">'+item.description+'</span><strong>◆ '+item.price+(permanent?' ÇEKİRDEK':' ALTIN')+'</strong></button>').join('');
-}
+const {nextLockedWeapon,shopCanBuy,renderShop}=window.DropForgeShopView.createShopView({getGame:()=>game,getLegacy:()=>legacy,getUnlockedWeapons:()=>unlockedWeapons,WEAPON_NAMES,PERMANENT_ITEMS,SHOP_ITEMS,AMMO_MAX,MODS,masteryLevel,$});
 function openShop(){if(!game||shopOpen||loadoutOpen||hubForgeOpen||helpOpen||mapOpen||paused||!currentRoom().cleared||!currentRoom().merchant||game.dead||game.won)return;shopOpen=true;paused=true;mouse.down=false;$('shopOverlay').classList.remove('hidden');renderShop();}
 function closeShop(){if(!shopOpen)return;shopOpen=false;$('shopOverlay').classList.add('hidden');if(game&&!game.dead&&!game.won){paused=false;canvas.focus();}}
 function buyShopItem(id){
@@ -690,27 +580,7 @@ $('closeHelp').onclick=closeHelp;
 function togglePause(){if(helpOpen){closeHelp();return;}if(shopOpen){closeShop();return;}if(loadoutOpen){toggleLoadout(false);return;}if(hubForgeOpen){closeHubForge();return;}if(!game||game.dead||game.won)return;paused=!paused;$('gamePauseMenu').classList.toggle('hidden',!paused);if(!paused)canvas.focus();}
 function returnToMainMenu(){if(!game)return;saveSlot();const seed=game.seed;buildGame(seed);setupHub();}
 $('resumeGameBtn').onclick=()=>togglePause();$('muteGameBtn').onclick=()=>{muted=!muted;$('muteGameBtn').textContent=muted?'♪ SESİ AÇ':'♪ SESİ KAPAT';};$('mainMenuBtn').onclick=()=>returnToMainMenu();
-function drawMap(){
- if(!game)return;const c=mctx,w=mapCanvas.width,h=mapCanvas.height;c.clearRect(0,0,w,h);c.fillStyle='#0b111c';c.fillRect(0,0,w,h);
- const rooms=game.rooms,minX=Math.min(...rooms.map(r=>r.x)),maxX=Math.max(...rooms.map(r=>r.x)),minY=Math.min(...rooms.map(r=>r.y)),maxY=Math.max(...rooms.map(r=>r.y));
- const step=Math.min(55,(w-125)/(maxX-minX+1),(h-130)/(maxY-minY+1)),ox=(w-(maxX-minX)*step)/2+20,oy=71+(h-130-(maxY-minY)*step)/2;
- const zoneColors=['rgba(98,149,184,.16)','rgba(82,164,106,.16)','rgba(159,101,203,.16)','rgba(211,109,76,.16)'];
- const zoneNames=['I · TERK EDİLMİŞ MADEN · LV 1','II · ZEHİRLİ ORMAN · LV 2','III · MOR KRİSTAL · LV 3','IV · LAV ÇEKİRDEĞİ · LV 3'];
- for(let zone=0;zone<4;zone++){const top=zone===0?oy-step*.6:oy+step*(zone*5+.5),bottom=oy+step*(zone*5+5.5);
- c.fillStyle=zoneColors[zone];c.fillRect(5,top,w-10,bottom-top);
- c.fillStyle=['#b2d9f4','#aeefbb','#dec0ff','#ffc39f'][zone];c.font='bold 11px monospace';c.textAlign='left';c.fillText(zoneNames[zone],11,top+17);
- if(zone<3){c.strokeStyle='#a5bcd8';c.lineWidth=1;c.setLineDash([6,5]);c.beginPath();c.moveTo(7,bottom);c.lineTo(w-7,bottom);c.stroke();c.setLineDash([]);}
- }
- for(const room of rooms)for(const id of Object.values(room.links)){const next=rooms[id];if(id<=room.id)continue;c.strokeStyle=room.visited&&next.visited?'#6dcfae':'#354355';c.lineWidth=room.visited&&next.visited?4:2;c.setLineDash(room.visited&&next.visited?[]:[4,4]);c.beginPath();c.moveTo(ox+(room.x-minX)*step,oy+(room.y-minY)*step);c.lineTo(ox+(next.x-minX)*step,oy+(next.y-minY)*step);c.stroke();}c.setLineDash([]);
- for(const room of rooms){const x=ox+(room.x-minX)*step,y=oy+(room.y-minY)*step,sz=Math.max(12,step*(room.type==='boss'?1.18:.67)),known=room.discovered||room.visited,active=room.id===game.roomId;
- c.fillStyle=active?'#fff0a4':room.cleared?'#66c89e':room.visited?'#75a8d9':known?(room.type==='boss'?'#a77ebc':'#647c99'):'#263244';
- c.fillRect(x-sz/2,y-sz/2,sz,sz);c.strokeStyle=active?'#ffffff':known?'#afc0d2':'#47546a';c.lineWidth=active?3:1;c.strokeRect(x-sz/2,y-sz/2,sz,sz);
- c.textAlign='center';c.fillStyle=active?'#182235':known?'#f6f0de':'#79899b';c.font='bold '+Math.max(8,Math.min(12,step*.25))+'px monospace';
- c.fillText(active?'●':known?room.type==='boss'?'B'+room.bossStage:({defense:'K',hunt:'H',elite:'E',treasure:'T'})[room.type]||'·':'?',x,y+4);
- if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C'})[room.reward]||'',x,y+sz/2+10);}
- }
- c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
-}
+const drawMap=window.DropForgeMapView.createMapRenderer({getGame:()=>game,mapCanvas,mctx});
 function roomRouteLabel(r){const reward={ammo:'MERMİ',mod:'EKLENTİ',xp:'SİLAH XP',health:'SAĞLIK'}[r.reward]||'ÖDÜL';return roomName(r)+(r.type==='boss'?' '+r.bossStage+'/4':r.type==='start'?'':' · '+reward)+' · '+BIOMES[r.biome].name+' · LV '+r.level;}
 function setMap(on){if(shopOpen||hubForgeOpen||helpOpen||!game||game.dead||game.won)return;mapOpen=on;$('mapOverlay').classList.toggle('hidden',!on);if(on){drawMap();const routes=Object.entries(currentRoom().links).map(([dir,id])=>({dir,room:game.rooms[id]}));const names={left:'SOL',right:'SAĞ',up:'YUKARI',down:'AŞAĞI'};$('mapRoute').textContent=routes.length?'KOMŞU ODALAR: '+routes.map(({dir,room})=>names[dir]+' → '+roomRouteLabel(room)).join('  |  '):'Bu odadan başka geçiş bulunmuyor.';}else canvas.focus();}
 window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright','shift','tab'].includes(k))e.preventDefault();if(k==='m'){if(shopOpen||hubForgeOpen||helpOpen)return;if(!e.repeat)setMap(!mapOpen);return;}if(k==='escape'){if(!e.repeat){if(helpOpen)closeHelp();else if(hubForgeOpen)closeHubForge();else if(shopOpen)closeShop();else if(loadoutOpen)toggleLoadout(false);else if(mapOpen)setMap(false);else togglePause();}return;}if(k==='tab'||k==='i'){if(shopOpen||hubForgeOpen||helpOpen)return;if(!e.repeat)toggleLoadout();return;}if(k==='e'&&!e.repeat)interact();if(['1','2'].includes(k)&&!e.repeat&&game&&!paused)equipSlot(Number(k)-1);if((k==='3'||k==='h')&&!e.repeat)useKit();if(k==='4'&&!e.repeat)throwGrenade();if(k==='5'&&!e.repeat)useAccessory(0);if(k==='q'&&!e.repeat)dropHeldWeapon();if(k==='r'&&!e.repeat)reloadWeapon();if(k==='v'&&!e.repeat&&game&&!paused&&!mapOpen&&shootTimer<=0)melee();if(!game||paused||mapOpen)return;const p=game.player;if((k===' '||k==='w'||k==='arrowup')&&!e.repeat&&(p.jumps<2||p.wallSide)){if(p.grapple)p.grapple=null;if(p.wallSide){p.vy=-575;p.vx=-p.wallSide*390;p.face=-p.wallSide;p.wallKick=.19;p.moveCharge=1.6;p.wallSide=0;p.jumps=1;p.grounded=false;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#a9e6ff',13,145);sound(470,.1,'triangle');keys.add(k);return;}if(p.jumps===1){p.spin=0;p.spinDuration=.49;burst(currentRoom(),p.x+p.w/2,p.y+p.h,'#9adffd',11,160);sound(590,.1,'triangle');}p.vy=p.jumps===0?-580:-515;p.jumps++;p.grounded=false;p.dash=0;}if(k==='shift'&&!e.repeat&&p.dashCooldown<=0){burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#98e8ff',14,185);sound(310,.13,'sawtooth');p.grapple=null;p.dash=.16;p.moveCharge=1.6;p.dashCooldown=.95;p.invuln=Math.max(p.invuln,.19);game.motionTrails.push({x:p.x+p.w/2,y:p.y+p.h/2,face:p.face,life:.32,maxLife:.32,kind:'dash'});shake=Math.max(shake,3);}if(k==='z'&&!e.repeat){grappleToggle();sound(720,.07,'triangle',.014);}keys.add(k);});window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();mouse.down=false;if(game&&!paused&&!game.dead&&!game.won)togglePause();});canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height;});canvas.addEventListener('mousedown',e=>{if(e.button===0){mouse.down=true;canvas.focus();}else if(e.button===2){e.preventDefault();canvas.focus();useWeaponAbility();}});window.addEventListener('mouseup',()=>mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());$('mapBtn').onclick=()=>setMap(!mapOpen);$('closeMap').onclick=()=>setMap(false);$('helpBtn').onclick=openHelp;$('startBtn').onclick=()=>{if(game?.inHub&&hubForgeOpen){applyHubForge();return;}let raw=$('seedInput').value.trim(),seed=raw?Number(raw):Math.floor(Math.random()*2147483647);if(!Number.isSafeInteger(seed)||seed<1)seed=382711;buildGame(seed>>>0);setupHub();};
