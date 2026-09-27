@@ -120,3 +120,36 @@ test('game boot keeps chest helper in a function and populates both starter sele
   assert.match(source,/for\(let i=1;i<=2;i\+\+\)\$\('forgeGun'\+i\)\.onchange=refreshForge/);
   assert.match(source,/refreshForge\(\);\s*function weaponName/);
 });
+
+test('expanded map is 41 rooms, downward, with three ordered bosses', () => {
+  const source=readFileSync('src/game.js','utf8');
+  const rngStart=source.indexOf('function rng(seed)'),rngEnd=source.indexOf('function announce(',rngStart);
+  const hashStart=source.indexOf('function hash2('),hashEnd=source.indexOf('const BIOMES=',hashStart);
+  const mapStart=source.indexOf('function makeMap(seed)'),mapEnd=source.indexOf('function buildGame(seed)',mapStart);
+  const makeMap=new Function('W','FLOOR',source.slice(rngStart,rngEnd)+source.slice(hashStart,hashEnd)+'function buildTerrain(r){}function buildBiome(r){}'+source.slice(mapStart,mapEnd)+'return makeMap;')(1120,548);
+  for(const seed of [1,42,97321,382711,12345678,333333,999999]){
+    const rooms=makeMap(seed),bosses=rooms.filter(r=>r.type==='boss');
+    assert.equal(rooms.length,41);
+    assert.deepEqual(bosses.map(r=>r.bossStage),[1,2,3]);
+    assert.ok(bosses[0].y<bosses[1].y && bosses[1].y<bosses[2].y);
+    assert.equal(Math.min(...rooms.map(r=>r.y)),0);
+  }
+});
+
+test('boss victory is gated to stage three, and map reveals inactive nodes', () => {
+  const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
+  assert.match(source,/room\.type==='boss'&&room\.bossStage===3/);
+  assert.match(source,/const known=room\.discovered\|\|room\.visited/);
+  assert.match(source,/known\?room\.type==='boss'/);
+  assert.match(html,/id="mapCanvas" width="900" height="920"/);
+});
+
+test('automatic kit and three-hit melee have visible feedback', () => {
+  const source=readFileSync('src/game.js','utf8');
+  assert.match(source,/p\.hp>0&&p\.hp<p\.maxHp\*\.5&&p\.kits>0\)useKit\(true\)/);
+  assert.match(source,/function useKit\(auto=false\)/);
+  assert.match(source,/p\.meleeCombo=now</);
+  assert.match(source,/combo===3\?57/);
+  assert.match(source,/game\.muzzleFlash=/);
+  assert.match(source,/flashTint='255,95,109'/);
+});
