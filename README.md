@@ -70,7 +70,7 @@ Dash görüntü izleri ve enerji çemberi bırakır; kancanın hattı animasyonl
 - Düşmanlar garantili **altın**, sıkça **yedek mühimmat** ve bazen sağlık kiti bırakır. Altın yaklaşınca karaktere çekilir. Boss'lar daha çok altın, garantili mühimmat ve sağlık kiti bırakır.
 - Odaların ödülleri, sandıklar ve çarklar eklenti, ustalık XP'si, silah, sağlık, mühimmat veya bomba kazandırabilir. Özel eşya türleri: Koruyucu Kalkan, Adrenalin Serumu, Spor Filtresi ve Prizma Bobini.
 - Tüccarda altınla mühimmat, sağlık kiti, bomba, aktif silah için ustalık XP'si ve ustalığı açılmış 12 eklenti alternatifinden biri alınabilir.
-- **Kalıcı ilerleme:** Tarayıcıya kaydedilen silah ustalığı XP/seviyeleri ve şans çarkında kalıcı olarak açılan silahlar. Ustalık 2/4/6/8 seviyeleri yeni eklenti yuvası açar.
+- **Kalıcı ilerleme:** Tarayıcıya kaydedilen silah ustalığı XP/seviyeleri (tüccardan satın alınan XP dâhil) ve şans çarkında kalıcı olarak açılan silahlar. Ustalık 2/4/6/8 seviyeleri yeni eklenti yuvası açar.
 - **Yalnızca o sefere ait:** Altın, satın alınan ve takılı/çantadaki eklentiler, iki silahın mevcut mühimmatı, ganimet, sağlık kitleri, bombalar, özel eşyalar ve oda ilerlemesi. Ölümden sonra hazırlık alanında yeni sefer sıfır kaynakla başlar; ustalık ve açılmış silahlar kalır.
 
 Her ölüm otomatik güç artışı getirmez: gerçek savaşta silah XP'si kazanıldıysa veya yeni silah açıldıysa sonraki sefere daha fazla seçenekle başlanır. Şu anda kalıcı altın, karakter seviyesi veya ayrı bir kalıcı yetenek ağacı yoktur. Kalıcı kayıtlar tarayıcının yerel depolamasındadır; başka cihazlara otomatik taşınmaz.
