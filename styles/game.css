@@ -202,3 +202,12 @@ footer .stat.ammo{flex:0 1 auto!important;min-width:0!important}
 
 /* TAB inventory also explains why a chosen mod behaves differently on this weapon. */
 .modRow .modBagHint{display:block;width:100%;color:#a9c6db;font:10px/1.45 'Courier New',monospace;margin-top:4px;white-space:normal}
+
+/* Arena status belongs BELOW the game, not on top of the cave/depth label. */
+#statusStrip{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:31px;padding:5px 12px;background:#11243a;border:1px solid #5b7a9a;border-top:2px solid #8facbe;color:#f2e0ac;font:900 10px/1.35 'Courier New',monospace;letter-spacing:.25px}
+#statusMessage{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#abilityStatus{color:#baf4e3;flex:none;text-align:right;max-width:44%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#game{width:min(100%,calc((100dvh - 239px)*16/9))}
+@media(max-width:900px){#game{width:min(100%,calc((100dvh - 253px)*16/9))}}
+@media(max-width:580px){#statusStrip{padding:4px 6px;gap:6px;min-height:30px;font-size:9px}#abilityStatus{max-width:43%}#game{width:min(100%,calc((100dvh - 234px)*16/9))}}
+@media(max-height:570px){#game{width:min(100%,calc((100dvh - 202px)*16/9))}}
