@@ -399,3 +399,52 @@ test('icon quick bar renders real weapon sprites, item art and readable counts',
  assert.match(source,/function setupHub\(\)/);
  assert.match(source,/function enterExpedition\(\)/);
 });
+
+test('weapon families give the same attachment different real combat effects',()=>{
+ const source=readFileSync('src/game.js','utf8'),start=source.indexOf('function weaponStats(slot)'),end=source.indexOf('function fire(){',start);
+ assert.ok(start>=0&&end>start);
+ const types=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
+ const stats=new Function('WEAPON_DAMAGE','WEAPON_FIRE_RATES','WEAPON_PROJECTILES','MAG_SIZE',source.slice(start,end)+'return weaponStats;')(
+ types.map(()=>25),types.map(()=>.2),types,types.map(()=>12));
+ const kinetic=stats({weapon:0,mods:['pierceBarrel']});
+ const scatter=stats({weapon:2,mods:['pierceBarrel']});
+ const explosive=stats({weapon:11,mods:['pierceBarrel']});
+ assert.equal(kinetic.pierce,1,'kinetic receives real extra penetration');
+ assert.equal(scatter.pierce,0,'shotgun receives tightening instead of piercing');
+ assert.equal(scatter.spread,.75);
+ assert.equal(explosive.pierce,0,'explosive receives blast radius instead of piercing');
+ assert.equal(explosive.areaBonus,1.2);
+ assert.equal(stats({weapon:12,mods:[undefined,undefined,'core']}).areaBonus,1.25);
+ assert.equal(stats({weapon:12,mods:[undefined,undefined,'core']}).pierce,0);
+ assert.equal(stats({weapon:0,mods:[undefined,undefined,'core']}).pierce,1);
+ assert.equal(stats({weapon:2,mods:[undefined,undefined,undefined,'stabilizer']}).spread,.58);
+ const grip=stats({weapon:0,mods:[undefined,undefined,undefined,'heavyGrip']});
+ assert.equal(grip.spread,1,'heavy grip no longer copies stabilizer');
+ assert.equal(grip.recoil,.65);assert.equal(grip.staggerBonus,1.5);
+});
+test('each shot can trigger at most one shock chain across shotgun pellets',()=>{
+ const source=readFileSync('src/game.js','utf8'),start=source.indexOf('function applyProjectileModEffects(room,e,b)'),end=source.indexOf('function projectileImpact(',start);
+ const hits=[],apply=new Function('burst','hitEnemy',source.slice(start,end)+'return applyProjectileModEffects;')(
+ ()=>{},(room,target,damage)=>hits.push({target,damage}));
+ const e={alive:true,x:100,y:100,w:20,h:20},other={alive:true,x:145,y:100,w:20,h:20},room={enemies:[e,other]},shotEffects={shockRemaining:1};
+ for(let pellet=0;pellet<5;pellet++)apply(room,e,{mods:['shockCore'],weapon:2,damage:50,hitTargets:new Set([e]),shotEffects});
+ assert.equal(hits.length,1);
+ assert.equal(hits[0].damage,18);
+ assert.equal(shotEffects.shockRemaining,0);
+});
+test('attachment cards display class-specific names, precise deltas and are available in the TAB inventory',()=>{
+ const html=readFileSync('index.html','utf8'),css=readFileSync('styles/game.css','utf8'),source=readFileSync('src/game.js','utf8');
+ for(let i=1;i<=2;i++)assert.match(html,new RegExp('id="forgeEditorChoices'+i+'"'));
+ assert.match(css,/\.forgeModChoice\.chosen/);
+ assert.match(source,/function modNameForWeapon\(id,mod\)/);
+ assert.match(source,/function modDiffHTML\(id,currentMods,mod,slot\)/);
+ assert.match(source,/data-mod-choice=/);
+ assert.match(source,/modEffectForWeapon\(w\.weapon,current\)/);
+ const a=source.indexOf('function modNameForWeapon(id,mod)'),b=source.indexOf('function modTradeoff(',a);
+ const naming=new Function('WEAPON_PROJECTILES','MODS','WEAPON_TYPES',source.slice(a,b)+'return {modNameForWeapon,modEffectForWeapon};')(
+ ['kinetic','scatter','explosive','arc'],{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},['TABANCA','POMPALI','PATLAYICI','ARK']);
+ assert.equal(naming.modNameForWeapon(0,'pierceBarrel'),'DELİCİ NAMLU');
+ assert.equal(naming.modNameForWeapon(1,'pierceBarrel'),'DARALTICI NAMLU');
+ assert.equal(naming.modNameForWeapon(2,'pierceBarrel'),'GENİŞ ETKİ NAMLU');
+ assert.match(naming.modEffectForWeapon(2,'core'),/alanını %25/);
+});
