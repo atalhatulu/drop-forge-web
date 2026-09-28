@@ -209,8 +209,8 @@ const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,W
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
- const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK · '+legacy.marks+' ÇEKİRDEK':'DERİNLİK '+room.y)+' · '+($('hint').textContent||'E ATÖLYE · PORTAL');if(status&&status.textContent!==message)status.textContent=message;
- if(ability){const spec=WEAPON_ABILITIES[p.weapon],value=spec?'SAĞ TIK · '+spec.name+' · '+(abilityCooldown(p,p.weapon)>0?abilityCooldown(p,p.weapon).toFixed(1)+'sn':'HAZIR'):'SAĞ TIK · SİLAH YOK';if(ability.textContent!==value)ability.textContent=value;ability.title=spec?.description||'Silahın yok';}
+ const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y);if(status&&status.textContent!==message)status.textContent=message;
+ if(ability){const spec=WEAPON_ABILITIES[p.weapon],value=spec?'↗ '+spec.name+' · '+(abilityCooldown(p,p.weapon)>0?abilityCooldown(p,p.weapon).toFixed(1)+'sn':'✓'):'↗ —';if(ability.textContent!==value)ability.textContent=value;ability.title=spec?.description||'Silahın yok';}
 }
 function specialBullet(p,st,angle,{family=st.family,damage=st.damage,speed=st.speed,pierces=st.pierce,areaBonus=st.areaBonus,impactStagger=st.staggerBonus,shotEffects={shockRemaining:1}}={}){
  const spec=PROJECTILE_FAMILIES[family];game.bullets.push({x:p.x+p.w/2,y:p.y+p.h*.45,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,life:spec.life,damage:Math.max(1,Math.round(damage)),mods:[...(p.slots[p.activeSlot].mods||[])],shotEffects,weapon:p.weapon,family,pierces,impactStagger,areaBonus,hitTargets:new Set(),radius:spec.radius});
@@ -601,7 +601,7 @@ function updateHud(){
  $('hpFill').style.width=(p.hp/p.maxHp*100)+'%';$('hpText').textContent=p.hp+' / '+p.maxHp;
  $('weaponLabel').textContent=weaponName(p.weapon);$('weaponTypeLabel').textContent=weaponType(p.weapon);
  $('hudXp').innerHTML=p.weapon===null?'':xpBarHTML(p.weapon);
- $('ammoText').textContent=p.weapon===null?'—':p.ammo+' / '+p.reserve+' · UST '+masteryLevel(p.weapon);
+ $('ammoText').textContent=p.weapon===null?'—':p.ammo+' / '+p.reserve;
  $('roomLabel').textContent=game.inHub?'HAZIRLIK':String(game.roomId+1).padStart(2,'0')+' / '+game.rooms.length;
  $('goldLabel').textContent=p.gold;
  updateStatusStrip();
