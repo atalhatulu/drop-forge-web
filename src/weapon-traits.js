@@ -59,6 +59,14 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c}){
  }
  return result;
 }
+function snapshot(slot){
+ const s=slot?.traits;
+ return s?{main:s.main||null,supports:[...s.supports],levels:{...s.levels}}:null;
+}
+function hasInvestment(slot){
+ const s=slot?.traits;
+ return !!s&&(!!s.main||s.supports.length>0);
+}
 function loadoutHTML(slot){
  const s=state(slot);
  const row=(id,label)=>{
@@ -69,5 +77,5 @@ function loadoutHTML(slot){
  return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
   row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
 }
-root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,choices,loadoutHTML});
+root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,choices,snapshot,hasInvestment,loadoutHTML});
 })(window);
