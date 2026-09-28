@@ -192,3 +192,7 @@ Silah ustalığı artık yalnızca eklenti yuvası açmaz. Seviye 1'den 10'a kad
 ## Yenilenen silah siluetleri
 
 13 silahın piksel çizimleri ailelerine göre farklı namlu, gövde, şarjör ve enerji parçası siluetleriyle yenilendi. Aynı aileyi paylaşan modellerde farklı vurgu işaretleri bulunur. Atölye ve HUD aynı sprite kaynağını kullanır.
+
+## Başlangıç alanı savaş test ekranı
+
+Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman türünü (çağırıcılar ve boss dâhil), LV1–LV4 seviyesini ve 1–4 düşman sayısını seçebilirsin. Test sırasında XP, altın, ganimet veya çekirdek kazanılmaz; can sıfırlanmak yerine yenilenir. Aynı düğmeden testi bitirince önceki silahların ve konumun geri gelir. Test, gerçek sefere başlamadan farklı silah ve düşman kombinasyonlarını denemek içindir.
