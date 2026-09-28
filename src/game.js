@@ -51,7 +51,7 @@ const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
 let forgeFocusGun=1,forgeEditors={1:-1,2:-1};
 function ensureForgeModSlots(){/* Four dedicated hidden selectors are part of the workbench markup. */}
 function forgeMods(n){return Array.from({length:4},(_,j)=>$(j===0?'forgeMod'+n:'forgeMod'+n+'_'+(j+1))).filter(Boolean);}
-function chosenForgeMods(n){const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);return forgeMods(n).map((el,j)=>j<limit&&MODS[el.value]?.slot===j?el.value:undefined);}
+function chosenForgeMods(n){const weapon=Number($('forgeGun'+n).value),limit=masteryLevel(weapon)>=5?1:0;return forgeMods(n).map((el,j)=>j<limit&&MODS[el.value]?.slot===j?el.value:undefined);}
 function setForgeBuild(n,mods){const weapon=Number($('forgeGun'+n).value),limit=getModSlots(weapon);for(const [j,selector] of forgeMods(n).entries()){const mod=mods?.[j];selector.value=j<limit&&MODS[mod]?.slot===j?mod:'';}forgeEditors[n]=-1;syncForgeWorkbench();renderForgePreview();}
 function restoreForgeBuild(n){const weapon=Number($('forgeGun'+n).value);if(savedBuilds[weapon])setForgeBuild(n,savedBuilds[weapon]);}
 function recommendedForgeBuild(weapon){const family=WEAPON_PROJECTILES[weapon],preferred=family==='explosive'?['pierceBarrel','extendedMag','core','stabilizer']:['barrel','loader','shockCore','stabilizer'];return preferred.map((mod,j)=>MODS[mod]?.slot===j?mod:null);}
