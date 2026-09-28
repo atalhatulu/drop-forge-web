@@ -836,3 +836,14 @@ test('enemy ammo pickups match the equipped projectile family and refill matchin
  for(const family of ['kinetic','scatter','pierce','plasma','laser','explosive','arc'])assert.match(loot,new RegExp(family+':\\['));
  assert.match(loot,/if\(item\.kind==='ammo'\)/);
 });
+
+
+test('gold vault and assault room events have distinct generation and gameplay', () => {
+ const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8'),map=readFileSync('src/map-view.js','utf8');
+ assert.match(world,/room\.type='assault'/);assert.match(world,/room\.type='gold'/);
+ assert.match(world,/room\.type==='gold'\?'gold'/);
+ assert.match(game,/room\.type==='treasure'\|\|room\.type==='gold'/);
+ assert.match(game,/ALTIN KASASI · ALTINLARI TOPLA/);
+ assert.match(game,/room\.type==='assault'\?3:2/);
+ assert.match(map,/gold:'\$',assault:'!'/);
+});
