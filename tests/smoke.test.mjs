@@ -397,6 +397,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const dropped=combat.loot.find(item=>item.weapon===original.weapon&&item!==modded);
  assert.ok(dropped,'previous weapon is returned to the ground');
  assert.deepEqual(dropped.mods,originalMods,'old attachments are not deleted');
+ assert.deepEqual(dropped.traits??null,original.traits??null,'the dropped gun keeps its run traits and their levels');
  assert.equal(dropped.ammo,originalAmmo);assert.equal(dropped.reserve,originalReserve,'old ammunition is not deleted');
  const count=combat.loot.length;api.interact();
  assert.equal(combat.loot.length,count,'stale second interaction cannot remove another item');
