@@ -51,7 +51,7 @@ test('boss and wheel share ownership, capacity and slot validation',()=>{
  assert.ok(options.includes('barrel')&&options.includes('loader'));
  assert.equal(availableRewardMods(rewardArgs({bag:Array(12).fill('owned')})).length,0);
  assert.equal(availableRewardMods(rewardArgs({level:1})).length,0);
- assert.deepEqual(availableRewardMods(rewardArgs({level:2,slotMods:['barrel']})),[]);
+ assert.equal(availableRewardMods(rewardArgs({level:2,slotMods:['barrel']})).length,0);
  const choice=selectBossAttachment(rewardArgs(),123,2,()=>1);
  assert.equal(choice,options[1]);
  assert.equal(selectBossAttachment(rewardArgs({bag:Array(12).fill('owned')}),123,2,()=>1),null);
