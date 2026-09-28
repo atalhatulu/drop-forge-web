@@ -434,14 +434,15 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.kits,3);assert.equal(player.grenades,3);
  // Explicit ammo families should survive the drop generator and stay until a matching gun can use them.
  const ammo=ground('ammo','kinetic');
+ const caps=[240,420,140,360,100,120,400,170,110,360,180,48,220];
  const relevant=player.slots.filter(slot=>slot&&win.DropForgeCatalog.WEAPON_PROJECTILES[slot.weapon]==='kinetic');
  assert.ok(relevant.length>0,'starting weapon can accept kinetic ammunition');
- for(const slot of relevant)slot.reserve=AMMO_MAX[slot.weapon];
- player.reserve=AMMO_MAX[player.weapon];tick();
+ for(const slot of relevant)slot.reserve=caps[slot.weapon];
+ player.reserve=caps[player.weapon];tick();
  assert.ok(combat.loot.includes(ammo),'maxed reserves leave the ammo pickup on the floor');
  relevant[0].reserve-=15;if(player.slots[player.activeSlot]===relevant[0])player.reserve=relevant[0].reserve;
  tick();assert.ok(!combat.loot.includes(ammo),'ammo can be collected after reserve space opens');
- assert.ok(relevant[0].reserve>AMMO_MAX[relevant[0].weapon]-15,'ammo is added to the matching reserve');
+ assert.ok(relevant[0].reserve>caps[relevant[0].weapon]-15,'ammo is added to the matching reserve');
  player.accessories=[{type:'shield',cooldown:0},{type:'stim',cooldown:0}];
  const artifact=ground('artifact','coil');tick();
  assert.ok(combat.loot.includes(artifact),'a full accessory bar does not consume the pickup');
