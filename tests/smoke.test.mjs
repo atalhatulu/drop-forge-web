@@ -669,7 +669,7 @@ test('wheel displays a timed animated 2D reward screen', () => {
  assert.match(game,/w\.spinAngle\+=\(15\*\(1-progress\)\*\*2\+1\.2\)\*dt/);
  assert.match(game,/function drawWheelScreen\(w\)/);
  assert.match(game,/ctx\.arc\(0,0,r,a,b\)/);
- assert.match(game,/drawGameHud\(\);drawWheelScreen\(room\.wheel\)/);
+ assert.match(game,/drawGameHud\(\);drawNearbyMinimap\(room\);drawWheelScreen\(room\.wheel\)/);
  assert.match(game,/w\.resultLabel=announcementText;w\.resultTime=1\.8/);
 });
 
@@ -715,4 +715,14 @@ test('wheel screen stays hidden until E starts the wheel and closes after result
  assert.match(game,/if\(near\?\.nearWheel\)\{spinWheel\(room\);return;\}/);
  assert.match(game,/w\.spinTime=2\.4;w\.spinDuration=2\.4/);
  assert.match(game,/room\.wheel\.resultTime=Math\.max\(0,room\.wheel\.resultTime-dt\)/);
+});
+
+
+test('nearby minimap appears outside combat and only shows adjacent rooms', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/function drawNearbyMinimap\(room\)/);
+ assert.match(game,/room\.arenaStarted&&!room\.cleared/);
+ assert.match(game,/room\.enemies\.some\(e=>e\.alive\)/);
+ assert.match(game,/Object\.values\(room\.links\)\.map\(id=>game\.rooms\[id\]\)/);
+ assert.match(game,/drawGameHud\(\);drawNearbyMinimap\(room\);drawWheelScreen\(room\.wheel\)/);
 });
