@@ -792,7 +792,7 @@ test('wheel displays a timed animated 2D reward screen', () => {
 
 test('chests offer varied useful fallback when mods or accessories are exhausted', () => {
  const game=readFileSync('src/game.js','utf8');
- assert.match(readFileSync('src/chest-rewards.js','utf8'),/!stashedMods\.includes\(id\)/);
+ assert.match(readFileSync('src/chest-rewards.js','utf8'),/!player\.chipBag\.includes\(id\)/);
  assert.match(game,/function openChestUpgradeModal\(choices\)/);
  assert.match(game,/dropPickup\(room,'health',room\.chest\.x/);
  assert.match(game,/dropPickup\(room,'ammo',room\.chest\.x/);
