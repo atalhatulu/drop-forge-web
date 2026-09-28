@@ -69,3 +69,31 @@ test('boss claim recomputes the offer and only consumes a valid rewarded attachm
  assert.match(source,/id!==valid\)return;game\.stashedMods\.push\(id\)/);
  assert.match(source,/game\.pendingBossReward=null;renderLoadout\(\)/);
 });
+
+test('three-choice chest never offers the same gear twice when random gear repeats',()=>{
+ const player={slots:[{weapon:0,mods:[null,null,null,null]}],gearBag:[],chipBag:[],chips:{}};
+ const pieces=[
+  {id:'bastion-helmet',set:'bastion',slot:'helmet'},
+  {id:'runner-boots',set:'runner',slot:'boots'},
+  {id:'arsenal-belt',set:'arsenal',slot:'belt'}
+ ];
+ let calls=0;
+ const result=selectChestChoices({
+  room:{x:2,y:3,id:7,type:'combat',reward:'mod'},player,
+  stashedMods:[],modCatalog:{},chipCatalog:{},masteryLevel:()=>1,modSlotUnlocked:()=>false,
+  seed:17,hash:()=>0,randomGear:()=>pieces[Math.min(2,Math.floor(calls++/2))],random:()=>0
+ });
+ assert.equal(result.length,3);
+ assert.equal(new Set(result.map(item=>item.id)).size,3);
+ assert.ok(result.every(item=>item.type==='gear'));
+});
+test('three-choice chest returns fewer options rather than repeating an unavailable gear selection',()=>{
+ const player={slots:[],gearBag:[],chipBag:[],chips:{}};
+ const result=selectChestChoices({
+  room:{x:2,y:3,id:7,type:'combat',reward:'mod'},player,
+  stashedMods:[],modCatalog:{},chipCatalog:{},masteryLevel:()=>1,modSlotUnlocked:()=>false,
+  seed:17,hash:()=>0,randomGear:()=>({id:'bastion-helmet',set:'bastion',slot:'helmet'}),random:()=>0
+ });
+ assert.equal(result.length,1);
+ assert.equal(result[0].id,'bastion-helmet');
+});
