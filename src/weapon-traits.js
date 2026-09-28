@@ -42,16 +42,16 @@ function grant(slot,id,projectiles){
  slot.traits=next;
  return true;
 }
-function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c}){
+function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c,kind=null}){
  const pool=[];
  for(let i=0;i<slots.length;i++)for(const id of Object.keys(TRAITS)){
   const slot=slots[i];if(!canGrant(slot,id,projectiles))continue;
-  const t=TRAITS[id],s=state(slot);
+  const t=TRAITS[id],s=state(slot);if(kind&&t.kind!==kind)continue;
   pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:!!s.levels[id],replace:t.kind==='main'&&!!s.main&&s.main!==id});
  }
  const result=[],used=new Set();
- for(const kind of ['main','support',null]){
-  const candidates=pool.filter(item=>(!kind||item.kind===kind)&&!used.has(item.id));
+ for(const phase of (kind?[kind,null,null]:['main','support',null])){
+  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.id));
   if(!candidates.length)continue;
   const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length;
   const item=candidates[index];
