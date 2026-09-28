@@ -212,3 +212,7 @@ Düşmanlardan ve oda ödüllerinden çıkan mühimmat, düşüş anında eldeki
 ## Yeni oda olayları: Altın Kasası ve Saldırı Odası
 
 Bazı yan kollar, anahtar odalarını değiştirmeden **Altın Kasası** olur: savaş yerine seviyeye göre artan iki altın ödülü ve sandık içerir. Bazı normal savaş odaları **Saldırı Odası**na dönüşür: başlangıçta daha fazla düşman, iki yerine üç portal ve artırılmış oda düşman kapasitesi vardır. Haritada Altın Kasası `$`, Saldırı Odası `!` simgesiyle görünür. Şans çarkı yalnızca seyrek hazine odalarında kalır.
+
+## Giysi setleri ve karakter build'leri
+
+Kask, zırh, eldiven, kemer ve bot için dört seferlik set bulunur: **Kale** (parça başına +20 maksimum can; tam sette +80), **Rüzgâr** (parça başına %5,5 hız; tam sette +%15), **Cephanelik** (parça başına %5,5 mühimmat tasarrufu; tam sette +%20), **Kanbağı** (parça başına öldürmede +3 can; tam sette +12). Giysiler düşmanlardan, bosslardan, hazine sandıklarından ve çarktan düşebilir. TAB çantasında en fazla 20 yedek giysi tutulur; aynı yuvadaki eski parça çantaya geri döner. Giysiler seferliktir, silah ustalığı kalıcı kalır.
