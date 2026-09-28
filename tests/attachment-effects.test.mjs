@@ -25,7 +25,7 @@ test('mirror barrel ricochets once at the arena boundary',()=>{
 });
 test('attachment effects, gear pickup and chest failure handling are wired into gameplay',()=>{
  const g=readFileSync('src/game.js','utf8');
- assert.match(g,/shotProfile\(p\.slots\[p\.activeSlot\],p\.ammo,st\)/);
+ assert.match(g,/shotProfile\(p\.slots\[p\.activeSlot\],p\.ammo,st,spentAmmo\)/);
  assert.match(g,/bounces:p\.slots\[p\.activeSlot\]\.mods\.includes\('mirrorBarrel'\)\?1:0/);
  assert.match(g,/bounceBullet\(bullet,\{left:25,right:W-25,top:25,bottom:FLOOR\}\)/);
  const grant=g.slice(g.indexOf('function grantGear('),g.indexOf('function earnLegacy(',g.indexOf('function grantGear(')));
