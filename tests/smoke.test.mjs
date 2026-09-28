@@ -615,10 +615,10 @@ test('enemy health scales by 75%, 75%, then 25% and level four adds shields', ()
 });
 
 
-test('portal shield triggers once at half health and overdrive speeds spawning after pause', () => {
+test('portal shields trigger at health thresholds and overdrive speeds spawning after pause', () => {
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/shield:0,shieldTriggered:false,overdrive:false/);
- assert.match(game,/q\.hp>0&&q\.hp<=q\.maxHp\*\.5&&!q\.shieldTriggered/);
+ assert.match(game,/shield:0,shieldCharges:room\.level>=3\?2:1,shieldTriggered:false,overdrive:false/);
+ assert.match(game,/q\.hp>0&&q\.shieldCharges>0&&q\.hp<=q\.maxHp\*/);
  assert.match(game,/q\.shield=2\.7;q\.overdrive=true;q\.time=Math\.max\(q\.time,q\.shield\)/);
  assert.match(game,/if\(portal\.shield>0\)continue;portal\.time=Math\.max\(0,portal\.time-dt\)/);
  assert.match(game,/portal\.spawnDuration=game\.settings\.spawnDelay\*\(portal\.overdrive\?\.6:1\)/);
