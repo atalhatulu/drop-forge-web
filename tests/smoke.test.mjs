@@ -576,3 +576,15 @@ test('purple mage projectiles explode with area damage and a visible blast', () 
  assert.match(game,/p\.dash<=0/);
  assert.match(game,/hitGenerator\(room,Math\.round\(b\.damage\*1\.4\)\)/);
 });
+
+
+test('enemy, chest and room rewards include diverse guaranteed and bonus loot', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/const bonus=hash2\(room\.x,room\.y,game\.seed\+9187\)%5/);
+ assert.match(game,/bonus===0\)dropPickup\(room,'grenade'/);
+ assert.match(game,/bonus===2&&room\.branchEnd\)dropPickup\(room,'artifact'/);
+ assert.match(game,/if\(e\.type==='boss'\)\{dropPickup\(room,'artifact'/);
+ assert.match(game,/if\(room\.type==='treasure'\)dropPickup\(room,'artifact'/);
+ assert.match(game,/if\(rand\(\)<\.65\)dropPickup\(room,'grenade'/);
+ assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)dropPickup\(room,'gold'/);
+});
