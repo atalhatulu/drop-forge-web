@@ -224,7 +224,7 @@ test('twelve attachment alternatives are grouped three per slot', () => {
  for(let slot=0;slot<4;slot++)assert.equal(Object.values(mods).filter(mod=>mod.slot===slot).length,3);
  assert.ok(Object.values(mods).every(mod=>mod.level===[2,4,6,8][mod.slot]));
  const runtime=readFileSync('src/game.js','utf8');
- assert.match(runtime,/m\.slot===j/);
+ assert.match(runtime,/mods:\[\],traits:null,rune:null/);
  assert.match(runtime,/modCatalog\[next\]\.slot!==j/);
  assert.match(readFileSync('src/shop-data.js','utf8'),/root\.DropForgeShopData=Object\.freeze/);
 });
@@ -307,7 +307,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -548,15 +548,13 @@ test('each shot can trigger at most one shock chain across shotgun pellets',()=>
  assert.equal(hits[0].damage,18);
  assert.equal(shotEffects.shockRemaining,0);
 });
-test('attachment cards display class-specific names, precise deltas and are available in the TAB inventory',()=>{
- const html=readFileSync('index.html','utf8'),css=readProjectCss(),source=readFileSync('src/game.js','utf8');
- for(let i=1;i<=2;i++)assert.match(html,new RegExp('id="forgeEditorChoices'+i+'"'));
- assert.match(css,/\.forgeModChoice\.chosen/);
- assert.match(source,/window\.DropForgeModPresentation/);
+test('legacy attachment descriptions stay available while the hub uses run trait preview',()=>{
+ const html=readFileSync('index.html','utf8'),source=readFileSync('src/game.js','utf8');
+ assert.doesNotMatch(html,/forgeEditorChoices/);
+ assert.doesNotMatch(html,/forgeAttachSlot/);
+ assert.match(html,/forgeStarterNote/);
  assert.match(source,/function modDiffHTML\(id,currentMods,mod,slot\)/);
- assert.match(source,/data-mod-choice=/);
- assert.match(source,/legacyWeaponMods/);
- assert.match(source,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
+ assert.match(source,/DropForgeWeaponTraits\.loadoutHTML\(slot\)/);
  const presentation=readFileSync('src/mod-presentation.js','utf8');
  const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},ALL_MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
  new Function('window',presentation)(root);
@@ -760,20 +758,17 @@ test('each combat room starts with one healer without healer-to-healer loops', (
 });
 
 
-test('forge supports per-weapon persistent builds and recommended loadouts', () => {
+test('starter forge chooses two guns and retains permanent mastery without preset attachment builds',()=>{
  const game=readFileSync('src/game.js','utf8'),progress=readFileSync('src/progression.js','utf8'),html=readFileSync('index.html','utf8');
- assert.match(progress,/dropForge\.weaponBuilds\.v1/);
- assert.match(progress,/savedBuilds,saveBuilds/);
- assert.match(game,/function setForgeBuild\(n,mods\)/);
- assert.match(game,/function restoreForgeBuild\(n\)/);
- assert.match(game,/function recommendedForgeBuild\(weapon\)/);
- assert.match(game,/savedBuilds\[weapon\]=chosenForgeMods\(n\)/);
- assert.match(game,/selector\.value=modSlotUnlocked\(j,weapon\)&&MODS\[mod\]\?\.slot===j/);
- assert.equal((html.match(/data-build-action="save"/g)||[]).length,2);
- assert.equal((html.match(/data-build-action="load"/g)||[]).length,2);
- assert.equal((html.match(/data-build-action="recommend"/g)||[]).length,2);
+ assert.match(progress,/dropForge\.weaponBuilds\.v1/,'old build data remains readable for compatibility');
+ assert.match(game,/function refreshForge\(\)/);
+ assert.match(game,/function applyHubForge\(\)/);
+ assert.match(game,/traits:window\.DropForgeWeaponTraits\.snapshot\(previous\)/);
+ assert.match(game,/mods:\[\],traits:null,rune:null/);
+ assert.doesNotMatch(html,/data-build-action/);
+ assert.doesNotMatch(html,/forgeHiddenInputs/);
+ assert.equal((html.match(/data-focus-gun="[12]"/g)||[]).length,2);
 });
-
 
 test('wheel displays a timed animated 2D reward screen', () => {
  const game=readFileSync('src/game.js','utf8');
