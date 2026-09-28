@@ -257,3 +257,13 @@ button.danger-btn:hover{background:#7d2228!important;border-color:#ff7d83!import
 #pause .forgePreviewInfo .weaponTraits{margin-top:10px}
 #pause .forgeLegacyNote{margin:9px 0;padding:8px;border:1px solid #536b83;background:#152437}
 #pause .forgeLegacyNote>b{font:900 10px 'Courier New',monospace;color:#d9c79d}
+
+/* Permanent mastery start styles are independent from run trait slots. */
+.forgeMasteryStyle{display:flex;flex-direction:column;gap:6px;margin:10px 0;padding:11px;border:1px solid #55758d;background:#14283b}
+.forgeMasteryStyle>span{font:900 11px 'Courier New',monospace;color:#f2deac}
+.forgeMasteryStyle select{min-width:0;width:100%;padding:9px;color:#f2f4f5;background:#20354c;border:1px solid #7197ae}
+.forgeMasteryStyle select:disabled{opacity:.65;cursor:not-allowed}
+.forgeMasteryStyle small{font:10px/1.5 'Courier New',monospace;color:#b9cbd9}
+.masteryStyleBadge{display:flex;flex-direction:column;gap:5px;margin:8px 0;padding:8px;border-left:3px solid #d7bc7d;background:#192d3b}
+.masteryStyleBadge b{font:800 11px/1.4 'Courier New',monospace;color:#f2deac}
+.masteryStyleBadge small{font:10px/1.5 'Courier New',monospace;color:#c0d2dd}
