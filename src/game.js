@@ -8,6 +8,7 @@ const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,
 const {PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
 const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
 const GEAR=window.DropForgeGear;
+const {shotProfile,bounceBullet}=window.DropForgeAttachmentEffects;
 const BOSS_BLUEPRINT_KEY='dropForge.bossBlueprints.v1';
 function availableModules(){const ids=Object.keys(ACTIVE_MODULES);return matrixUnlocks.module?ids:ids.slice(0,Math.max(1,ids.length-3));}
 function availableChips(){const ids=Object.keys(GEAR.CHIPS);return matrixUnlocks.chip?ids:ids.slice(0,Math.max(1,ids.length-3));}
@@ -61,7 +62,6 @@ function unequipGear(slot){const p=game?.player,item=p?.equipment?.[slot];if(!it
 function grantGear(room,x,y){
   const item=GEAR.randomGear();
   if(item){
-    unlockGear(item);
     dropPickup(room,'gear',x,y,true,item);
   }
 }
@@ -273,8 +273,8 @@ function updateStatusStrip(){
  const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y);if(status&&status.textContent!==message)status.textContent=message;
  if(ability){const spec=ACTIVE_MODULES[p.activeModule],value=spec?'↗ '+spec.name+' · '+(p.moduleCooldown>0?p.moduleCooldown.toFixed(1)+'sn':'✓'):'↗ MODÜL YOK';if(ability.textContent!==value)ability.textContent=value;ability.title=spec?.description||'Gizli bölmeden aktif modül bul';}
 }
-function fire(){if(!game||paused||mapOpen||game.dead||game.won||shootTimer>0)return;const p=game.player,weapon=p.weapon;if(weapon===null){announce('V · BIÇAK KULLAN',.65);return;}if(p.ammo<=0){if(p.reserve>0)reloadWeapon();else if((p.emptyWarningTime||0)<=0){breakWeapon();p.emptyWarningTime=2.8;shootTimer=.38;}else shootTimer=.3;return;}const stForAmmo=weaponStats(p.slots[p.activeSlot]);if(Math.random()>=Math.min(.8,(stForAmmo.ammoSave||0)+gearStats().ammo))p.ammo--;p.slots[p.activeSlot].ammo=p.ammo;shootTimer=stForAmmo.interval*(hasChip('gravity')&&p.grounded?.8:1)*(activeSet()==='runner'&&p.runnerShot?1/1.3:1)*(activeSet()==='vampire'&&p.setLevel>=2?1/(1+.4*(1-p.hp/p.maxHp)):1);p.runnerShot=false;const rune=p.slots[p.activeSlot].rune;if(rune==='storm'&&p.ammo===0)p.runeShield=stForAmmo.reload;if(activeSet()==='arsenal'&&p.setLevel>=3&&p.ammo===0&&game.elapsed-(p.lastTurretAt??-100)>=30){p.lastTurretAt=game.elapsed;p.miniTurretTime=8;announce('CEPHANELİK · MİNİ TARET',1.5);}if(rune==='shadow'&&p.dash>0)p.runeShadow=true;const hunger=rune==='hunger'&&game.elapsed-(p.lastDamageAt??-100)>=10;const chain=rune==='chain'&&p.runeChainReady;const kinetic=hasChip('kinetic')&&p.kineticReady;const momentum=hasChip('momentum')&&p.runTime>=3;const st=stForAmmo,dx=mouse.x-(p.x+p.w/2),dy=mouse.y-(p.y+p.h*.45),base=Math.atan2(dy,dx),family=st.family,spec=PROJECTILE_FAMILIES[family],count=st.pellets;
- const shotEffects={shockRemaining:1};for(let i=0;i<count;i++){const spread=(family==='scatter'?.12:.025)*st.spread,ang=base+(i-(count-1)/2)*spread+(Math.random()-.5)*.027*st.spread,speed=st.speed*(momentum?1.2:1);game.bullets.push({x:p.x+p.w/2,y:p.y+p.h*.45,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,life:Math.max(spec.life,Math.hypot(W,H)/Math.max(1,speed)+.5)*(chain?1.5:1),damage:Math.round(st.damage*((p.grapple||p.dash>0||p.moveCharge>0)?1+st.movementBonus:1)*(rune==='blood'&&p.hp<p.maxHp*.5?1.3:1)*(hunger?3:1)*(kinetic?2:1)),rune,shadowPierce:rune==='shadow'&&p.runeShadow,mods:[...p.slots[p.activeSlot].mods],shotEffects,weapon,family,pierces:st.pierce,impactStagger:st.staggerBonus,areaBonus:st.areaBonus,hitTargets:new Set(),radius:spec.radius});}
+function fire(){if(!game||paused||mapOpen||game.dead||game.won||shootTimer>0)return;const p=game.player,weapon=p.weapon;if(weapon===null){announce('V · BIÇAK KULLAN',.65);return;}if(p.ammo<=0){if(p.reserve>0)reloadWeapon();else if((p.emptyWarningTime||0)<=0){breakWeapon();p.emptyWarningTime=2.8;shootTimer=.38;}else shootTimer=.3;return;}const stForAmmo=weaponStats(p.slots[p.activeSlot]);if(Math.random()>=Math.min(.8,(stForAmmo.ammoSave||0)+gearStats().ammo))p.ammo--;p.slots[p.activeSlot].ammo=p.ammo;shootTimer=stForAmmo.interval*(hasChip('gravity')&&p.grounded?.8:1)*(activeSet()==='runner'&&p.runnerShot?1/1.3:1)*(activeSet()==='vampire'&&p.setLevel>=2?1/(1+.4*(1-p.hp/p.maxHp)):1);p.runnerShot=false;const rune=p.slots[p.activeSlot].rune;if(rune==='storm'&&p.ammo===0)p.runeShield=stForAmmo.reload;if(activeSet()==='arsenal'&&p.setLevel>=3&&p.ammo===0&&game.elapsed-(p.lastTurretAt??-100)>=30){p.lastTurretAt=game.elapsed;p.miniTurretTime=8;announce('CEPHANELİK · MİNİ TARET',1.5);}if(rune==='shadow'&&p.dash>0)p.runeShadow=true;const hunger=rune==='hunger'&&game.elapsed-(p.lastDamageAt??-100)>=10;const chain=rune==='chain'&&p.runeChainReady;const kinetic=hasChip('kinetic')&&p.kineticReady;const momentum=hasChip('momentum')&&p.runTime>=3;const st=stForAmmo,dx=mouse.x-(p.x+p.w/2),dy=mouse.y-(p.y+p.h*.45),base=Math.atan2(dy,dx),shot=shotProfile(p.slots[p.activeSlot],p.ammo,st),family=shot.family,spec=PROJECTILE_FAMILIES[family],count=shot.pellets;
+ const shotEffects={shockRemaining:1};for(let i=0;i<count;i++){const spread=(family==='scatter'?.12:.025)*st.spread,ang=base+(i-(count-1)/2)*spread+(Math.random()-.5)*.027*st.spread,speed=st.speed*(momentum?1.2:1);game.bullets.push({x:p.x+p.w/2,y:p.y+p.h*.45,vx:Math.cos(ang)*speed,vy:Math.sin(ang)*speed,life:Math.max(spec.life,Math.hypot(W,H)/Math.max(1,speed)+.5)*(chain?1.5:1),damage:Math.round(st.damage*((p.grapple||p.dash>0||p.moveCharge>0)?1+st.movementBonus:1)*(rune==='blood'&&p.hp<p.maxHp*.5?1.3:1)*(hunger?3:1)*(kinetic?2:1)),rune,shadowPierce:rune==='shadow'&&p.runeShadow,mods:[...p.slots[p.activeSlot].mods],shotEffects,weapon,family,bounces:p.slots[p.activeSlot].mods.includes('mirrorBarrel')?1:0,pierces:st.pierce,impactStagger:st.staggerBonus,areaBonus:st.areaBonus,hitTargets:new Set(),radius:spec.radius});}
  if(kinetic)p.kineticReady=false;if(rune==='shadow')p.runeShadow=false;if(chain)p.runeChainReady=false;if(hunger)p.lastDamageAt=game.elapsed;p.face=dx>=0?1:-1;p.kick=(family==='explosive'?.24:family==='scatter'?.2:.12)*st.recoil;shake=Math.max(shake,family==='explosive'?8:family==='scatter'?5:2);flash=Math.max(flash,family==='explosive'?.13:.055);flashTint='255,235,211';game.muzzleFlash={x:p.x+p.w/2+Math.cos(base)*35,y:p.y+p.h*.45+Math.sin(base)*35,color:spec.color,time:.11};sound(family==='plasma'?375:family==='scatter'?105:215,.065,family==='plasma'?'sine':'square',.02);burst(currentRoom(),p.x+p.w/2+Math.cos(base)*25,p.y+p.h*.45+Math.sin(base)*25,spec.color,family==='explosive'?19:family==='scatter'?12:7,150);burst(currentRoom(),p.x+p.w/2+Math.cos(base)*34,p.y+p.h*.45+Math.sin(base)*34,'#fff4ce',family==='explosive'?10:4,95);if(!p.ammo&&!p.reserve)breakWeapon();else updateHud();}
 // Plasma has a small splash. Piercing rounds may pass through one target before disappearing.
 function applyProjectileModEffects(room,e,b){if(!e.alive&&!b.mods?.includes('shockCore'))return;if(e.alive&&b.mods?.includes('burnCore')){e.burnTime=3;e.burnTick=.5;e.burnDamage=Math.max(1,Math.round(b.damage*.12));burst(room,e.x+e.w/2,e.y+e.h/2,'#ffb46e',7,80);}if(b.mods?.includes('shockCore')&&(b.shotEffects?.shockRemaining??1)>0){const other=room.enemies.find(q=>q!==e&&q.alive&&!b.hitTargets.has(q)&&Math.hypot(q.x-e.x,q.y-e.y)<140);if(other){if(b.shotEffects)b.shotEffects.shockRemaining--;b.hitTargets.add(other);const amount=Math.max(1,Math.round(b.damage*.35));burst(room,other.x+other.w/2,other.y+other.h/2,'#a0f0ff',12,160);hitEnemy(room,other,amount,'shock',b.weapon);}}}
@@ -355,6 +355,7 @@ function update(dt){
  if(!game.inHub&&room.biome==='lava'&&p.poisonCooldown<=0)for(const h of room.hazards){if(collideRect(p,{x:h.x-h.w/2,y:h.y-h.h,w:h.w,h:h.h+8})){p.poisonCooldown=1.2;damagePlayer(7);burst(room,h.x,h.y,'#ff9d54',9,85);floating(p.x,p.y-24,'YANIK -7','#ffa56b');break;}}
  if(mouse.down)fire();
  for(const bullet of game.bullets){bullet.x+=bullet.vx*dt;bullet.y+=bullet.vy*dt;const r=bullet.radius||3;
+   if(bounceBullet(bullet,{left:25,right:W-25,top:25,bottom:FLOOR})){burst(room,bullet.x,bullet.y,'#a3e9ff',5,90);continue;}
    if(bullet.x<25||bullet.x>W-25||bullet.y<25||bullet.y>FLOOR){bullet.life=0;continue;}
    if(bullet.life>0&&tileRects(room,bullet.x-r,bullet.y-r,r*2,r*2).length){bullet.life=0;projectileImpact(room,bullet);}
    for(const b of room.breakables)if(b.alive&&bullet.life>0&&collideRect({x:bullet.x-r,y:bullet.y-r,w:r*2,h:r*2},b)){bullet.life=0;projectileImpact(room,bullet);break;}
@@ -543,8 +544,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
     const p = game.player;
     if(p.gearBag.length < 20){
       p.gearBag.push(item);
-      gearLocker.add(item.id);
-      saveGearBuild();
+      unlockGear(item);
       // If current equipment slot is empty, automatically equip it
       if(!p.equipment[item.slot]){
         equipGear(item.id);
@@ -554,6 +554,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
       sound(880, .2, "triangle");
     } else {
       announce("ZIRH ÇANTASI DOLU", 2);
+      return;
     }
   } else if(item.type === 'chip'){
     const p = game.player;
@@ -565,6 +566,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
       sound(880, .2, "triangle");
     } else {
       announce("CHIP ÇANTASI DOLU", 2);
+      return;
     }
   } else {
     const pick = item.id;
@@ -577,6 +579,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
       sound(880, .2, "triangle");
     } else {
       announce("ÇANTA DOLU · EKLENTİ ALINAMADI", 2);
+      return;
     }
   }
   closeChestUpgradeModal();
