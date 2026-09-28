@@ -247,3 +247,13 @@ button.danger-btn:hover{background:#7d2228!important;border-color:#ff7d83!import
 .legacyWeaponMods strong,.legacyModArchive strong{display:block;width:100%;color:#d9c79d;font:900 10px/1.4 'Courier New',monospace}
 .legacyWeaponMods small,.legacyModArchive small{display:block;width:100%;color:#afbdcb;font:10px/1.45 'Courier New',monospace}
 .legacyWeaponMods span,.legacyModArchive span{padding:5px 7px;border:1px solid #647389;background:#25354c;color:#e9e7dc;font:10px/1.4 'Courier New',monospace}
+
+/* Starter preparation no longer offers installable attachment sockets. Retain hidden
+   legacy form nodes temporarily so existing saves and migration tests can be read. */
+#pause .forgeWeaponCard>.forgeSlotHeader,
+#pause .forgeWeaponCard>.forgeBuildActions,
+#pause .forgeWeaponCard>.forgeAttachGrid,
+#pause .forgeWeaponCard>.forgeEditor{display:none!important}
+#pause .forgePreviewInfo .weaponTraits{margin-top:10px}
+#pause .forgeLegacyNote{margin:9px 0;padding:8px;border:1px solid #536b83;background:#152437}
+#pause .forgeLegacyNote>b{font:900 10px 'Courier New',monospace;color:#d9c79d}
