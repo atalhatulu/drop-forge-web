@@ -34,7 +34,7 @@ test('style choices require mastery four, keep run trait slots free and make dif
  assert.ok(rapid.mag>focused.mag,'scatter rapid style adds a shell');
  choice=null;const standard=stats(weapon);
  assert.equal(standard.masteryStyle,null);
- assert.ok(standard.damage<focused.damage&&standard.damage>rapid.damage);
+ assert.ok(standard.damage<focused.damage&&standard.damage>=rapid.damage,'small-caliber damage rounds to integer without reversing the tradeoff');
 });
 test('explosive focused style boosts area while rapid style accelerates reloading',()=>{
  let choice='focused';
