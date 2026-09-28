@@ -716,3 +716,13 @@ test('wheel screen stays hidden until E starts the wheel and closes after result
  assert.match(game,/w\.spinTime=2\.4;w\.spinDuration=2\.4/);
  assert.match(game,/room\.wheel\.resultTime=Math\.max\(0,room\.wheel\.resultTime-dt\)/);
 });
+
+
+test('nearby minimap appears outside combat and only shows adjacent rooms', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/function drawNearbyMinimap\(room\)/);
+ assert.match(game,/room\.arenaStarted&&!room\.cleared/);
+ assert.match(game,/room\.enemies\.some\(e=>e\.alive\)/);
+ assert.match(game,/Object\.values\(room\.links\)\.map\(id=>game\.rooms\[id\]\)/);
+ assert.match(game,/drawGameHud\(\);drawNearbyMinimap\(room\);drawWheelScreen\(room\.wheel\)/);
+});
