@@ -429,8 +429,9 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.chipBag.length,15);
  const kit=ground('health',null),grenade=ground('grenade',null);
  tick();assert.ok(combat.loot.includes(kit)&&combat.loot.includes(grenade),'capped consumables remain available');
- player.kits=2;player.grenades=2;tick();
- assert.ok(!combat.loot.includes(kit)&&!combat.loot.includes(grenade),'consumables can be claimed after spending supplies');
+ player.hp=player.maxHp;player.kits=2;player.grenades=2;tick();
+ assert.ok(!combat.loot.includes(kit),'health kit can be claimed after spending a kit; remaining='+combat.loot.map(item=>item.kind).join(','));
+ assert.ok(!combat.loot.includes(grenade),'grenade can be claimed after spending one; remaining='+combat.loot.map(item=>item.kind).join(','));
  assert.equal(player.kits,3);assert.equal(player.grenades,3);
  // Explicit ammo families should survive the drop generator and stay until a matching gun can use them.
  const ammo=ground('ammo','kinetic');
