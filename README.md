@@ -168,3 +168,7 @@ Hazırlık alanındaki **Kalıcı Usta** yalnızca kalıcı çekirdek kabul eder
 ## Şans çarkı ekranı etkileşimi
 
 Odada duran çark ayrı ekranı kendiliğinden açmaz. Çarkın yanına gidip **E** tuşuna basınca animasyon başlar; ödül gösterimi tamamlanınca oyun ekranı otomatik geri gelir.
+
+## Yakın çevre mini haritası
+
+Seferde savaş dışında sağ üst köşede yalnızca bulunduğun oda ve doğrudan bağlı komşularını gösteren yarı saydam mini harita görünür. Aktif savaş, canlı düşman veya portal varken otomatik gizlenir. Tam harita tuşu ve mevcut harita ekranı değişmez.
