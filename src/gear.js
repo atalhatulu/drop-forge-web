@@ -9,6 +9,8 @@ const SETS={
  arsenal:{name:'CEPHANELİK',color:'#ffd78e',bonus:'5 PARÇA: +%20 EK MERMİ TASARRUFU',hp:0,speed:0,ammo:.055,leech:0},
  vampire:{name:'KANBAĞI',color:'#ee9fc7',bonus:'5 PARÇA: ÖLDÜRMEDE +12 EK CAN',hp:0,speed:0,ammo:0,leech:3}
 };
+const CHIPS=Object.freeze({steel:{name:'ÇELİK REFLEKS',description:'+15 maksimum can',hp:15},gravity:{name:'YERÇEKİMİ TABAN',description:'+%5 hareket hızı',speed:.05},kinetic:{name:'KİNETİK YÜK',description:'+%5 mermi tasarrufu',ammo:.05},blood:{name:'KAN KOKUSU',description:'Öldürmede +2 can',leech:2},momentum:{name:'MOMENTUM',description:'+%3 hareket hızı',speed:.03},breath:{name:'İKİNCİ NEFES',description:'+10 maksimum can',hp:10},reflex:{name:'AYNA REFLEKS',description:'+%3 mermi tasarrufu',ammo:.03},step:{name:'ÇİFT ADIM',description:'+%4 hareket hızı',speed:.04}});
+function chipStats(chips){const result={hp:0,speed:0,ammo:0,leech:0};for(const id of Object.values(chips||{})){const chip=CHIPS[id];if(!chip)continue;for(const key of Object.keys(result))result[key]+=chip[key]||0;}return result;}
 function createGear(set,slot){if(!SETS[set]||!SLOTS.includes(slot))return null;return {set,slot,id:set+'-'+slot};}
 function stats(equipment){const result={hp:0,speed:0,ammo:0,leech:0,full:[]};for(const slot of SLOTS){const gear=equipment?.[slot],spec=gear&&SETS[gear.set];if(!spec||gear.slot!==slot)continue;result.hp+=spec.hp;result.speed+=spec.speed;result.ammo+=spec.ammo;result.leech+=spec.leech;}for(const [set,spec] of Object.entries(SETS))if(SLOTS.every(slot=>equipment?.[slot]?.set===set)){result.full.push(set);if(set==='bastion')result.hp+=80;if(set==='runner')result.speed+=.15;if(set==='arsenal')result.ammo+=.2;if(set==='vampire')result.leech+=12;}return result;}
 function randomGear(rand=Math.random){const sets=Object.keys(SETS);return createGear(sets[Math.min(sets.length-1,Math.floor(rand()*sets.length))],SLOTS[Math.min(SLOTS.length-1,Math.floor(rand()*SLOTS.length))]);}
@@ -55,5 +57,5 @@ function drawWarrior(ctx,equipment={},bob=0,leg=0,face=1,dashing=false){
  // Each collected piece replaces the relevant exposed body area.
  drawEquipped(ctx,equipment,bob,leg);
 }
-root.DropForgeGear=Object.freeze({SLOTS,SLOT_NAMES,SETS,createGear,stats,randomGear,drawPiece,icon,drawEquipped,drawWarrior});
+root.DropForgeGear=Object.freeze({SLOTS,SLOT_NAMES,SETS,CHIPS,chipStats,createGear,stats,randomGear,drawPiece,icon,drawEquipped,drawWarrior});
 })(window);
