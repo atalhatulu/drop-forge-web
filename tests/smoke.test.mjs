@@ -671,3 +671,15 @@ test('wheel displays a timed animated 2D reward screen', () => {
  assert.match(game,/drawGameHud\(\);drawWheelScreen\(room\.wheel\)/);
  assert.match(game,/w\.resultLabel=announcementText;w\.resultTime=1\.8/);
 });
+
+
+test('chests offer varied useful fallback when mods or accessories are exhausted', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/!game\.stashedMods\.includes\(k\)/);
+ assert.match(game,/eligible\.length&&game\.stashedMods\.length<12&&reward<\.55/);
+ assert.match(game,/dropPickup\(room,'health',room\.chest\.x/);
+ assert.match(game,/dropPickup\(room,'grenade',room\.chest\.x/);
+ assert.match(game,/p\.slots\.some\(q=>q&&q\.reserve<AMMO_MAX\[q\.weapon\]\)/);
+ assert.match(game,/p\.gold\+=bonus;for\(const slot of p\.slots\)if\(slot\)grantMastery\(slot\.weapon,25\)/);
+ assert.match(game,/accessory\.length\)dropPickup\(room,'artifact'/);
+});
