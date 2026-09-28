@@ -306,14 +306,14 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
   getContext(){return ctx}toDataURL(){return 'data:image/png;base64,'}
   append(element){this.children.push(element);if(element.id)nodes.set(element.id,element)}
   after(element){for(const child of element.children||[])if(child.id)nodes.set(child.id,child)}
-  closest(){return new Node('label','LABEL')}querySelector(){return new Node()}addEventListener(){}setAttribute(){}
+  closest(){return new Node('label','LABEL')}querySelector(){return new Node()}addEventListener(kind,fn){(this.listeners??={})[kind]=fn}setAttribute(){}
   focus(){}getBoundingClientRect(){return {left:0,top:0,width:1280,height:720}}insertAdjacentHTML(){}
  }
  Object.defineProperty(Node.prototype,'innerHTML',{get(){return this._html||''},set(html){this._html=html;if(this.tagName==='SELECT'){this.options=[...String(html).matchAll(/<option\b([^>]*)>/g)].map(m=>({value:(m[1].match(/value="([^"]*)"/)||[])[1]||'',disabled:/disabled/.test(m[1])}));this.value=this.options.find(item=>!item.disabled)?.value||'';}}});
@@ -364,6 +364,25 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  player.activeModule='boost';player.moduleCooldown=0;assert.equal(api.useActiveModule(),true,'module activates');assert.ok(player.moduleCooldown>0,'module cooldown begins');assert.equal(api.useActiveModule(),false,'module respects cooldown');
  combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:548};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
  assert.doesNotThrow(()=>api.draw());
+ // Use the actual interaction and registered chest-click handler, not a string pattern.
+ combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
+ game.stashedMods=[];player.gearBag=[];player.chipBag=[];
+ const chestGold=player.gold;api.interact();
+ assert.equal(combat.chest.opened,true,'a chest opens exactly once');
+ assert.equal(player.gold,chestGold+45,'opening gives guaranteed gold');
+ assert.equal(api.chestUpgradeOpen,true,'a usable offer opens the live selection UI');
+ const picked=game.currentChestUpgradeChoices[0];
+ assert.equal(picked.type,'mod','first compatible offer is a weapon attachment');
+ nodes.get('chestUpgradeChoices').listeners.click({target:{closest(){return {dataset:{upgradeIndex:'0'}}}}});
+ assert.ok(game.stashedMods.includes(picked.id),'clicking a real choice stores the offered attachment');
+ assert.equal(api.chestUpgradeOpen,false,'claim closes the chest overlay');
+ assert.equal(game.currentChestUpgradeChoices,null,'claimed offer cannot be redeemed twice');
+ combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
+ game.stashedMods=Array(12).fill('occupied');player.gearBag=Array(20).fill({id:'occupied'});
+ const fallbackGold=player.gold;api.interact();
+ assert.equal(player.gold,fallbackGold+65,'full inventories receive guaranteed gold plus a fallback');
+ assert.equal(api.chestUpgradeOpen,false,'empty offer does not open an unclaimable modal');
+ assert.equal(game.currentChestUpgradeChoices,null);
 });
 
 test('forced boss ammunition and health never reroll into grenades',()=>{
