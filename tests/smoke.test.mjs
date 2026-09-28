@@ -429,7 +429,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.chipBag.length,15);
  const kit=ground('health',null),grenade=ground('grenade',null);
  tick();assert.ok(combat.loot.includes(kit)&&combat.loot.includes(grenade),'capped consumables remain available');
- player.hp=player.maxHp;player.kits=2;player.grenades=2;tick();
+ player.hp=player.maxHp;player.kits=2;player.grenades=2;player.x=kit.x-player.w/2;player.y=548-player.h;player.vx=0;player.vy=0;tick();
  assert.ok(!combat.loot.includes(kit),'health kit can be claimed after spending a kit; remaining='+combat.loot.map(item=>item.kind).join(','));
  assert.ok(!combat.loot.includes(grenade),'grenade can be claimed after spending one; remaining='+combat.loot.map(item=>item.kind).join(','));
  assert.equal(player.kits,3);assert.equal(player.grenades,3);
