@@ -132,3 +132,7 @@ Seferde ilk kez alınan bir silah, eklenti veya aksesuar oyuncunun çevresinde a
 ## Düşman seviyesi ve kalkan
 
 Düşman canı LV 1'e göre LV 2'de ×1,75; LV 3'te ×3,0625; LV 4'te ×3,828125 olarak ölçeklenir (zorluk çarpanı ayrıca uygulanır). LV 4 düşmanları, boss ve işaretli av hedefi dâhil, nihai canlarının %50'si kadar ayrı bir kalkanla doğar. Hasar önce kalkanı tüketir; boss aşaması ve av hedefi can artışları kalkana da yansır.
+
+## Portal savunması ve hızlandırılmış üretim
+
+Portalın kalkanı artık mermi sayısına bağlı değildir. Canı ilk kez %50 veya altına düştüğünde 2,7 saniyelik kalkan açar ve bu sırada düşman üretimini durdurur. Kalkan sona erdiğinde üretim aralığı normalin %60'ına iner; portal aynı seferde ikinci kez kalkan açmaz. Portalın aynı anda üretebileceği düşman sınırı değişmez.
