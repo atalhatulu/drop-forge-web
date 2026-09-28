@@ -147,7 +147,9 @@ test('reforge gives three distinct main transformations for the newly picked-up 
 });
 test('live swap retains old weapon traits on the ground and equips any traits on the pickup',()=>{
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/old\.mods\|\|\[\],old\.traits\)/);
+ assert.match(game,/old\.mods\|\|\[\],old\.traits,old\.rune\)/);
+ assert.match(game,/sameBuild\(duplicate,item\)/);
+ assert.match(game,/rune:item\.rune\|\|null/);
  assert.match(game,/traits:window\.DropForgeWeaponTraits\.snapshot\(item\)/);
  assert.match(game,/hasInvestment\(old\)/);
  assert.match(game,/openChestUpgradeModal\(offers\)/);
@@ -167,7 +169,7 @@ test('wheel offers three immediate traits after its result animation, never a le
 });
 test('manual weapon drop preserves run traits just like a weapon swap',()=>{
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/dropWeapon\(currentRoom\(\),p\.weapon,[^;]*p\.slots\[p\.activeSlot\]\?\.traits\)/);
+ assert.match(game,/dropWeapon\(currentRoom\(\),p\.weapon,[^;]*p\.slots\[p\.activeSlot\]\?\.traits,p\.slots\[p\.activeSlot\]\?\.rune\)/);
 });
 
 test('same-socket main and support both change real projectile behavior and firing stats',()=>{
