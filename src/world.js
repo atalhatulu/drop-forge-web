@@ -6,8 +6,13 @@ const ri=(r,a,b)=>a+Math.floor(r()*(b-a+1)),clamp=(x,a,b)=>Math.max(a,Math.min(b
 function hash2(ix,iy,seed){let h=(seed^Math.imul(ix,374761393)^Math.imul(iy,668265263))>>>0;h=Math.imul(h^(h>>>13),1274126177);return (h^(h>>>16))>>>0;}
 function createMapGenerator({W,FLOOR,buildTerrain,buildBiome}){
 function makeMap(seed){const rand=rng(seed);const rooms=[],byPos=new Map();const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
-function add(x,y,type){let room={id:rooms.length,x,y,type,links:{},discovered:false,visited:false,cleared:type==='start',enemies:[],projectiles:[],portals:[],particles:[],chest:null,loot:[],rocks:[],props:[],platforms:[],breakables:[],cave:null,time:0,arenaStarted:false};rooms.push(room);byPos.set(x+','+y,room);return room;}
-function connect(a,b){const dx=b.x-a.x,dy=b.y-a.y;let d=dx===1?'right':dx===-1?'left':dy===1?'down':'up',reverse={right:'left',left:'right',up:'down',down:'up'}[d];a.links[d]=b.id;b.links[reverse]=a.id;}
+// Placement and topology are separate: touching rooms do not gain an implicit door.
+function occupied(x,y,w=1,h=1){for(const room of rooms)if(x<room.x+(room.mapW||1)&&x+w>room.x&&y<room.y+(room.mapH||1)&&y+h>room.y)return true;return false;}
+function add(x,y,type,w=1,h=1){if(occupied(x,y,w,h))return null;let room={id:rooms.length,x,y,mapW:w,mapH:h,type,links:{},discovered:false,visited:false,cleared:type==='start',enemies:[],projectiles:[],portals:[],particles:[],chest:null,loot:[],rocks:[],props:[],platforms:[],breakables:[],cave:null,time:0,arenaStarted:false};rooms.push(room);for(let yy=y;yy<y+h;yy++)for(let xx=x;xx<x+w;xx++)byPos.set(xx+','+yy,room);return room;}
+const reverseDir={right:'left',left:'right',up:'down',down:'up'};
+function connect(a,b){if(!a||!b||a===b)return false;const dx=b.x-a.x,dy=b.y-a.y,d=dx===1&&dy===0?'right':dx===-1&&dy===0?'left':dx===0&&dy===1?'down':dx===0&&dy===-1?'up':null;if(!d)return false;const reverse=reverseDir[d];if((a.links[d]!==undefined&&a.links[d]!==b.id)||(b.links[reverse]!==undefined&&b.links[reverse]!==a.id))return false;a.links[d]=b.id;b.links[reverse]=a.id;return true;}
+function validateTopology(){const seen=new Set([0]),queue=[0];for(let i=0;i<queue.length;i++){const room=rooms[queue[i]];for(const [dir,id] of Object.entries(room.links)){const neighbor=rooms[id],dx=neighbor?.x-room.x,dy=neighbor?.y-room.y,expected=dir==='right'?[1,0]:dir==='left'?[-1,0]:dir==='down'?[0,1]:[0,-1];if(!neighbor||dx!==expected[0]||dy!==expected[1]||neighbor.links[reverseDir[dir]]!==room.id)throw new Error('Invalid room connection '+room.id+' '+dir);if(!seen.has(id)){seen.add(id);queue.push(id);}}}if(seen.size!==rooms.length)throw new Error('Unreachable rooms: '+(rooms.length-seen.size));}
+
 // Twenty central rooms preserve boss progression; lateral routes extend at most three rooms.
 const spine=[add(0,0,'start')];spine[0].spine=true;
 for(let depth=1;depth<=20;depth++){const boss=depth%5===0,type=boss?'boss':depth%5===3?'elite':'combat',room=add(0,depth,type);room.spine=true;room.bossStage=boss?depth/5:0;connect(spine[spine.length-1],room);spine.push(room);}
@@ -20,20 +25,21 @@ for(const depth of anchors){
  let parent=anchor;
  for(let distance=1;distance<=length;distance++){
   const x=side*distance,y=depth,key=x+','+y;if(byPos.has(key))break;
-  const room=add(x,y,'combat');room.branch=true;room.branchRoot=depth;connect(parent,room);parent=room;
+  const room=add(x,y,'combat');if(!room||!connect(parent,room))break;room.branch=true;room.branchRoot=depth;parent=room;
  }
  // A second route can peel off the side corridor, instead of every branch ending in loot.
  if(depth<19&&rand()<.78){
   const forkX=side*(length>=2?2:1),forkY=depth+1,from=byPos.get(forkX+','+depth);
   if(from&&!byPos.has(forkX+','+forkY)){
-   const fork=add(forkX,forkY,'combat');fork.branch=true;fork.branchRoot=depth;connect(from,fork);
+   const fork=add(forkX,forkY,'combat');if(!fork||!connect(from,fork))continue;fork.branch=true;fork.branchRoot=depth;
    if(Math.abs(forkX)<3&&rand()<.62&&!byPos.has((forkX+side)+','+forkY)){
-    const tip=add(forkX+side,forkY,'combat');tip.branch=true;tip.branchRoot=depth;connect(fork,tip);
+    const tip=add(forkX+side,forkY,'combat');if(tip&&connect(fork,tip)){tip.branch=true;tip.branchRoot=depth;}
    }
   }
  }
 }
 // A terminal is a navigation property, not automatically a treasure room.
+validateTopology();
 for(const room of rooms)if(room.branch){room.branchEnd=Object.keys(room.links).length===1;if(room.branchEnd&&rand()<.22)room.type='treasure';else if(rand()<.15)room.type='elite';}
 for(const room of rooms){const rr=rng((seed^Math.imul(room.id+1,0x9e3779b1))>>>0);room.rocks=[];// Room silhouettes are seeded and vary between terraces, shafts, bridges and split caverns.
 const layouts=[
