@@ -393,14 +393,14 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  combat.loot.push(obsolete);const beforeSalvage=player.gold;api.update(.016);
  assert.equal(player.gold,beforeSalvage+15,'obsolete attachment pickups grant salvage gold');
  assert.equal(obsolete.taken,true,'salvage can be collected only once');
- assert.equal(game.stashedMods.length,0,'legacy ground loot never reintroduces the attachment bag');
+ assert.equal(Object.hasOwn(game,'stashedMods'),false,'legacy ground loot never reintroduces the retired attachment bag');
  player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
  player.activeModule='boost';player.moduleCooldown=0;assert.equal(api.useActiveModule(),true,'module activates');assert.ok(player.moduleCooldown>0,'module cooldown begins');assert.equal(api.useActiveModule(),false,'module respects cooldown');
  combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:548};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
  assert.doesNotThrow(()=>api.draw());
  // Use the actual interaction and registered chest-click handler, not a string pattern.
  combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
- game.stashedMods=[];player.gearBag=[];player.chipBag=[];
+ player.gearBag=[];player.chipBag=[];
  const chestGold=player.gold;api.interact();
  assert.equal(combat.chest.opened,true,'a chest opens exactly once');
  assert.equal(player.gold,chestGold+45,'opening gives guaranteed gold');
@@ -413,7 +413,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(api.chestUpgradeOpen,false,'claim closes the chest overlay');
  assert.equal(game.currentChestUpgradeChoices,null,'claimed offer cannot be redeemed twice');
  combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
- game.stashedMods=Array(12).fill('occupied');player.gearBag=Array(20).fill({id:'occupied'});
+ player.gearBag=Array(20).fill({id:'occupied'});
  const savedSlots=player.slots;player.slots=[null,null];
  const fallbackGold=player.gold;api.interact();player.slots=savedSlots;
  assert.equal(player.gold,fallbackGold+65,'when no gun or inventory can accept a reward, give fallback gold');
