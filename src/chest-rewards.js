@@ -19,9 +19,14 @@ function selectChestChoices({room,player,stashedMods,modCatalog,chipCatalog,mast
    const index=hash(room.x,room.y,seed+room.id*37+c*911)%availableMods.length;
    choices.push({type:'mod',id:availableMods.splice(index,1)[0]});
   }
-  if(gearRoom)for(let c=choices.length;c<3;c++){
-   const piece=randomGear(()=>Math.abs(Math.sin(seed+room.id*97+c*313)));
-   if(piece)choices.push({type:'gear',...piece});
+  if(gearRoom){
+   const offered=new Set(choices.map(item=>item.type+':'+item.id));
+   for(let attempt=0;choices.length<3&&attempt<40;attempt++){
+    const piece=randomGear(()=>Math.abs(Math.sin(seed+room.id*97+attempt*313)));
+    if(!piece||!piece.id||offered.has('gear:'+piece.id))continue;
+    offered.add('gear:'+piece.id);
+    choices.push({type:'gear',...piece});
+   }
   }
  }
  return choices;
