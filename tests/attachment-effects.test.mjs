@@ -34,7 +34,7 @@ test('attachment effects, gear pickup and chest failure handling are wired into 
  assert.match(g,/p\.gearBag\.push\(item\);\s*unlockGear\(item\)/);
  assert.match(g,/ZIRH ÇANTASI DOLU[^]*?return;/);
  assert.match(g,/CHIP ÇANTASI DOLU[^]*?return;/);
- assert.match(g,/ÇANTA DOLU · EKLENTİ ALINAMADI[^]*?return;/);
+ assert.match(g,/choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\|\|item\.type==='chip'\)\)/);
 });
 
 test('hunter mark gives critical hits for five seconds without affecting unmarked enemies',()=>{
