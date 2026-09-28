@@ -73,7 +73,7 @@ function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*
 function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0||amount<=0)return;const old=masteryLevel(weapon),learning=!permanentShop&&old<=3?1.5:1;mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+Math.round(amount*learning));const level=masteryLevel(weapon);if(level>old){announce(weaponName(weapon)+' · USTALIK SEVİYESİ '+level,2.6);levelUpToast(weapon,level);burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);if(game.inHub)refreshForge();}saveMastery();updateHud();}
 let forgeFocusGun=1;
 // Legacy attachments on previously acquired guns still use the original combat effects.
-const {modNameForWeapon}=window.DropForgeModPresentation;
+const {MOD_ICONS,modNameForWeapon}=window.DropForgeModPresentation;
 function syncForgeWorkbench(){
  if(!document.getElementById('forgeGun1'))return;
  for(let n=1;n<=2;n++){
