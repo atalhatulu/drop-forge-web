@@ -633,6 +633,7 @@ function interact(){
    if(room.type!=='elite'&&room.reward!=='chip'){
      const traitChoices=window.DropForgeWeaponTraits.choices({slots:p.slots,projectiles:WEAPON_PROJECTILES,seed:game.seed+room.id,hash:hash2});
      if(traitChoices.length)choices.splice(0,choices.length,...traitChoices);
+     else choices.splice(0,choices.length,...choices.filter(item=>item.type==='gear'));
    }
    if(choices.length){
      game.currentChestUpgradeChoices=choices;
