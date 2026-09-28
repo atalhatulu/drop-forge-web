@@ -640,7 +640,7 @@ test('room threat escalates every 30 seconds with capped movement and attack buf
 
 test('each combat room starts with one healer without healer-to-healer loops', () => {
  const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
- assert.match(game,/if\(room\.type==='treasure'\)\{room\.cleared=true/);
+ assert.match(game,/if\(room\.type==='treasure'\|\|room\.type==='gold'\)\{room\.cleared=true/);
  assert.match(game,/if\(!room\.enemies\.some\(e=>e\.type==='healer'\)\)spawnEnemy\(room,'healer'/);
  assert.match(game,/room\.enemyCap=Math\.max\(room\.enemyCap,room\.enemies\.length\)/);
  assert.match(game,/if\(room\.type==='hunt'\)\{const target=room\.enemies\[0\]/);
@@ -702,7 +702,7 @@ test('merchant currency follows merchant type and permanent cores reward room mi
  const game=readFileSync('src/game.js','utf8'),shop=readFileSync('src/shop-view.js','utf8');
  assert.match(game,/const p=game\.player,permanent=!!currentRoom\(\)\.merchant\?\.permanent/);
  assert.match(shop,/game\.rooms\?\.\[game\.roomId\]\?\.merchant\?\.permanent/);
- assert.match(game,/room\.cleared=true;earnLegacy\(1\);collectBossKey\(room\)/);
+ assert.match(game,/if\(room\.type==='treasure'\)\{earnLegacy\(1\);collectBossKey\(room\)/);
  assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)earnLegacy\(1\)/);
  assert.match(game,/game\.earnedCores=\(game\.earnedCores\|\|0\)\+earned/);
  assert.match(shop,/BU SEFERLİK · Aldıkların sefer bitince sıfırlanır/);
@@ -835,4 +835,15 @@ test('enemy ammo pickups match the equipped projectile family and refill matchin
  assert.match(game,/const family=item\.artifact\|\|'kinetic',targets=p\.slots\.filter\(q=>q&&WEAPON_PROJECTILES\[q\.weapon\]===family/);
  for(const family of ['kinetic','scatter','pierce','plasma','laser','explosive','arc'])assert.match(loot,new RegExp(family+':\\['));
  assert.match(loot,/if\(item\.kind==='ammo'\)/);
+});
+
+
+test('gold vault and assault room events have distinct generation and gameplay', () => {
+ const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8'),map=readFileSync('src/map-view.js','utf8');
+ assert.match(world,/room\.type='assault'/);assert.match(world,/room\.type='gold'/);
+ assert.match(world,/room\.type==='gold'\?'gold'/);
+ assert.match(game,/room\.type==='treasure'\|\|room\.type==='gold'/);
+ assert.match(game,/ALTIN KASASI · ALTINLARI TOPLA/);
+ assert.match(game,/room\.type==='assault'\?3:2/);
+ assert.match(map,/gold:'\$',assault:'!'/);
 });
