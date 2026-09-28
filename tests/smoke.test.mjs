@@ -459,6 +459,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  api.enterRoom(combat.id,'up');assert.equal(game.roomId,combat.id);
  assert.equal(combat.loot.length,beforeCount,'unclaimed loot persists when revisiting a cleared room');
  assert.ok(combat.loot.includes(waiting));
+ player.x=waiting.x-player.w/2;player.y=548-player.h;
  player.chipBag.pop();tick();
  assert.ok(!combat.loot.includes(waiting),'revisited pickup remains claimable after freeing capacity');
 });
