@@ -370,7 +370,7 @@ test('forced boss ammunition and health never reroll into grenades',()=>{
  const source=readFileSync('src/game.js','utf8');
  const a=source.indexOf('function dropPickup(room,kind,x,y,force=false,artifact=null)'),b=source.indexOf('function saveSlot()',a);
  assert.ok(a>=0&&b>a);
- const drop=new Function('Math','burst',source.slice(a,b)+'return dropPickup;')({random:()=>.01},()=>{});
+ const drop=new Function('Math','burst','WEAPON_PROJECTILES','game',source.slice(a,b)+'return dropPickup;')({random:()=>.01},()=>{},['kinetic'],{player:{weapon:0,slots:[]}});
  const room={loot:[]};
  drop(room,'ammo',100,100,true);
  drop(room,'health',110,100,true);
