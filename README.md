@@ -224,3 +224,7 @@ Portalların maksimum canı LV1–4 için sırasıyla 320, 490, 720 ve 960'tır.
 ## Yedi boss ve iki faz
 
 Her seferin dört boss kademesi bulunur; ilk üç kademenin ikişer, son kademenin bir boss alternatifi vardır. Aynı seed ve oda için seçim sabittir. Maden Muhafızı (yaylı atış), Tünel Yarıcı (hücum), Spor Ana (minyon), Kök Avcısı (uzak atış), Prizma Hükümdarı (mermi yelpazesi), Ayna Hayaleti (ışınlanma) ve Kül İmparatoru (ateş yağmuru) farklı saldırı profillerine sahiptir. Bosslar güçlendirilmiş canla başlar; %50 can eşiğinde ikinci faza geçip saldırı temposunu artırır.
+
+## Sadeleştirilmiş oyun HUD'u
+
+Üst menü kısa simge ve tuş etiketlerine indirildi. Oyun sırasında can, mermi, oda, altın ve yetenek durumu görünür kalır; uzun kontrol açıklamaları yardım ekranına ve araç ipuçlarına taşındı. Hızlı envanterde tekrarlanan açıklama satırları gizlendi. Silah ustalığı ayrıntısı TAB çantasında durur.
