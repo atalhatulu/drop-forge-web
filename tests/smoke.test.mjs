@@ -484,7 +484,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
  assert.match(source,/game\.player\.kills%5===0\)earnLegacy\(1\)/);
  assert.match(source,/e\.type==='boss'\)earnLegacy\(3\)/);
  assert.match(source,/room\.merchant=\{x:857,y:FLOOR,permanent:true\}/);
- assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.rooms\?\.\[game\.roomId\]\?\.merchant\?\.permanent,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
  assert.match(source,/p\.gold-=price/);
  assert.match(source,/legacy\.marks-=price;saveLegacy\(\)/);
  assert.match(source,/grantMastery\(p\.weapon,90,true\)/);
