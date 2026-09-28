@@ -18,34 +18,8 @@ function drawMap(){
  c.fillStyle=active?'#fff0a4':room.cleared?'#66c89e':room.visited?'#75a8d9':known?(room.type==='boss'?'#a77ebc':'#647c99'):'#263244';
  c.fillRect(x-sz/2,y-sz/2,sz,sz);c.strokeStyle=active?'#ffffff':known?'#afc0d2':'#47546a';c.lineWidth=active?3:1;c.strokeRect(x-sz/2,y-sz/2,sz,sz);
  c.textAlign='center';c.fillStyle=active?'#182235':known?'#f6f0de':'#79899b';c.font='bold '+Math.max(8,Math.min(12,step*.25))+'px monospace';
- c.fillText(active?'●':known?room.type==='boss'?'B'+room.bossStage:({defense:'K',hunt:'H',elite:'E',treasure:'T',gold:'[room.type]||'·':'?',x,y+4);
- if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C',gold:'[room.reward]||'',x,y+sz/2+10);}
- }
- c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
-}
-return drawMap;
-}
-root.DropForgeMapView=Object.freeze({createMapRenderer});
-})(window);
-,assault:'!'})[room.type]||'·':'?',x,y+4);
- if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C'})[room.reward]||'',x,y+sz/2+10);}
- }
- c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
-}
-return drawMap;
-}
-root.DropForgeMapView=Object.freeze({createMapRenderer});
-})(window);
-})[room.reward]||'',x,y+sz/2+10);}
- }
- c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
-}
-return drawMap;
-}
-root.DropForgeMapView=Object.freeze({createMapRenderer});
-})(window);
-,assault:'!'})[room.type]||'·':'?',x,y+4);
- if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C'})[room.reward]||'',x,y+sz/2+10);}
+ c.fillText(active?'●':known?room.type==='boss'?'B'+room.bossStage:({defense:'K',hunt:'H',elite:'E',treasure:'T',gold:'$',assault:'!'})[room.type]||'·':'?',x,y+4);
+ if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C',gold:'$'})[room.reward]||'',x,y+sz/2+10);}
  }
  c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
 }
