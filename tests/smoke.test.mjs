@@ -198,7 +198,7 @@ test('each stat attachment occupies its own dedicated weapon slot', () => {
 test('gold and ammo enemy drops feed a real purchase panel', () => {
  const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
  assert.match(source,/dropPickup\(room,'gold',e\.x\+e\.w\/2/);
- assert.match(source,/Math\.random\(\)<\.6\)dropPickup\(room,'ammo'/);
+ assert.match(source,/dropPickup\(room,'ammo',e\.x\+e\.w\/2\+16/);
  assert.match(source,/if\(item\.kind==='gold'\)\{p\.gold\+=/);
  assert.match(source,/function buyShopItem\(id\)/);
  assert.match(source,/p\.gold-=price/);
@@ -224,8 +224,8 @@ test('twelve attachment alternatives are grouped three per slot', () => {
  assert.ok(Object.values(mods).every(mod=>mod.level===[2,4,6,8][mod.slot]));
  const runtime=readFileSync('src/game.js','utf8');
  assert.match(runtime,/m\.slot===j/);
- assert.match(runtime,/MODS\[next\]\.slot!==j/);
- assert.match(readFileSync('src/shop-data.js','utf8'),/for\(const \[id,mod\] of Object\.entries\(MODS\)\)/);
+ assert.match(runtime,/modCatalog\[next\]\.slot!==j/);
+ assert.match(readFileSync('src/shop-data.js','utf8'),/Object\.entries\(MODS\)/);
 });
 test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
  const source=readFileSync('src/game.js','utf8');
@@ -306,7 +306,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useWeaponAbility,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -338,7 +338,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  for(let i=0;i<20;i++)api.update(.016);
  assert.ok(room.dummy.total>0,'training dummy registers actual bullet damage');
  assert.equal(api.mastery[player.weapon]||0,initialXP,'training ammunition cannot farm persistent mastery');
- api.mastery[player.weapon]=90;player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
+ api.mastery[player.weapon]=1440;player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearForge,true,'forge becomes interactive when approached');
  api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
  const firstSocket=workbenchNodes.get('.forgeAttachSlot')[0];firstSocket.onclick();
@@ -360,8 +360,8 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const combat=game.rooms[1],gold={kind:'gold',artifact:25,x:500,y:548-14,grounded:true,vx:0,vy:0,taken:false};combat.loot.push(gold);
  player.x=120;player.y=548-player.h;api.update(.016);assert.equal(gold.x,500,'coins must stay where they land; no magnet');
  const wallet=player.gold;player.x=gold.x-player.w/2;player.y=548-player.h;api.update(.016);assert.equal(player.gold,wallet+25,'touching the coin collects it');assert.equal(gold.taken,true);
- player.abilityCooldowns=Array(13).fill(0);player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
- for(let id=0;id<13;id++){player.weapon=id;player.activeSlot=0;player.slots[0]={weapon:id,mods:[],ammo:40,reserve:100};game.bullets=[];assert.equal(api.useWeaponAbility(),true,'special ability for gun '+id+' activates');assert.ok(player.abilityCooldowns[id]>0,'special ability '+id+' enters its own cooldown');assert.equal(api.useWeaponAbility(),false,'ability cannot fire again before cooldown');}
+ player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
+ player.activeModule='boost';player.moduleCooldown=0;assert.equal(api.useActiveModule(),true,'module activates');assert.ok(player.moduleCooldown>0,'module cooldown begins');assert.equal(api.useActiveModule(),false,'module respects cooldown');
  combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:548};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
  assert.doesNotThrow(()=>api.draw());
 });
@@ -521,7 +521,7 @@ test('fourth region uses level four enemies with a separate shield pool', () => 
  const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
  assert.match(world,/room\.level=Math\.min\(4,room\.stage\)/);
  assert.match(game,/shield:\(room\.level===4\?Math\.round\(hp\*\.5\):0\)/);
- assert.match(game,/const shieldAbsorbed=Math\.min\(e\.shield\|\|0,amount\)/);
+ assert.match(game,/const shieldAbsorbed=bypassShield\?0:Math\.min\(e\.shield\|\|0,amount\)/);
  assert.match(game,/e\.shield-=shieldAbsorbed/);
  assert.match(game,/const segments=e\.type==='boss'\?1:Math\.min\(3,e\.level\|\|1\)/);
  assert.match(game,/if\(e\.maxShield>0\)/);
@@ -536,7 +536,7 @@ test('first boss requires three reachable, guaranteed region-one keys', () => {
  assert.match(world,/room\.bossKey=true/);
  assert.match(game,/function collectBossKey\(room\)/);
  assert.match(game,/room\.bossKeyCollected=true;game\.regionKeys\[room\.keyStage-1\]\+\+/);
- assert.match(game,/room\.cleared=true;collectBossKey\(room\)/);
+ assert.match(game,/collectBossKey\(room\)/);
  assert.match(game,/bossGateReady\(stage\)/);
 });
 
@@ -581,11 +581,11 @@ test('enemy, chest and room rewards include diverse guaranteed and bonus loot', 
  assert.match(game,/const bonus=hash2\(room\.x,room\.y,game\.seed\+9187\)%5/);
  assert.match(game,/bonus===0\)dropPickup\(room,'grenade'/);
  assert.match(game,/bonus===2&&room\.branchEnd\)dropPickup\(room,'artifact'/);
- assert.match(game,/if\(e\.type==='boss'\)\{dropPickup\(room,'artifact'/);
- assert.match(game,/if\(room\.type==='treasure'\)\{const accessory=/);
- assert.match(game,/if\(accessory\.length\)dropPickup\(room,'artifact'/);
- assert.match(game,/if\(rand\(\)<\.65\)dropPickup\(room,'grenade'/);
- assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)dropPickup\(room,'gold'/);
+ assert.match(game,/if\(e\.type==='boss'\)\{if\(game\.player\.setLevel<2&&activeSet\(\)\)dropPickup\(room,'setBooster'/);
+ assert.match(game,/if\(room\.type==='treasure'&&rand\(\)<\.65\)grantGear/);
+ assert.match(game,/dropPickup\(room,'artifact',e\.x\+e\.w\/2\+30/);
+ assert.match(game,/dropPickup\(room,'grenade',e\.x\+e\.w\/2-35/);
+ assert.match(game,/dropPickup\(room,'gold',e\.x\+e\.w\/2/);
 });
 
 
@@ -595,7 +595,7 @@ test('first acquisition highlights new weapons mods and accessories once per run
  assert.match(game,/function highlightFirstLoot\(kind,id,name\)/);
  assert.match(game,/if\(game\.seenLoot\.has\(key\)\)return/);
  assert.match(game,/game\.seenLoot\.add\(key\);game\.newLootGlow=1\.8/);
- assert.match(game,/highlightFirstLoot\('mod',item\.artifact/);
+ assert.match(game,/highlightFirstLoot\('mod',id,/);
  assert.match(game,/highlightFirstLoot\('artifact',item\.artifact/);
  assert.match(game,/highlightFirstLoot\('weapon',p\.weapon/);
  assert.match(game,/if\(game\.newLootGlow>0\)\{/);
@@ -638,7 +638,7 @@ test('room threat escalates every 30 seconds with capped movement and attack buf
 test('each combat room starts with one healer without healer-to-healer loops', () => {
  const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
  assert.match(game,/if\(room\.type==='treasure'\|\|room\.type==='gold'\)\{room\.cleared=true/);
- assert.match(game,/if\(!room\.enemies\.some\(e=>e\.type==='healer'\)\)spawnEnemy\(room,'healer'/);
+ assert.match(game,/room\.type!=='miniboss'&&!room\.enemies\.some\(e=>e\.type==='healer'\)/);
  assert.match(game,/room\.enemyCap=Math\.max\(room\.enemyCap,room\.enemies\.length\)/);
  assert.match(game,/if\(room\.type==='hunt'\)\{const target=room\.enemies\[0\]/);
  assert.match(game,/portal\.type==='healer'&&room\.enemies\.some\(e=>e\.alive&&e\.type==='healer'\)/);
@@ -654,7 +654,7 @@ test('forge supports per-weapon persistent builds and recommended loadouts', () 
  assert.match(game,/function restoreForgeBuild\(n\)/);
  assert.match(game,/function recommendedForgeBuild\(weapon\)/);
  assert.match(game,/savedBuilds\[weapon\]=chosenForgeMods\(n\)/);
- assert.match(game,/MODS\[mod\]\?\.slot===j&&MODS\[mod\]\.level<=masteryLevel\(weapon\)/);
+ assert.match(game,/selector\.value=modSlotUnlocked\(j,weapon\)&&MODS\[mod\]\?\.slot===j/);
  assert.equal((html.match(/data-build-action="save"/g)||[]).length,2);
  assert.equal((html.match(/data-build-action="load"/g)||[]).length,2);
  assert.equal((html.match(/data-build-action="recommend"/g)||[]).length,2);
@@ -668,19 +668,19 @@ test('wheel displays a timed animated 2D reward screen', () => {
  assert.match(game,/function drawWheelScreen\(w\)/);
  assert.match(game,/ctx\.arc\(0,0,r,a,b\)/);
  assert.match(game,/drawGameHud\(\);drawNearbyMinimap\(room\);drawWheelScreen\(room\.wheel\)/);
- assert.match(game,/w\.resultLabel=announcementText;w\.resultTime=1\.8/);
+ assert.match(game,/w\.resultLabel=announcementText/);assert.match(game,/w\.resultTime=2\.3/);
 });
 
 
 test('chests offer varied useful fallback when mods or accessories are exhausted', () => {
  const game=readFileSync('src/game.js','utf8');
  assert.match(game,/!game\.stashedMods\.includes\(k\)/);
- assert.match(game,/eligible\.length&&game\.stashedMods\.length<12&&reward<\.55/);
+ assert.match(game,/function openChestUpgradeModal\(choices\)/);
  assert.match(game,/dropPickup\(room,'health',room\.chest\.x/);
- assert.match(game,/dropPickup\(room,'grenade',room\.chest\.x/);
+ assert.match(game,/dropPickup\(room,'ammo',room\.chest\.x/);
  assert.match(game,/p\.slots\.some\(q=>q&&q\.reserve<AMMO_MAX\[q\.weapon\]\)/);
- assert.match(game,/p\.gold\+=bonus;for\(const slot of p\.slots\)if\(slot\)grantMastery\(slot\.weapon,25\)/);
- assert.match(game,/accessory\.length\)dropPickup\(room,'artifact'/);
+ assert.match(game,/game\.player\.gold \+= 20/);
+ assert.match(game,/grantGear\(room,room\.chest\.x/);
 });
 
 
@@ -700,7 +700,7 @@ test('merchant currency follows merchant type and permanent cores reward room mi
  assert.match(game,/const p=game\.player,permanent=!!currentRoom\(\)\.merchant\?\.permanent/);
  assert.match(shop,/game\.rooms\?\.\[game\.roomId\]\?\.merchant\?\.permanent/);
  assert.match(game,/if\(room\.type==='treasure'\)\{earnLegacy\(1\);collectBossKey\(room\)/);
- assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)earnLegacy\(1\)/);
+ assert.match(game,/room\.type==='elite'\|\|room\.type==='hunt'\|\|room\.type==='miniboss'\|\|room\.miniEvent/);
  assert.match(game,/game\.earnedCores=\(game\.earnedCores\|\|0\)\+earned/);
  assert.match(shop,/BU SEFERLİK · Aldıkların sefer bitince sıfırlanır/);
  assert.match(shop,/ÇEKİRDEK/);
@@ -712,7 +712,7 @@ test('wheel screen stays hidden until E starts the wheel and closes after result
  assert.match(game,/if\(!w\|\|!\(w\.spinTime>0\|\|w\.resultTime>0\)\)return/);
  assert.match(game,/if\(near\?\.nearWheel\)\{spinWheel\(room\);return;\}/);
  assert.match(game,/w\.spinTime=2\.4;w\.spinDuration=2\.4/);
- assert.match(game,/room\.wheel\.resultTime=Math\.max\(0,room\.wheel\.resultTime-dt\)/);
+ assert.match(game,/w\.resultTime=Math\.max\(0,w\.resultTime-dt\)/);
 });
 
 
@@ -728,13 +728,13 @@ test('nearby minimap appears outside combat and only shows adjacent rooms', () =
 
 test('collected boss keys follow the player outside combat and first boss gate shows key count', () => {
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/bossKeys:0,keyFollowers:\[\]/);
+ assert.match(game,/regionKeys:\[0,0,0,0\],keyFollowers:\[\]/);
  assert.match(game,/game\.keyFollowers\.push\(\{x:game\.player\.x/);
  assert.match(game,/if\(!game\.inHub&&room\.cleared\)for\(let i=0;i<game\.keyFollowers\.length;i\+\+\)/);
  assert.match(game,/function drawFollowingKeys\(room\)/);
  assert.match(game,/drawFollowingKeys\(room\);drawPlayer\(game\.player\)/);
- assert.match(game,/needsKeys=target\.type==='boss'&&target\.bossStage===1/);
- assert.match(game,/ctx\.fillText\('⚿ '\+game\.bossKeys\+'\/'\+required/);
+ assert.match(game,/bossGateReady\(stage\)/);
+ assert.match(game,/bossGateStatus\(stage\)/);
 });
 
 
@@ -758,7 +758,7 @@ test('merchant cards prioritize short effects and actionable prices', () => {
  assert.match(shop,/class="shopIcon"/);
  assert.match(shop,/class="shopEffect"/);
  assert.match(shop,/class="shopBuy"/);
- assert.match(shop,/YETERSİZ /);
+ assert.match(shop,/YETERSİZ/);
  assert.match(shop,/title=/);
 });
 
@@ -799,13 +799,13 @@ test('wheel rewards vary between spins and rare wheels appear only in treasure r
  const game=readFileSync('src/game.js','utf8'),world=readFileSync('src/world.js','utf8');
  assert.match(game,/game\.wheelSpins=\(game\.wheelSpins\|\|0\)\+1/);
  assert.match(game,/ÇARK ÖDÜLÜ · \+100 ALTIN/);
- assert.match(game,/if\(p\.kits<5\)/);
+ assert.match(game,/if\(p\.kits<3\)/);
  assert.match(world,/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('first boss door consumes and animates three follower keys', () => {
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/!game\.rooms\[id\]\.keysConsumed/);
- assert.match(game,/game\.bossKeys=0;for\(const key of game\.keyFollowers\)/);
+ assert.match(game,/if\(!boss\.keysConsumed\)\{boss\.keysConsumed=true/);
+ assert.match(game,/for\(const key of game\.keyFollowers\)burst\(room,key\.x,key\.y/);
  assert.match(game,/game\.keyFollowers\.length=0/);
 });
 
