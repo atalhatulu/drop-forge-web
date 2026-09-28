@@ -140,3 +140,7 @@ Portalın kalkanı artık mermi sayısına bağlı değildir. Canı ilk kez %50 
 ## Odada kalma baskısı
 
 Savaş odasında geçen süre 30, 60 ve 90. saniyelerde tehdit seviyesini artırır (en fazla 3). Her kademe düşmanların hareketini %12 hızlandırır, saldırı bekleme aralığını %10 oranında kısaltan bir çarpan uygular ve saldırı hasarını %8 artırır. Tehdit seviyesi ve odada geçen süre oyun ekranında gösterilir; yeni odanın sayacı sıfırdan başlar. Hazırlık ve temizlenmiş odalarda tehdit artmaz.
+
+## Savaş odalarında şifacı
+
+Her savaş odası (boss odaları dâhil) başlangıçta en az bir şifacıyla açılır; hazine odalarında düşman doğmaz. Başlangıç düşman sayısı oda sınırını doldurmuşsa şifacıya yer açmak için eşzamanlı düşman sınırı başlangıç sayısına yükseltilir. Şifacı portalları odada canlı şifacı varken ikinci bir şifacı üretmez. Şifacılar birbirlerini iyileştiremez; işaretli av hedefi başlangıç diziliminde ilk düşman olarak kalır.
