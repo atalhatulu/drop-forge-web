@@ -584,7 +584,8 @@ test('enemy, chest and room rewards include diverse guaranteed and bonus loot', 
  assert.match(game,/bonus===0\)dropPickup\(room,'grenade'/);
  assert.match(game,/bonus===2&&room\.branchEnd\)dropPickup\(room,'artifact'/);
  assert.match(game,/if\(e\.type==='boss'\)\{dropPickup\(room,'artifact'/);
- assert.match(game,/if\(room\.type==='treasure'\)dropPickup\(room,'artifact'/);
+ assert.match(game,/if\(room\.type==='treasure'\)\{const accessory=/);
+ assert.match(game,/if\(accessory\.length\)dropPickup\(room,'artifact'/);
  assert.match(game,/if\(rand\(\)<\.65\)dropPickup\(room,'grenade'/);
  assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)dropPickup\(room,'gold'/);
 });
