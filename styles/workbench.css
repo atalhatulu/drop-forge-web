@@ -232,3 +232,12 @@ button.danger-btn:hover{background:#7d2228!important;border-color:#ff7d83!import
 ::-webkit-scrollbar-thumb:hover{background:#4d75a8;border-color:#ffd78a}
 * {scrollbar-width:thin;scrollbar-color:#3a5982 #0d182b}
 
+
+/* Run traits appear as read-only weapon identity, separate from legacy attachment selectors. */
+.weaponTraits{margin:10px 0;padding:10px;border:2px solid #54869a;background:#0b2332;display:grid;gap:7px}
+.weaponTraits h4{margin:0 0 2px;color:#a5f2dd;font:900 11px 'Courier New',monospace;letter-spacing:.35px}
+.weaponTraitRow{display:grid;grid-template-columns:110px minmax(0,1fr);gap:9px;align-items:start;padding:7px;background:#142e43;border:1px solid #42657a}
+.weaponTraitKind{font:900 10px/1.4 'Courier New',monospace;color:#f7d890}
+.weaponTraitRow strong{display:block;font:900 11px/1.4 'Courier New',monospace;color:#eff8ff}
+.weaponTraitRow small{display:block;margin-top:3px;font:10px/1.45 'Courier New',monospace;color:#b1cad7}
+@media(max-width:540px){.weaponTraitRow{grid-template-columns:1fr;gap:3px}}
