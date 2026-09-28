@@ -588,3 +588,16 @@ test('enemy, chest and room rewards include diverse guaranteed and bonus loot', 
  assert.match(game,/if\(rand\(\)<\.65\)dropPickup\(room,'grenade'/);
  assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)dropPickup\(room,'gold'/);
 });
+
+
+test('first acquisition highlights new weapons mods and accessories once per run', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/seenLoot:new Set\(\),newLootGlow:0/);
+ assert.match(game,/function highlightFirstLoot\(kind,id,name\)/);
+ assert.match(game,/if\(game\.seenLoot\.has\(key\)\)return/);
+ assert.match(game,/game\.seenLoot\.add\(key\);game\.newLootGlow=1\.8/);
+ assert.match(game,/highlightFirstLoot\('mod',item\.artifact/);
+ assert.match(game,/highlightFirstLoot\('artifact',item\.artifact/);
+ assert.match(game,/highlightFirstLoot\('weapon',p\.weapon/);
+ assert.match(game,/if\(game\.newLootGlow>0\)\{/);
+});
