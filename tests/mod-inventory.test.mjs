@@ -49,3 +49,32 @@ test('confirmed swap consumes one new mod and scraps the old mod once',()=>{
  assert.equal(applyModSwap(0,0,'rapidBarrel','barrel',true),false);
  assert.equal(game.player.gold,10);
 });
+
+test('a full mod bag can swap one carried mod for an equipped mod without changing capacity',()=>{
+ const bag=['rapidBarrel',...Array.from({length:11},(_,i)=>'other-'+i)];
+ const {game,applyModSwap}=harness({bag,equipped:'barrel'});
+ assert.equal(applyModSwap(0,0,'rapidBarrel','barrel',false),true);
+ assert.equal(game.player.slots[0].mods[0],'rapidBarrel');
+ assert.equal(game.stashedMods.length,12);
+ assert.ok(game.stashedMods.includes('barrel'));
+ assert.ok(!game.stashedMods.includes('rapidBarrel'));
+ assert.equal(game.player.gold,0);
+});
+test('a full mod bag can confirm a scrap swap without overflowing or paying twice',()=>{
+ const bag=['rapidBarrel',...Array.from({length:11},(_,i)=>'other-'+i)];
+ const {game,applyModSwap}=harness({bag,equipped:'barrel'});
+ assert.equal(applyModSwap(0,0,'rapidBarrel','barrel',true),true);
+ assert.equal(game.stashedMods.length,11);
+ assert.equal(game.player.slots[0].mods[0],'rapidBarrel');
+ assert.equal(game.player.gold,10);
+ assert.equal(applyModSwap(0,0,'rapidBarrel','barrel',true),false);
+ assert.equal(game.player.gold,10);
+});
+test('a swap rejected after equipment changes preserves the mod bag and gold',()=>{
+ const {game,applyModSwap}=harness({bag:['rapidBarrel'],equipped:'barrel'});
+ game.player.slots[0].mods[0]='loader';
+ assert.equal(applyModSwap(0,0,'rapidBarrel','barrel',true),false);
+ assert.deepEqual(game.stashedMods,['rapidBarrel']);
+ assert.equal(game.player.slots[0].mods[0],'loader');
+ assert.equal(game.player.gold,0);
+});
