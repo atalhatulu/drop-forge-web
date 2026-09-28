@@ -152,3 +152,7 @@ Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve *
 ## Animasyonlu şans çarkı
 
 Çarkla etkileşim, oyun kanvası üzerinde ayrı bir tam ekran 2D çark sahnesi açar. Altı renkli dilim, sabit gösterge ve yavaşlayarak dönen animasyon 2,4 saniye sürer. Ödül belirlendikten sonra sonuç 1,8 saniye gösterilir; mevcut ödül olasılıkları ve kazanım mantığı korunur.
+
+## Sandık ganimet çeşitliliği
+
+Özel sandıklar artık yalnızca eklenti değil, eksik ihtiyaca göre sağlık kiti, bomba veya mühimmat da verebilir. Uygun yeni eklenti kalmadığında ya da eklenti çantası dolduğunda kullanılamayacak kopya yerine ek altın ve iki kuşanılmış silaha ustalık XP'si verilir. Hazine sandığı sahip olunan aksesuarı tekrar seçmez; tüm aksesuarlar mevcutsa ilave altın verir. Temel +45 altın ödülü korunur.
