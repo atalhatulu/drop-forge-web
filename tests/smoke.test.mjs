@@ -399,7 +399,42 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const count=combat.loot.length;api.interact();
  assert.equal(combat.loot.length,count,'stale second interaction cannot remove another item');
  assert.equal(player.ammo,4,'stale second interaction cannot claim the same weapon twice');
+ // Pickup capacity is checked against real player state; rejected items stay on the floor.
+ const ground=(kind,artifact)=>{
+  const item={kind,artifact,x:player.x+player.w/2,y:548-14,grounded:true,vx:0,vy:0,taken:false};
+  combat.loot.push(item);return item;
+ };
+ const tick=()=>api.update(.016);
+ combat.cleared=true;game.transitionCooldown=2;player.kits=3;player.grenades=3;player.hp=player.maxHp;
+ player.gearBag=Array(20).fill({id:'occupied'});
+ player.equipment.helmet=null;
+ const freeSlotGear=ground('gear',{id:'bastion-helmet',set:'bastion',slot:'helmet'});
+ tick();
+ assert.ok(!combat.loot.includes(freeSlotGear),'full bag equips gear directly into a free slot');
+ assert.equal(player.equipment.helmet.id,'bastion-helmet');
+ assert.equal(player.gearBag.length,20,'direct equip does not exceed bag capacity');
+ assert.match(storeWrites['dropForge.gearLocker.v1']||'',/bastion-helmet/,'only collected gear reaches permanent locker');
+ const blockedGear=ground('gear',{id:'runner-helmet',set:'runner',slot:'helmet'});
+ tick();
+ assert.ok(combat.loot.includes(blockedGear),'full bag with occupied equipment slot leaves gear on ground');
+ assert.equal(blockedGear.taken,false);
+ player.gearBag.pop();tick();
+ assert.ok(!combat.loot.includes(blockedGear),'freeing bag space allows returning to collect gear');
+ assert.equal(player.gearBag.length,20);
+ player.chipBag=Array(15).fill('steel');
+ const chip=ground('chip','gravity');
+ tick();assert.ok(combat.loot.includes(chip),'full chip bag leaves chip on the ground');
+ player.chipBag.pop();tick();
+ assert.ok(!combat.loot.includes(chip),'chip is collected once capacity is available');
+ assert.equal(player.chipBag.length,15);
+ const kit=ground('health',null),grenade=ground('grenade',null);
+ tick();assert.ok(combat.loot.includes(kit)&&combat.loot.includes(grenade),'capped consumables remain available');
+ player.kits=2;player.grenades=2;tick();
+ assert.ok(!combat.loot.includes(kit)&&!combat.loot.includes(grenade),'consumables can be claimed after spending supplies');
+ assert.equal(player.kits,3);assert.equal(player.grenades,3);
 });
+
+test('forced boss ammunition
 
 test('forced boss ammunition and health never reroll into grenades',()=>{
  const source=readFileSync('src/game.js','utf8');
