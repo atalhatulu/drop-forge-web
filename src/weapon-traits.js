@@ -46,9 +46,11 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c,kind=null}){
   const t=TRAITS[id],s=state(slot);if(kind&&t.kind!==kind)continue;
   pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:!!s.levels[id],replace:t.kind==='main'&&!!s.main&&s.main!==id});
  }
+ // A completed build should receive the calling reward's gold fallback, not an endless replacement-only offer.
+ if(!pool.some(item=>!item.replace))return [];
  const result=[],used=new Set();
  for(const phase of (kind?[kind,null,null]:['main','support',null])){
-  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.id));
+  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.id)&&(phase!=='main'||!item.replace));
   if(!candidates.length)continue;
   const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length;
   const item=candidates[index];
