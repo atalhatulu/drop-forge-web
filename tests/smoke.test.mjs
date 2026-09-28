@@ -555,7 +555,8 @@ test('attachment cards display class-specific names, precise deltas and are avai
  assert.match(source,/window\.DropForgeModPresentation/);
  assert.match(source,/function modDiffHTML\(id,currentMods,mod,slot\)/);
  assert.match(source,/data-mod-choice=/);
- assert.match(source,/modEffectForWeapon\(w\.weapon,current\)/);
+ assert.match(source,/legacyWeaponMods/);
+ assert.match(source,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
  const presentation=readFileSync('src/mod-presentation.js','utf8');
  const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},ALL_MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
  new Function('window',presentation)(root);
