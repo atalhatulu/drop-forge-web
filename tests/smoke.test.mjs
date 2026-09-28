@@ -364,6 +364,11 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const combat=game.rooms[1],gold={kind:'gold',artifact:25,x:500,y:548-14,grounded:true,vx:0,vy:0,taken:false};combat.loot.push(gold);
  player.x=120;player.y=548-player.h;api.update(.016);assert.equal(gold.x,500,'coins must stay where they land; no magnet');
  const wallet=player.gold;player.x=gold.x-player.w/2;player.y=548-player.h;api.update(.016);assert.equal(player.gold,wallet+25,'touching the coin collects it');assert.equal(gold.taken,true);
+ const obsolete={kind:'mod',artifact:'barrel',x:gold.x,y:548-14,grounded:true,vx:0,vy:0,taken:false};
+ combat.loot.push(obsolete);const beforeSalvage=player.gold;api.update(.016);
+ assert.equal(player.gold,beforeSalvage+15,'obsolete attachment pickups grant salvage gold');
+ assert.equal(obsolete.taken,true,'salvage can be collected only once');
+ assert.equal(game.stashedMods.length,0,'legacy ground loot never reintroduces the attachment bag');
  player.x=570;player.y=548-player.h;api.mouse.x=700;api.mouse.y=410;
  player.activeModule='boost';player.moduleCooldown=0;assert.equal(api.useActiveModule(),true,'module activates');assert.ok(player.moduleCooldown>0,'module cooldown begins');assert.equal(api.useActiveModule(),false,'module respects cooldown');
  combat.cleared=true;combat.merchant={x:player.x+player.w/2,y:548};player.gold=200;api.openShop();assert.equal(api.shopOpen,true);assert.equal(api.buyShopItem('kit'),true);assert.equal(player.gold,145,'run merchant charges run gold');assert.equal(api.buyShopItem('xp'),false,'permanent mastery XP is unavailable in run merchant');api.closeShop();
