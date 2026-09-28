@@ -726,3 +726,15 @@ test('nearby minimap appears outside combat and only shows adjacent rooms', () =
  assert.match(game,/Object\.values\(room\.links\)\.map\(id=>game\.rooms\[id\]\)/);
  assert.match(game,/drawGameHud\(\);drawNearbyMinimap\(room\);drawWheelScreen\(room\.wheel\)/);
 });
+
+
+test('collected boss keys follow the player outside combat and first boss gate shows key count', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/bossKeys:0,keyFollowers:\[\]/);
+ assert.match(game,/game\.keyFollowers\.push\(\{x:game\.player\.x/);
+ assert.match(game,/if\(!game\.inHub&&room\.cleared\)for\(let i=0;i<game\.keyFollowers\.length;i\+\+\)/);
+ assert.match(game,/function drawFollowingKeys\(room\)/);
+ assert.match(game,/drawFollowingKeys\(room\);drawPlayer\(game\.player\)/);
+ assert.match(game,/needsKeys=target\.type==='boss'&&target\.bossStage===1/);
+ assert.match(game,/ctx\.fillText\('⚿ '\+game\.bossKeys\+'\/'\+required/);
+});
