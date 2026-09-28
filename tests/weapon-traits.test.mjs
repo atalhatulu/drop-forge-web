@@ -52,3 +52,15 @@ test('chest UI grants traits directly rather than routing them into the mod bag'
  assert.match(game,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
  assert.match(game,/SİLAHA HEMEN UYGULA/);
 });
+
+test('chest selection presents a main and support when both are available',()=>{
+ const cards=traits.choices({slots:[gun()],projectiles,seed:11,hash:(_a,_b,c)=>c});
+ assert.equal(cards.length,3);
+ assert.equal(cards[0].kind,'main');
+ assert.equal(cards[1].kind,'support');
+ assert.equal(new Set(cards.map(card=>card.id)).size,3);
+});
+test('normal chest offers do not fall back to legacy attachment cards',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\)\)/);
+});
