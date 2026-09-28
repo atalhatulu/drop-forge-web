@@ -108,3 +108,7 @@ Her silahın kendine ait **sağ tık yeteneği** ve bağımsız bekleme süresi 
 ## İlk boss kapısının üç anahtarı
 
 İlk bölgedeki (LV 1) üç yan dalın son odası, seed'den bağımsız olarak birer boss anahtarı taşır. Anahtar, ilgili oda temizlendiğinde veya hazine odasına girildiğinde otomatik toplanır; böylece düşman ganimetine veya şansa bağlı kalmaz. İlk boss odasına geçiş için üçünün de toplanması gerekir. Oyun içi gösterge anahtar sayısını, rota haritası da anahtar odalarını ve toplanma durumlarını gösterir. Diğer boss kapıları mevcut ilerleme kurallarını korur.
+
+## Tank hücumu
+
+Kırmızı tank düşmanları oyuncu yatay menzildeyken kısa süre hücumu zeminde işaretler, ardından sabit yöne yüksek hızla atılır. Hücum isabeti normal temastan daha yüksek hasar ve belirgin geri itme uygular; aynı hücum yalnızca bir kez vurur. Hücum bitince bekleme süresi başlar. Jeneratör savunması ve diğer düşman davranışları korunur.
