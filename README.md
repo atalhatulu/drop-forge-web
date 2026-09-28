@@ -144,3 +144,7 @@ Savaş odasında geçen süre 30, 60 ve 90. saniyelerde tehdit seviyesini artır
 ## Savaş odalarında şifacı
 
 Her savaş odası (boss odaları dâhil) başlangıçta en az bir şifacıyla açılır; hazine odalarında düşman doğmaz. Başlangıç düşman sayısı oda sınırını doldurmuşsa şifacıya yer açmak için eşzamanlı düşman sınırı başlangıç sayısına yükseltilir. Şifacı portalları odada canlı şifacı varken ikinci bir şifacı üretmez. Şifacılar birbirlerini iyileştiremez; işaretli av hedefi başlangıç diziliminde ilk düşman olarak kalır.
+
+## Silah build kayıtları
+
+Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve **ÖNERİLEN BUILD** düğmeleri bulunur. Build tercihleri silah kimliğine göre tarayıcıda saklanır ve sonraki seferlerde yeniden uygulanabilir. Önerilen dizilim silahın mermi ailesine göre bir başlangıç seçeneğidir; yalnızca ustalık seviyesiyle açılmış yuvalara uygun eklentiler takılır. Kayıtlar eklenti veya ustalık kilidini açmaz ve mevcut seferin ganimetini kalıcılaştırmaz.
