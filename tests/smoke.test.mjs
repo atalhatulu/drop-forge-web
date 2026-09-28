@@ -827,3 +827,12 @@ test('ground enemies drop through platforms to pursue player below', () => {
  assert.match(ai,/e\.dropThrough=\.48/);
  assert.match(ai,/e\.dropThrough=Math\.max\(0/);
 });
+
+
+test('enemy ammo pickups match the equipped projectile family and refill matching weapons', () => {
+ const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
+ assert.match(game,/if\(kind==='ammo'\)artifact=WEAPON_PROJECTILES\[game\.player\.weapon/);
+ assert.match(game,/const family=item\.artifact\|\|'kinetic',targets=p\.slots\.filter\(q=>q&&WEAPON_PROJECTILES\[q\.weapon\]===family/);
+ for(const family of ['kinetic','scatter','pierce','plasma','laser','explosive','arc'])assert.match(loot,new RegExp(family+':\\['));
+ assert.match(loot,/if\(item\.kind==='ammo'\)/);
+});
