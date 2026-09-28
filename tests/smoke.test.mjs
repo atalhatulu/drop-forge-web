@@ -484,7 +484,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
  assert.match(source,/game\.player\.kills%5===0\)earnLegacy\(1\)/);
  assert.match(source,/e\.type==='boss'\)earnLegacy\(3\)/);
  assert.match(source,/room\.merchant=\{x:857,y:FLOOR,permanent:true\}/);
- assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.inHub,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
+ assert.match(readFileSync('src/shop-view.js','utf8'),/const permanent=!!game\.rooms\?\.\[game\.roomId\]\?\.merchant\?\.permanent,items=permanent\?PERMANENT_ITEMS:SHOP_ITEMS/);
  assert.match(source,/p\.gold-=price/);
  assert.match(source,/legacy\.marks-=price;saveLegacy\(\)/);
  assert.match(source,/grantMastery\(p\.weapon,90,true\)/);
@@ -694,4 +694,16 @@ test('melee blade and arc animate through combo swings with hit flash', () => {
  assert.match(game,/tail=Math\.max\(-spread,head-/);
  assert.match(game,/if\(s\.hits\)\{ctx\.globalAlpha=fade\*\.7/);
  assert.match(game,/swing=active\?\(-\.95\+progress\*1\.9\)/);
+});
+
+
+test('merchant currency follows merchant type and permanent cores reward room milestones', () => {
+ const game=readFileSync('src/game.js','utf8'),shop=readFileSync('src/shop-view.js','utf8');
+ assert.match(game,/const p=game\.player,permanent=!!currentRoom\(\)\.merchant\?\.permanent/);
+ assert.match(shop,/game\.rooms\?\.\[game\.roomId\]\?\.merchant\?\.permanent/);
+ assert.match(game,/room\.cleared=true;earnLegacy\(1\);collectBossKey\(room\)/);
+ assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)earnLegacy\(1\)/);
+ assert.match(game,/game\.earnedCores=\(game\.earnedCores\|\|0\)\+earned/);
+ assert.match(shop,/BU SEFER \+'/);
+ assert.match(shop,/ÇEKİRDEKLER KALICI:/);
 });
