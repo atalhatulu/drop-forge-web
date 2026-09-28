@@ -640,7 +640,7 @@ test('room threat escalates every 30 seconds with capped movement and attack buf
 
 test('each combat room starts with one healer without healer-to-healer loops', () => {
  const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
- assert.match(game,/if\(room\.type==='treasure'\)\{room\.cleared=true/);
+ assert.match(game,/if\(room\.type==='treasure'\|\|room\.type==='gold'\)\{room\.cleared=true/);
  assert.match(game,/if\(!room\.enemies\.some\(e=>e\.type==='healer'\)\)spawnEnemy\(room,'healer'/);
  assert.match(game,/room\.enemyCap=Math\.max\(room\.enemyCap,room\.enemies\.length\)/);
  assert.match(game,/if\(room\.type==='hunt'\)\{const target=room\.enemies\[0\]/);
