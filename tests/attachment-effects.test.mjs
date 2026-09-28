@@ -30,7 +30,7 @@ test('attachment effects, gear pickup and chest failure handling are wired into 
  assert.match(g,/bounceBullet\(bullet,\{left:25,right:W-25,top:25,bottom:FLOOR\}\)/);
  const grant=g.slice(g.indexOf('function grantGear('),g.indexOf('function earnLegacy(',g.indexOf('function grantGear(')));
  assert.doesNotMatch(grant,/unlockGear\(/);
- assert.match(g,/p\.gearBag\.push\(item\.artifact\);unlockGear\(item\.artifact\)/);
+ assert.match(g,/p\.gearBag\.push\(gear\);unlockGear\(gear\)/);
  assert.match(g,/p\.gearBag\.push\(item\);\s*unlockGear\(item\)/);
  assert.match(g,/ZIRH ÇANTASI DOLU[^]*?return;/);
  assert.match(g,/CHIP ÇANTASI DOLU[^]*?return;/);

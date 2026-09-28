@@ -434,8 +434,6 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.kits,3);assert.equal(player.grenades,3);
 });
 
-test('forced boss ammunition
-
 test('forced boss ammunition and health never reroll into grenades',()=>{
  const source=readFileSync('src/game.js','utf8');
  const a=source.indexOf('function dropPickup(room,kind,x,y,force=false,artifact=null)'),b=source.indexOf('function saveSlot()',a);
