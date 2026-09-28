@@ -599,7 +599,7 @@ function interact(){
  }
 }
 const {SHOP_ITEMS,PERMANENT_ITEMS}=window.DropForgeShopData;
-const {nextLockedWeapon,shopCanBuy,renderShop}=window.DropForgeShopView.createShopView({getGame:()=>game,getLegacy:()=>legacy,getUnlockedWeapons:()=>unlockedWeapons,WEAPON_NAMES,PERMANENT_ITEMS,SHOP_ITEMS,AMMO_MAX,MODS,masteryLevel,$});
+const {nextLockedWeapon,shopCanBuy,renderShop}=window.DropForgeShopView.createShopView({getGame:()=>game,getLegacy:()=>legacy,getUnlockedWeapons:()=>unlockedWeapons,WEAPON_NAMES,PERMANENT_ITEMS,SHOP_ITEMS,AMMO_MAX,masteryLevel,$});
 function openShop(){if(!game||shopOpen||loadoutOpen||hubForgeOpen||helpOpen||mapOpen||paused||!currentRoom().cleared||!currentRoom().merchant||game.dead||game.won)return;shopOpen=true;paused=true;mouse.down=false;$('shopOverlay').classList.remove('hidden');renderShop();}
 function closeShop(){if(!shopOpen)return;shopOpen=false;$('shopOverlay').classList.add('hidden');if(game&&!game.dead&&!game.won){paused=false;canvas.focus();}}
 function buyShopItem(id){
@@ -613,7 +613,7 @@ function buyShopItem(id){
   else if(id==='unlock'){const weapon=nextLockedWeapon();if(weapon>=0)unlockWeapon(weapon);}
   legacy.marks-=price;saveLegacy();floating(p.x,p.y-25,'KALICI GELİŞİM · '+PERMANENT_ITEMS[id].name,'#a7f5d2');
  }else{
-  const price=SHOP_ITEMS[id].price;if(id==='kit')p.kits++;else if(id==='patch'){const healed=Math.min(65,p.maxHp-p.hp);p.hp+=healed;floating(p.x,p.y-35,'+'+healed+' CAN · SAHA TEDAVİSİ','#9ff0bb');}else if(id==='grenade')p.grenades++;else if(id==='ammo'){saveSlot();for(const q of p.slots)if(q)q.reserve=Math.min(AMMO_MAX[q.weapon],q.reserve+MAG_SIZE[q.weapon]*5);if(p.activeSlot>=0)p.reserve=p.slots[p.activeSlot]?.reserve??0;}else if(MODS[id]){game.stashedMods.push(id);highlightFirstLoot('mod',id,MODS[id].name);}
+  const price=SHOP_ITEMS[id].price;if(id==='kit')p.kits++;else if(id==='patch'){const healed=Math.min(65,p.maxHp-p.hp);p.hp+=healed;floating(p.x,p.y-35,'+'+healed+' CAN · SAHA TEDAVİSİ','#9ff0bb');}else if(id==='grenade')p.grenades++;else if(id==='ammo'){saveSlot();for(const q of p.slots)if(q)q.reserve=Math.min(AMMO_MAX[q.weapon],q.reserve+MAG_SIZE[q.weapon]*5);if(p.activeSlot>=0)p.reserve=p.slots[p.activeSlot]?.reserve??0;}
   p.gold-=price;floating(p.x,p.y-25,'-'+price+' ALTIN · '+SHOP_ITEMS[id].name,'#f5d98d');
  }
  sound(790,.12,'triangle');updateHud();renderShop();return true;
