@@ -860,3 +860,13 @@ test('gear can drop from enemies chests and wheel and be equipped in loadout', (
  assert.match(game,/if\(room\.type==='treasure'&&rand\(\)<\.65\)grantGear/);assert.match(game,/ÇARK ÖDÜLÜ · GİYSİ PARÇASI/);
  assert.match(game,/data-gear/);assert.match(loot,/item\.kind==='gear'/);
 });
+
+
+test('portal health scales by level and level three has two defensive shields', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/hp:\[320,490,720,960\]/);
+ assert.match(game,/shieldCharges:room\.level>=3\?2:1/);
+ assert.match(game,/q\.shieldCharges>0&&q\.hp<=q\.maxHp\*/);
+ assert.match(game,/q\.shieldCharges--/);
+ assert.match(game,/q\.shield=2\.7/);
+});
