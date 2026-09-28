@@ -554,3 +554,13 @@ test('tank charge telegraphs, hits once, and knocks the player back', () => {
  assert.match(game,/chargeWindup:0,chargeTime:0/);
  assert.match(game,/e\.chargeWindup>0/);
 });
+
+
+test('blue flying enemies pursue and evade faster without removing attack windup', () => {
+ const ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(ai,/e\.dodgeDir\*570:clamp\(dx\*1\.75,-245,245\)/);
+ assert.match(ai,/e\.vy=-e\.dodgeDir\*440/);
+ assert.match(ai,/Math\.sin\(e\.phase\*4\.2\)\*38\+clamp\(p\.y-115-e\.y,-115,115\)/);
+ assert.match(ai,/e\.type==='blue'\?1\.45:2\.35/);
+ assert.match(ai,/e\.type==='blue'\?\.42:\.36/);
+});
