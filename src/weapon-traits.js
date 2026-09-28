@@ -50,10 +50,12 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c}){
   pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:!!s.levels[id],replace:t.kind==='main'&&!!s.main&&s.main!==id});
  }
  const result=[],used=new Set();
- for(let n=0;n<3&&pool.length;n++){
-  const index=Math.abs(hash(seed,n,seed+n*773))%pool.length,item=pool.splice(index,1)[0],key=item.weaponSlot+':'+item.id;
-  if(used.has(key)){n--;continue;}
-  used.add(key);result.push(item);
+ for(const kind of ['main','support',null]){
+  const candidates=pool.filter(item=>(!kind||item.kind===kind)&&!used.has(item.id));
+  if(!candidates.length)continue;
+  const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length;
+  const item=candidates[index];
+  used.add(item.id);result.push(item);
  }
  return result;
 }
