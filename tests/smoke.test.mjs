@@ -704,8 +704,8 @@ test('merchant currency follows merchant type and permanent cores reward room mi
  assert.match(game,/room\.cleared=true;earnLegacy\(1\);collectBossKey\(room\)/);
  assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)earnLegacy\(1\)/);
  assert.match(game,/game\.earnedCores=\(game\.earnedCores\|\|0\)\+earned/);
- assert.match(shop,/BU SEFER \+'/);
- assert.match(shop,/ÇEKİRDEKLER KALICI:/);
+ assert.match(shop,/BU SEFERLİK · Aldıkların sefer bitince sıfırlanır/);
+ assert.match(shop,/ÇEKİRDEK/);
 });
 
 
@@ -750,4 +750,16 @@ test('summoner enemy types spawn bounded blockers and temporary portals', () => 
  assert.match(ai,/if\(e\.type==='riftcaller'\)/);
  assert.match(ai,/spawnLimit:3,owner:e/);
  assert.match(game,/portal\.spawnLimit&&portal\.produced>=portal\.spawnLimit/);
+});
+
+
+test('merchant cards prioritize short effects and actionable prices', () => {
+ const shop=readFileSync('src/shop-view.js','utf8');
+ assert.match(shop,/KALICI · Aldıkların tüm seferlerde geçerli/);
+ assert.match(shop,/BU SEFERLİK · Aldıkların sefer bitince sıfırlanır/);
+ assert.match(shop,/class="shopIcon"/);
+ assert.match(shop,/class="shopEffect"/);
+ assert.match(shop,/class="shopBuy"/);
+ assert.match(shop,/YETERSİZ /);
+ assert.match(shop,/title=/);
 });

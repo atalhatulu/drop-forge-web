@@ -11,9 +11,9 @@ function shopCanBuy(id){
 function renderShop(){
  const game=getGame();if(!game)return;const permanent=!!game.rooms?.[game.roomId]?.merchant?.permanent,items=permanent?PERMANENT_ITEMS:SHOP_ITEMS;
  $('shopTitle').textContent=permanent?'◆ KALICI GELİŞİM USTASI':'◆ SEFER TÜCCARI';
- $('shopDescription').textContent=permanent?'Kalıcı Çekirdek: her 5 düşmanda +1, boss başına +3, elit/av odası ve hazine odası başına +1. Alınan gelişimler ölümden sonra korunur.':'Buradan aldığın kitler, mühimmat, bombalar ve eklentiler yalnızca bu sefere aittir. Takılı eklenti sadece takıldığı silahı etkiler; çantadaki parçayı uyumlu başka bir silaha taşıyabilirsin.';
- $('shopGold').textContent=permanent?'KALICI ÇEKİRDEK · '+getLegacy().marks+' · BU SEFER +'+(game.earnedCores||0):'SEFER ALTINI · '+game.player.gold+' · ÇEKİRDEKLER KALICI: '+getLegacy().marks;
- $('shopItems').innerHTML=Object.entries(items).map(([id,item])=>'<button class="shopItem" data-shop-item="'+id+'" '+(shopCanBuy(id)?'':'disabled')+'><span class="shopName">'+item.name+'</span><span class="shopDescription">'+item.description+'</span><strong>◆ '+item.price+(permanent?' ÇEKİRDEK':' ALTIN')+'</strong></button>').join('');
+ $('shopDescription').textContent=permanent?'KALICI · Aldıkların tüm seferlerde geçerli.':'BU SEFERLİK · Aldıkların sefer bitince sıfırlanır.';
+ $('shopGold').textContent=permanent?'◆ '+getLegacy().marks+' ÇEKİRDEK':'◆ '+game.player.gold+' ALTIN';
+ const icons={hp:'♥',kits:'✚',ammo:'▣',xp:'★',unlock:'⚒',kit:'✚',grenade:'✹',barrel:'▰',loader:'↻',core:'◇',stabilizer:'⊕'};const effect={hp:'+10 MAKS. CAN',kits:'+1 BAŞLANGIÇ KİTİ',ammo:'+1 YEDEK ŞARJÖR',xp:'+90 SİLAH XP',unlock:'YENİ SİLAH AÇ',kit:'+1 SAĞLIK KİTİ',grenade:'+1 BOMBA'};$('shopItems').innerHTML=Object.entries(items).map(([id,item])=>{const available=shopCanBuy(id),price=item.price,currency=permanent?'ÇEKİRDEK':'ALTIN',balance=permanent?getLegacy().marks:game.player.gold,reason=available?'SATIN AL':balance<price?'YETERSİZ '+currency:'SINIRA ULAŞILDI / UYGUN DEĞİL',short=effect[id]||item.description.split(' · ')[0];return '<button class="shopItem" data-shop-item="'+id+'" '+(available?'':'disabled')+' title="'+item.description+'"><span class="shopIcon" aria-hidden="true">'+(icons[id]||'◇')+'</span><span class="shopName">'+item.name+'</span><span class="shopEffect">'+short+'</span><span class="shopBuy"><strong>◆ '+price+' '+currency+'</strong><small>'+reason+'</small></span></button>';}).join('');
 }
 
 return {nextLockedWeapon,shopCanBuy,renderShop};
