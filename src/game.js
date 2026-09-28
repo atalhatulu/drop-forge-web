@@ -9,7 +9,7 @@ const {PROJECTILE_FAMILIES,MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,W
 const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds}=window.DropForgeProgression;
 const WEAPON_ABILITIES=window.DropForgeAbilities;
 const GEAR=window.DropForgeGear;
-function gearStats(){return GEAR.stats(game?.player?.equipment);}
+function gearStats(){return GEAR?.stats(game?.player?.equipment)||{hp:0,speed:0,ammo:0,leech:0,full:[]};}
 function equipGear(id){const p=game?.player;if(!p)return;const index=p.gearBag.findIndex(q=>q.id===id);if(index<0)return;const item=p.gearBag.splice(index,1)[0],old=p.equipment[item.slot],before=p.maxHp;p.equipment[item.slot]=item;if(old)p.gearBag.push(old);p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));announce(GEAR.SETS[item.set].name+' · '+GEAR.SLOT_NAMES[item.slot]+' TAKILDI',1.5);renderLoadout();updateHud();}
 function grantGear(room,x,y){const item=GEAR.randomGear();dropPickup(room,'gear',x,y,true,item);}
 
