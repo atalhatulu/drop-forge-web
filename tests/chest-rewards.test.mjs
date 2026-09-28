@@ -64,11 +64,16 @@ test('wheel fallback pays gold instead of discarding a full gear bag or reserve'
  assert.match(source,/w\.traitOffers=offers/);
  assert.match(source,/ÇARK ÖDÜLÜ · \+85 ALTIN/);
 });
-test('boss claim recomputes the offer and only consumes a valid rewarded attachment',()=>{
+test('boss trait prize recomputes a compatible offer and grants it directly to the equipped weapon',()=>{
  const source=readFileSync('src/game.js','utf8');
- assert.match(source,/const id=selectBossAttachment\(/);
- assert.match(source,/id!==valid\)return;game\.stashedMods\.push\(id\)/);
- assert.match(source,/game\.pendingBossReward=null;renderLoadout\(\)/);
+ const render=source.slice(source.indexOf('if(game.pendingBossReward){'),source.indexOf('if(game.pendingRune){',source.indexOf('if(game.pendingBossReward){')));
+ const claim=source.slice(source.indexOf("const bossButton=e.target.closest('button[data-boss-reward]')"),source.indexOf("const runeButton=e.target.closest('button[data-rune-slot]')"));
+ assert.match(render,/DropForgeWeaponTraits\.choices/);
+ assert.match(render,/data-boss-reward="trait"/);
+ assert.doesNotMatch(render,/dataset\.attachment/);
+ assert.match(claim,/DropForgeWeaponTraits\.grant\(slot,offer\.id,WEAPON_PROJECTILES\)/);
+ assert.doesNotMatch(claim,/game\.stashedMods\.push\(id\)/);
+ assert.match(claim,/game\.pendingBossReward=null;renderLoadout\(\)/);
 });
 
 test('three-choice chest never offers the same gear twice when random gear repeats',()=>{
