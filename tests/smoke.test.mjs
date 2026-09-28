@@ -541,3 +541,16 @@ test('first boss requires three reachable, guaranteed region-one keys', () => {
  assert.match(game,/room\.cleared=true;collectBossKey\(room\)/);
  assert.match(game,/game\.rooms\[id\]\.bossStage===1&&game\.bossKeys<3/);
 });
+
+
+test('tank charge telegraphs, hits once, and knocks the player back', () => {
+ const ai=readFileSync('src/enemy-ai.js','utf8'),game=readFileSync('src/game.js','utf8');
+ assert.match(ai,/e\.chargeWindup=\.62/);
+ assert.match(ai,/e\.chargeDir\*650/);
+ assert.match(ai,/!e\.chargeHit&&collideRect\(p,e\)/);
+ assert.match(ai,/damagePlayer\(Math\.round\(35\*/);
+ assert.match(ai,/p\.vx=e\.chargeDir\*530;p\.vy=-350/);
+ assert.match(ai,/e\.chargeCooldown=3\.1/);
+ assert.match(game,/chargeWindup:0,chargeTime:0/);
+ assert.match(game,/e\.chargeWindup>0/);
+});
