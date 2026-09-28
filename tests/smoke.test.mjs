@@ -785,3 +785,14 @@ test('weapon sprites use distinct family silhouettes and individual signature ma
  assert.match(game,/if\(kind===0\)/);assert.match(game,/if\(kind===3\)/);assert.match(game,/if\(kind===6\)/);
  assert.match(game,/const marks=\[9,15,21,27,33,39,13,19,25,31,37,43,49\]/);
 });
+
+
+test('hub test lab configures weapon enemy level and count without progression rewards', () => {
+ const html=readFileSync('index.html','utf8'),game=readFileSync('src/game.js','utf8');
+ for(const id of ['testLabBtn','testLabOverlay','testLabWeapon','testLabEnemy','testLabLevel','testLabCount','startTestLab','stopTestLab'])assert.match(html,new RegExp('id="'+id+'"'));
+ assert.match(game,/function startCombatTest\(\)/);assert.match(game,/function stopCombatTest\(\)/);
+ assert.match(game,/game\.testMode=true/);assert.match(game,/if\(game\.testMode\)\{burst\(room/);
+ assert.match(game,/if\(game\.testMode\)\{p\.hp=/);
+ assert.match(game,/room\.level=level;room\.enemyCap=12/);
+ assert.match(game,/if\(testLabOpen\)closeTestLab\(\)/);
+});
