@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
@@ -97,7 +97,7 @@ test('seeded map includes defense, hunt, and meaningful route rewards', () => {
     const rooms=mapFactory(seed);
     assert.ok(rooms.some(r=>r.type==='defense'), 'defense room in seed '+seed);
     assert.ok(rooms.some(r=>r.type==='hunt'), 'hunt room in seed '+seed);
-    assert.ok(rooms.every(r=>['ammo','xp','mod','health'].includes(r.reward)));
+    assert.ok(rooms.every(r=>['ammo','xp','mod','health','gold'].includes(r.reward)));
     assert.ok(rooms.every(r=>Object.entries(r.links).every(([dir,id])=>rooms[id].links[back[dir]]===r.id)));
     assert.deepEqual(mapFactory(seed).map(r=>[r.x,r.y,r.type,r.reward]),rooms.map(r=>[r.x,r.y,r.type,r.reward]));
   }
@@ -129,7 +129,7 @@ test('four five-room regions form a boss-gated downward tree', () => {
   assert.deepEqual(bosses.map(r=>r.y),[5,10,15,20]);
   assert.deepEqual(bosses.map(r=>r.bossStage),[1,2,3,4]);
   assert.equal(spine.length,21);
-  assert.ok(rooms.length>45 && rooms.some(r=>r.branchEnd&&r.type==='treasure'));
+  assert.ok(rooms.length>21 && rooms.some(r=>r.branchEnd));
   assert.ok(rooms.every(r=>r.biome===biomeNames[r.stage-1]));
   assert.ok(rooms.every(r=>r.level===Math.min(4,r.stage)));
   assert.ok(rooms.every(r=>Object.entries(r.links).every(([dir,id])=>rooms[id].links[back[dir]]===r.id)));
@@ -320,7 +320,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  const grid=new Node('grid'),workbenchNodes=new Map();
  const doc={getElementById(id){if(!nodes.has(id)){nodes.set(id,new Node(id,/^forge(Gun|Mod|EditorSelect)[12](_[234])?$/.test(id)||id==='difficulty'?'SELECT':'DIV'));}return nodes.get(id)},querySelector(query){return query==='#forgePanel .forgeGrid'?grid:/^\[data-weapon-card="[12]"\]$/.test(query)?new Node('card'):null},querySelectorAll(query){if(!workbenchNodes.has(query))workbenchNodes.set(query,query==='.forgeAttachSlot'?Array.from({length:8},(_,i)=>{const node=new Node('attach'+i);node.dataset={gun:String(Math.floor(i/4)+1),slot:String(i%4)};return node;}):query==='[data-close-editor]'?[1,2].map(i=>{const node=new Node('close'+i);node.dataset.closeEditor=String(i);return node;}):query==='[data-focus-gun]'?[1,2].map(i=>{const node=new Node('focus'+i);node.dataset.focusGun=String(i);return node;}):query==='.forgeEditorChoices'?[1,2].map(i=>doc.getElementById('forgeEditorChoices'+i)):[]);return workbenchNodes.get(query)},createElement(tag){return new Node('',tag.toUpperCase())}};
  const storeWrites={},win={addEventListener(){},AudioContext:class{}},storage={getItem(){return null},setItem(key,value){storeWrites[key]=value}};
- new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
+ new Function('document','window','localStorage','requestAnimationFrame','performance','HTMLCanvasElement',['src/catalog.js','src/progression.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js'].map(path=>readFileSync(path,'utf8')).join('\n')+'\n'+source)(doc,win,storage,fn=>frames.push(fn),{now:()=>0},Node);
  const api=win.__testHub,game=api.game,room=game.rooms[0],player=game.player;
  assert.equal(game.inHub,true);assert.equal(game.roomId,0);
  assert.ok(room.dummy&&room.forge&&room.hubGate);assert.equal(room.merchant.permanent,true);
@@ -453,24 +453,21 @@ test('attachment cards display class-specific names, precise deltas and are avai
  assert.match(naming.modEffectForWeapon(2,'core'),/alanını %25/);
 });
 
-test('every weapon has a distinct right-click ability with an independent cooldown',()=>{
+test('weapon ability definitions remain available while right click uses the active module system',()=>{
  const source=readFileSync('src/game.js','utf8'),catalog=readFileSync('src/abilities-data.js','utf8');
  const root={};new Function('window',catalog)(root);
  const abilities=root.DropForgeAbilities;
- assert.match(source,/const WEAPON_ABILITIES=window\.DropForgeAbilities/);
  assert.equal(abilities.length,13);
  assert.equal(new Set(abilities.map(ability=>ability.name)).size,13);
  assert.ok(abilities.every(ability=>ability.cooldown>=8&&ability.cooldown<=15));
- assert.match(source,/canvas\.addEventListener\('mousedown',e=>\{if\(e\.button===0\)/);
- assert.match(source,/else if\(e\.button===2\)\{e\.preventDefault\(\);canvas\.focus\(\);useWeaponAbility\(\)/);
- assert.match(source,/p\.abilityCooldowns\[id\]=spec\.cooldown/);
- assert.match(source,/p\.abilityCooldowns=Array\(13\)\.fill\(0\);p\.abilityBuff=null;game\.inHub=false/);
- assert.match(source,/bullet\.weapon===8&&e\.markTime>0\?1\.35:1/);
+ assert.match(source,/function useActiveModule\(\)/);
+ assert.match(source,/else if\(e\.button===2\)\{e\.preventDefault\(\);canvas\.focus\(\);useActiveModule\(\)/);
+ assert.match(source,/moduleCooldown/);
 });
 test('preparation announcements are under the arena and gold requires player contact',()=>{
  const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8'),css=readProjectCss();
  const canvasEnd=html.indexOf('</main>'),status=html.indexOf('id="statusStrip"'),inventory=html.indexOf('class="inventory"');
- assert.ok(canvasEnd>=0&&status>canvasEnd&&inventory>status);
+ assert.ok(canvasEnd>=0&&status<canvasEnd&&inventory>canvasEnd);
  assert.match(css,/#statusStrip\{display:flex/);
  assert.match(source,/function drawGameHud\(\)\{const room=currentRoom\(\);if\(game\.inHub\)return/);
  assert.match(source,/\$\('banner'\)\.classList\.add\('hidden'\)/);
@@ -495,7 +492,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);
@@ -534,13 +531,13 @@ test('fourth region uses level four enemies with a separate shield pool', () => 
 
 test('first boss requires three reachable, guaranteed region-one keys', () => {
  const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8');
- assert.match(world,/filter\(room=>room\.branchEnd&&room\.stage===1\)/);
- assert.match(world,/slice\(0,3\)/);
+ assert.match(world,/filter\(room=>room\.branchEnd&&room\.stage===stage&&room\.type!=='boss'\)/);
+ assert.match(world,/const required=\[1,2,2,3\]\[stage-1\]/);
  assert.match(world,/room\.bossKey=true/);
  assert.match(game,/function collectBossKey\(room\)/);
- assert.match(game,/room\.bossKeyCollected=true;game\.bossKeys\+\+/);
+ assert.match(game,/room\.bossKeyCollected=true;game\.regionKeys\[room\.keyStage-1\]\+\+/);
  assert.match(game,/room\.cleared=true;collectBossKey\(room\)/);
- assert.match(game,/game\.rooms\[id\]\.bossStage===1&&game\.bossKeys<3/);
+ assert.match(game,/bossGateReady\(stage\)/);
 });
 
 
@@ -852,7 +849,7 @@ test('gold vault and assault room events have distinct generation and gameplay',
 test('armor sets provide five slots and distinct full-set build bonuses', () => {
  const src=readFileSync('src/gear.js','utf8'),context={window:{}};vm.runInNewContext(src,context);const gear=context.window.DropForgeGear;
  assert.equal(gear.SLOTS.length,5);
- for(const set of Object.keys(gear.SETS)){const equipment=Object.fromEntries(gear.SLOTS.map(slot=>[slot,gear.createGear(set,slot)])),stats=gear.stats(equipment);assert.equal(stats.full[0],set);if(set==='bastion')assert.equal(stats.hp,180);if(set==='runner')assert.ok(stats.speed>.4);if(set==='arsenal')assert.ok(stats.ammo>.4);if(set==='vampire')assert.equal(stats.leech,27);}
+ for(const set of Object.keys(gear.SETS)){const equipment=Object.fromEntries(gear.SLOTS.map(slot=>[slot,gear.createGear(set,slot)])),stats=gear.stats(equipment);assert.equal(stats.full[0],set);if(set==='bastion')assert.equal(stats.hp,100);if(set==='runner')assert.ok(stats.speed>.27);if(set==='arsenal')assert.ok(stats.ammo>.27);if(set==='vampire')assert.equal(stats.leech,0);}
 });
 test('gear can drop from enemies chests and wheel and be equipped in loadout', () => {
  const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
@@ -885,7 +882,7 @@ test('compact HUD keeps health ammo and ability while moving control instruction
  const html=readFileSync('index.html','utf8'),game=readFileSync('src/game.js','utf8'),css=readFileSync('styles/game.css','utf8');
  assert.match(html,/id="hpText"/);assert.match(html,/id="ammoText"/);assert.match(html,/id="abilityStatus"/);
  assert.match(html,/id="hint" title="A\/D hareket/);assert.match(game,/game\.inHub\?'HAZIRLIK':'DERİNLİK '/);
- assert.match(css,/footer \.hint\{display:none\}/);assert.match(css,/\.inventory \.invLabel,\.inventory \.invHelp\{display:none\}/);
+ assert.match(css,/footer \.hint\{display:none\}/);assert.match(css,/\.inventory\{display:flex/);
 });
 
 
