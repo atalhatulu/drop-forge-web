@@ -26,5 +26,24 @@ function drawPiece(ctx,slot,color,x=0,y=0,scale=1){
 }
 function icon(item){if(!item||!SETS[item.set])return '';const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;drawPiece(ctx,item.slot,SETS[item.set].color,32,33,1.6);return canvas.toDataURL('image/png');}
 function drawEquipped(ctx,equipment,bob=0,leg=0){for(const slot of ['boots','armor','belt','gloves','helmet']){const item=equipment?.[slot],set=item&&SETS[item.set];if(!set)continue;ctx.save();if(slot==='boots'){ctx.fillStyle=set.color;ctx.fillRect(-10,17+leg,9,7);ctx.fillRect(2,17-leg,9,7);}else{drawPiece(ctx,slot,set.color,0,-bob);}ctx.restore();}}
-root.DropForgeGear=Object.freeze({SLOTS,SLOT_NAMES,SETS,createGear,stats,randomGear,drawPiece,icon,drawEquipped});
+
+// Shared angular combat silhouette for the world sprite and equipment preview.
+function drawWarrior(ctx,equipment={},bob=0,leg=0,face=1,dashing=false){
+ const r=(color,x,y,w,h)=>{ctx.fillStyle=color;ctx.fillRect(x,y,w,h);};
+ r('#0b1324',-12,10+leg,11,15);r('#0b1324',2,10-leg,11,15);
+ r('#344356',-13,19+leg,13,7);r('#344356',1,19-leg,13,7);
+ r('#151e2c',-18,-15-bob,36,29);
+ r(dashing?'#6fbbce':'#475d70',-14,-12-bob,28,24);
+ r('#273949',-10,-10-bob,20,19);r('#728b96',-8,-10-bob,16,3);
+ r('#182739',-21,-11-bob,8,17);r('#182739',13,-11-bob,8,17);
+ r('#526a7c',-22,-12-bob,10,9);r('#526a7c',12,-12-bob,10,9);
+ r('#344657',-20,-3-bob,7,10);r('#344657',13,-3-bob,7,10);
+ r('#101a2a',-15,-29-bob,30,19);
+ r('#536e81',-13,-31-bob,26,8);r('#253b4c',-13,-24-bob,26,13);
+ r('#0a1725',-11,-21-bob,22,6);r('#9cd6d9',face>0?0:-9,-20-bob,9,3);
+ r('#1a2939',-9,-14-bob,18,5);r('#a5b3a8',-3,-12-bob,6,2);
+ r('#0b1324',-15,8-bob,30,5);r('#8198a0',-4,9-bob,8,3);
+ drawEquipped(ctx,equipment,bob,leg);
+}
+root.DropForgeGear=Object.freeze({SLOTS,SLOT_NAMES,SETS,createGear,stats,randomGear,drawPiece,icon,drawEquipped,drawWarrior});
 })(window);
