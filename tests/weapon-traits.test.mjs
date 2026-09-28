@@ -108,7 +108,7 @@ test('TAB displays every weapon trait, level and remaining open support slot',()
 test('TAB prioritizes run traits and shows old equipped attachments as read-only legacy items',()=>{
  const game=readFileSync('src/game.js','utf8');
  const css=readFileSync('styles/workbench.css','utf8');
- const start=game.indexOf('function renderLoadout(){'),end=game.indexOf('function switchModFromBag(',start);
+ const start=game.indexOf('function renderLoadout(){'),end=game.indexOf('function toggleLoadout(force){',start);
  const tab=game.slice(start,end);
  assert.match(tab,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
  assert.match(tab,/SİLAHLAR & ÖZELLİKLER/);
