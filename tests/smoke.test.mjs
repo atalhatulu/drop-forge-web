@@ -601,3 +601,13 @@ test('first acquisition highlights new weapons mods and accessories once per run
  assert.match(game,/highlightFirstLoot\('weapon',p\.weapon/);
  assert.match(game,/if\(game\.newLootGlow>0\)\{/);
 });
+
+
+test('enemy health scales by 75%, 75%, then 25% and level four adds shields', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/\[1,1\.75,1\.75\*1\.75,1\.75\*1\.75\*1\.25\]/);
+ assert.match(game,/shield:\(room\.level===4\?Math\.round\(hp\*\.5\):0\)/);
+ assert.match(game,/maxShield:\(room\.level===4\?Math\.round\(hp\*\.5\):0\)/);
+ assert.match(game,/if\(boss\.maxShield>0\)boss\.shield=boss\.maxShield=Math\.round\(boss\.maxHp\*\.5\)/);
+ assert.match(game,/if\(target\.maxShield>0\)target\.shield=target\.maxShield=Math\.round\(target\.maxHp\*\.5\)/);
+});
