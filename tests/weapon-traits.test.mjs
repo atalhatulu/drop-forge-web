@@ -88,3 +88,23 @@ test('chest trait claims do not increase the legacy global mod level',()=>{
  assert.match(game,/getModLevel:\(id,slot\)=>slot\?\.traits\?\.levels\?\.\[id\]\?\?game\?\.modLevels\?\.\[id\]\?\?1/);
  assert.doesNotMatch(game,/game\.modLevels\[item\.id\]=Math\.max\(/);
 });
+
+test('TAB displays every weapon trait, level and remaining open support slot',()=>{
+ const w=gun();
+ assert.equal(traits.grant(w,'shockCore',projectiles),true);
+ assert.equal(traits.grant(w,'shockCore',projectiles),true);
+ assert.equal(traits.grant(w,'stabilizer',projectiles),true);
+ const html=traits.loadoutHTML(w);
+ assert.match(html,/ANA DÖNÜŞÜM/);
+ assert.match(html,/ELEKTRİK ZİNCİRİ · SEV 2\/3/);
+ assert.match(html,/DENGELİ ATIŞ · SEV 1\/3/);
+ assert.match(html,/DESTEK 2[^]*BOŞ · SANDIKTAN ÖZELLİK SEÇ/);
+ assert.doesNotMatch(traits.loadoutHTML(gun()),/ELEKTRİK ZİNCİRİ · SEV/);
+});
+test('TAB shows run traits separately and prevents legacy editor overwriting their combat slot',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ const css=readFileSync('styles/workbench.css','utf8');
+ assert.match(game,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
+ assert.match(game,/if\(w\.traits\?\.levels&&Object\.keys\(w\.traits\.levels\)\.some\(id=>modCatalog\[id\]\?\.slot===j\)\)continue/);
+ assert.match(css,/\.weaponTraitRow/);
+});
