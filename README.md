@@ -172,3 +172,7 @@ Odada duran çark ayrı ekranı kendiliğinden açmaz. Çarkın yanına gidip **
 ## Yakın çevre mini haritası
 
 Seferde savaş dışında sağ üst köşede yalnızca bulunduğun oda ve doğrudan bağlı komşularını gösteren yarı saydam mini harita görünür. Aktif savaş, canlı düşman veya portal varken otomatik gizlenir. Tam harita tuşu ve mevcut harita ekranı değişmez.
+
+## Takip eden boss anahtarları
+
+Toplanan boss anahtarları savaş dışında oyuncunun arkasında küçük 2D anahtarlar ve aralarındaki ışıklı bağ ile takip eder. Savaşta gizlenirler; oda değiştirince oyuncunun yanından tekrar takip etmeye başlarlar. İlk boss odasına açılan kapı üzerinde anahtar simgesiyle mevcut/gerekli anahtar sayısı (ör. 0/3) görünür ve yeterli anahtar yoksa kapı kilitli kalır.
