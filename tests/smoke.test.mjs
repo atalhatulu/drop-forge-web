@@ -383,6 +383,22 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.gold,fallbackGold+65,'full inventories receive guaranteed gold plus a fallback');
  assert.equal(api.chestUpgradeOpen,false,'empty offer does not open an unclaimable modal');
  assert.equal(game.currentChestUpgradeChoices,null);
+ // Interact with a duplicate weapon that carries a different attachment.
+ combat.merchant=null;combat.chest=null;combat.interact={nearbyLoot:null};
+ const original=player.slots[0],originalMods=[...original.mods],originalAmmo=player.ammo,originalReserve=player.reserve;
+ const modded={weapon:original.weapon,mods:['mirrorBarrel'],ammo:4,reserve:17,x:player.x+player.w/2,y:548-14,grounded:true,vx:0,vy:0};
+ combat.loot.push(modded);combat.interact.nearbyLoot=modded;
+ api.interact();
+ assert.equal(player.slots[0].mods[0],'mirrorBarrel','different-mod duplicate replaces the equipped weapon');
+ assert.equal(player.ammo,4);assert.equal(player.reserve,17,'replacement preserves its own magazine and reserve');
+ assert.ok(!combat.loot.includes(modded),'claimed weapon is removed from the ground');
+ const dropped=combat.loot.find(item=>item.weapon===original.weapon&&item!==modded);
+ assert.ok(dropped,'previous weapon is returned to the ground');
+ assert.deepEqual(dropped.mods,originalMods,'old attachments are not deleted');
+ assert.equal(dropped.ammo,originalAmmo);assert.equal(dropped.reserve,originalReserve,'old ammunition is not deleted');
+ const count=combat.loot.length;api.interact();
+ assert.equal(combat.loot.length,count,'stale second interaction cannot remove another item');
+ assert.equal(player.ammo,4,'stale second interaction cannot claim the same weapon twice');
 });
 
 test('forced boss ammunition and health never reroll into grenades',()=>{
