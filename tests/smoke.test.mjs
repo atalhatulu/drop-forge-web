@@ -429,6 +429,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  player.chipBag.pop();tick();
  assert.ok(!combat.loot.includes(chip),'chip is collected once capacity is available');
  assert.equal(player.chipBag.length,15);
+ combat.loot=combat.loot.filter(item=>item.kind!=='health'&&item.kind!=='grenade'); // Isolate the capacity regression from random chest drops.
  const kit=ground('health',null),grenade=ground('grenade',null);
  tick();assert.ok(combat.loot.includes(kit)&&combat.loot.includes(grenade),'capped consumables remain available');
  player.hp=player.maxHp;player.kits=2;player.grenades=2;player.x=kit.x-player.w/2;player.y=548-player.h;player.vx=0;player.vy=0;tick();
