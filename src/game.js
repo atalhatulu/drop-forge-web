@@ -14,7 +14,8 @@ function availableChips(){const ids=Object.keys(GEAR.CHIPS);return matrixUnlocks
 function matrixCatalogHTML(){const names={weapon:'YENİ SİLAH LİSANSI',module:'YENİ MODÜL KATALOĞU',hard:'ZORLU BİYOM MODU',chip:'CHIP KATALOĞU'};return '<section class="gearStartingSets"><h3>ÇEKİRDEK MATRİSİ · '+legacy.marks+' MATRİS</h3><p>Kalıcı açılımlar başlangıç gücünü artırmaz; seçenek havuzunu genişletir.</p>'+Object.keys(matrixCosts).map(id=>'<button type="button" data-matrix-buy="'+id+'" '+((id==='weapon'?matrixUnlocks.weapon>=WEAPON_NAMES.length-2:matrixUnlocks[id])||legacy.marks<matrixCosts[id]?'disabled':'')+'>'+names[id]+' · '+matrixCosts[id]+' MATRİS'+(id==='weapon'?' · '+matrixUnlocks.weapon+' LİSANS':matrixUnlocks[id]?' · AÇIK':'')+'</button> ').join('')+'</section>';}
 const GEAR_LOCKER_KEY='dropForge.gearLocker.v1',GEAR_BUILD_KEY='dropForge.gearBuild.v1';
 function readGearSave(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
-const gearLocker=new Set((readGearSave(GEAR_LOCKER_KEY,[])||[]).filter(id=>typeof id==='string'&&GEAR.SLOTS.some(slot=>Object.keys(GEAR.SETS).some(set=>id===set+'-'+slot))));
+const storedGearLocker=readGearSave(GEAR_LOCKER_KEY,[]);
+const gearLocker=new Set((Array.isArray(storedGearLocker)?storedGearLocker:[]).filter(id=>typeof id==='string'&&GEAR.SLOTS.some(slot=>Object.keys(GEAR.SETS).some(set=>id===set+'-'+slot))));
 let gearBuild=readGearSave(GEAR_BUILD_KEY,{});if(!gearBuild||typeof gearBuild!=='object'||Array.isArray(gearBuild))gearBuild={};
 function saveGearBuild(){localStorage.setItem(GEAR_BUILD_KEY,JSON.stringify(gearBuild));}
 function unlockGear(item){if(!item||!GEAR.SETS[item.set]||!GEAR.SLOTS.includes(item.slot))return;gearLocker.add(item.id);localStorage.setItem(GEAR_LOCKER_KEY,JSON.stringify([...gearLocker]));}
@@ -190,7 +191,7 @@ function setupHub(){if(!game)return;game.testMode=false;game.testSnapshot=null;$
 let hubForgeOpen=false,helpOpen=false;
 function openHubForge(){if(!game?.inHub||paused)return;saveSlot();const p=game.player;for(let i=0;i<2;i++)if(p.slots[i])$('forgeGun'+(i+1)).value=String(p.slots[i].weapon);refreshForge();for(let i=0;i<2;i++){const slot=p.slots[i],mods=slot?.mods?.some(Boolean)?slot.mods:savedBuilds[Number($('forgeGun'+(i+1)).value)];if(mods)setForgeBuild(i+1,mods);}forgeFocusGun=1;forgeEditors={1:-1,2:-1};syncForgeWorkbench();renderForgePreview();renderGearWorkbench();hubForgeOpen=true;paused=true;mouse.down=false;$('pause').classList.remove('hidden');$('pause').querySelector('.eyebrow').textContent='OYUN İÇİ HAZIRLIK';$('pause').querySelector('h1').innerHTML='SİLAH <em>ATÖLYESİ</em>';$('pause').querySelector('p').textContent='İki silahını ve eklentilerini seç. Çıkınca hedef kuklasında test edebilir, portaldan sefere girebilirsin.';$('startBtn').textContent='KAYDET · TEST ALANINA DÖN';}
 function closeHubForge(){if(!hubForgeOpen)return;hubForgeOpen=false;paused=false;$('pause').classList.add('hidden');canvas.focus();}
-function applyHubForge(){if(!game?.inHub)return;const ids=[Number($('forgeGun1').value),Number($('forgeGun2').value)];if(ids[0]===ids[1]||ids.some(id=>!unlockedWeapons.has(id))){announce('İKİ FARKLI AÇIK SİLAH SEÇ');return;}let seed=Number($('seedInput').value.trim());if(!Number.isSafeInteger(seed)||seed<1)seed=game.seed;const diff=$('difficulty').value;if(seed!==game.seed){closeHubForge();buildGame(seed>>>0);setupHub();return;}const p=game.player;saveSlot();const old=p.slots;p.slots=ids.map((weapon,i)=>{const previous=old.find(q=>q?.weapon===weapon),slot={weapon,mods:chosenForgeMods(i+1),ammo:previous?.ammo??MAG_SIZE[weapon],reserve:previous?.reserve??Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*7)};slot.ammo=weaponStats(slot).mag;slot.reserve=Math.max(slot.reserve,Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*5));return slot;});p.activeSlot=0;p.weapon=p.slots[0].weapon;p.ammo=p.slots[0].ammo;p.reserve=p.slots[0].reserve;game.difficulty=diff in DIFFICULTY?diff:'normal';game.settings=DIFFICULTY[game.difficulty];cancelReload(p);closeHubForge();announce('SİLAHLAR HAZIR · KUKLAYI TEST ET · E İLE PORTALA GİR',3);updateHud();}
+function applyHubForge(){if(!game?.inHub)return;const ids=[Number($('forgeGun1').value),Number($('forgeGun2').value)];if(ids[0]===ids[1]||ids.some(id=>!unlockedWeapons.has(id))){announce('İKİ FARKLI AÇIK SİLAH SEÇ');return;}let seed=Number($('seedInput').value.trim());if(!Number.isSafeInteger(seed)||seed<1)seed=game.seed;const diff=$('difficulty').value;if(seed!==game.seed){closeHubForge();buildGame(seed>>>0);setupHub();return;}const p=game.player;saveSlot();const old=p.slots;p.slots=ids.map((weapon,i)=>{const previous=old.find(q=>q?.weapon===weapon),slot={weapon,mods:chosenForgeMods(i+1),ammo:previous?.ammo??MAG_SIZE[weapon],reserve:previous?.reserve??Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*7)};slot.ammo=weaponStats(slot).mag;slot.reserve=Math.max(slot.reserve,Math.min(AMMO_MAX[weapon],MAG_SIZE[weapon]*5));return slot;});p.activeSlot=0;p.weapon=p.slots[0].weapon;p.ammo=p.slots[0].ammo;p.reserve=p.slots[0].reserve;game.difficulty=diff in DIFFICULTY&&(diff!=='hard'||matrixUnlocks.hard)?diff:'normal';game.settings=DIFFICULTY[game.difficulty];cancelReload(p);closeHubForge();announce('SİLAHLAR HAZIR · KUKLAYI TEST ET · E İLE PORTALA GİR',3);updateHud();}
 function enterExpedition(){if(!game?.inHub)return;const room=game.rooms[0],next=room.links.down;if(next===undefined){announce('SEFER PORTALI HAZIR DEĞİL');return;}const p=game.player;saveSlot();for(const slot of p.slots)if(slot){slot.ammo=weaponStats(slot).mag;slot.reserve=Math.min(AMMO_MAX[slot.weapon],MAG_SIZE[slot.weapon]*(7+legacy.ammo));}p.hp=p.maxHp;p.ammo=p.slots[p.activeSlot]?.ammo??0;p.reserve=p.slots[p.activeSlot]?.reserve??0;p.kits=Math.min(3,1+legacy.kits);p.grenades=1;game.inHub=false;room.dummy=null;room.hubGate=null;room.forge=null;room.doors=room.hubDoors||room.doors;room.training=false;room.merchant={x:880,y:FLOOR};game.bullets=[];game.enemyBullets=[];game.grenades=[];game.flow=0;game.flowChain=0;game.flowTime=0;enterRoom(next,'up');announce('SEFER BAŞLADI · '+BIOMES[currentRoom().biome].name,3);}
 function hitDummy(room,amount,dir=1){const d=room.dummy;if(!d||!game?.inHub)return;d.hit=.22;d.lastDamage=Math.round(amount);d.total+=Math.round(amount);d.recoil=dir*17;burst(room,d.x+d.w/2,d.y+28,'#f9ddaa',13,165);floating(d.x+d.w/2,d.y-14,String(Math.round(amount)),'#ffe5a3');shake=Math.max(shake,2);}
 function currentRoom(){return game.rooms[game.roomId];}
@@ -892,7 +893,7 @@ function updateSaveSummary(){
   const runeCount=lootLocker.runes.length;
   const gearCount=gearLocker.size;
   const marks=legacy.marks||0;
-  box.innerHTML='<b>MEVCUT İLERLEME VERİLERİ:</b><br>• Açık Silahlar: '+wepCount+'/'+DropForgeCatalog.WEAPON_PROJECTILES.length+'<br>• Kalıcı Çekirdek Matrisi: '+marks+'<br>• Açık Zırh Koleksiyonu: '+gearCount+' parça<br>• Keşfedilen Çipler: '+chipCount+' · Rünler: '+runeCount+'<br>• Otomatik Kayıt: <b>AKTİF (Oyun içi hamlelerde anlık kaydedilir)</b>';
+  box.innerHTML='<b>MEVCUT İLERLEME VERİLERİ:</b><br>• Açık Silahlar: '+wepCount+'/'+DropForgeCatalog.WEAPON_PROJECTILES.length+'<br>• Kalıcı Çekirdek Matrisi: '+marks+'<br>• Açık Zırh Koleksiyonu: '+gearCount+' parça<br>• Keşfedilen Çipler: '+chipCount+' · Rünler: '+runeCount+'<br>• Kalıcı ilerleme: <b>Otomatik kayıt etkin · sefer konumu kaydedilmez</b>';
 }
 function openSaveOverlay(){
   if(!game)return;
@@ -911,6 +912,7 @@ function closeSaveOverlay(){
   canvas.focus();
 }
 function triggerManualSave(){
+  if(!game)return;
   saveSlot();
   saveLegacy();
   saveMastery();
@@ -919,8 +921,8 @@ function triggerManualSave(){
   saveTalents();
   saveMatrix();
   saveGearBuild();
-  announce('OYUN KAYDEDİLDİ · TÜM VERİLER SAKLANDI',2.5);
-  floating(game?.player?.x||W/2,(game?.player?.y||H/2)-40,'OYUN KAYDEDİLDİ','#9ef5c2');
+  announce('KALICI İLERLEME KAYDEDİLDİ · SEFER KONUMU KAYDEDİLMEZ',2.5);
+  floating(game?.player?.x||W/2,(game?.player?.y||H/2)-40,'İLERLEME KAYDEDİLDİ','#9ef5c2');
   sound(780,.15,'sine');
 }
 function triggerLoadBackup(){
@@ -942,17 +944,17 @@ function triggerResetAll(){
   alert('Tüm kayıtlar silindi. Oyun sıfırdan başlatılıyor...');
   window.location.reload();
 }
-if($('quickSaveBtn'))$('quickSaveBtn').onclick=triggerManualSave;
+if($('quickSaveBtn'))$('quickSaveBtn').onclick=openSaveOverlay;
 if($('quickLoadBtn'))$('quickLoadBtn').onclick=triggerLoadBackup;
 if($('quickResetBtn'))$('quickResetBtn').onclick=triggerResetAll;
-if($('pauseSaveBtn'))$('pauseSaveBtn').onclick=triggerManualSave;
+if($('pauseSaveBtn'))$('pauseSaveBtn').onclick=openSaveOverlay;
 if($('pauseLoadBtn'))$('pauseLoadBtn').onclick=triggerLoadBackup;
 if($('pauseResetBtn'))$('pauseResetBtn').onclick=triggerResetAll;
 if($('closeSaveOverlay'))$('closeSaveOverlay').onclick=()=>closeSaveOverlay();
 if($('manualSaveBtn'))$('manualSaveBtn').onclick=()=>{triggerManualSave();updateSaveSummary();closeSaveOverlay();};
 if($('exportSaveBtn'))$('exportSaveBtn').onclick=()=>{
   const json=exportSaveData();
-  (navigator.clipboard?.writeText?.(json)||Promise.reject(new Error('Clipboard unavailable'))).then(()=>{
+  Promise.resolve(navigator.clipboard?.writeText?.(json)||Promise.reject(new Error('Clipboard unavailable'))).then(()=>{
     announce('KAYIT YEDEĞİ PANOLARA KOPYALANDI',2.5);
   }).catch(()=>{
     prompt('Kayıt Verisi (Kopyala ve sakla):',json);
