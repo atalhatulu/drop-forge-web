@@ -307,7 +307,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get masteryStyles(){return masteryStyles},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -342,6 +342,11 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  api.mastery[player.weapon]=1440;player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearForge,true,'forge becomes interactive when approached');
  api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
+ assert.equal(nodes.get('forgeStyle1').disabled,false,'mastery four unlocks the first gun start styles');
+ nodes.get('forgeStyle1').onchange({target:{value:'focused'}});
+ assert.equal(api.masteryStyles[player.weapon],'focused','the selected style is stored per weapon');
+ assert.match(storeWrites['dropForge.masteryStyles.v1'],/"0":"focused"/,'style choice persists in the existing permanent progression store');
+ assert.match(nodes.get('forgePreview').innerHTML,/KIVILCIM · NİŞANCI/,'hub previews the selected start style');
  assert.equal(win.DropForgeWeaponTraits.grant(player.slots[0],'stabilizer',win.DropForgeCatalog.WEAPON_PROJECTILES),true,'existing run trait is available for migration coverage');
  nodes.get('forgeGun1').onchange();
  assert.match(nodes.get('forgePreview').innerHTML,/DENGELİ ATIŞ/,'hub preview includes existing traits for a held gun');
@@ -354,6 +359,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.ok(player.slots.every(slot=>slot.mods.length===0),'new starter guns have no legacy attachment presets');
  assert.equal(player.slots[0].traits.supports[0],'stabilizer','saving the two-gun loadout preserves an existing run trait');
  assert.equal(game.inHub,true);
+ assert.equal(api.masteryStyles[player.weapon],'focused','hub save leaves the permanent style attached to its weapon model');
  player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
  api.interact();
