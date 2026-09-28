@@ -372,15 +372,17 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.gold,chestGold+45,'opening gives guaranteed gold');
  assert.equal(api.chestUpgradeOpen,true,'a usable offer opens the live selection UI');
  const picked=game.currentChestUpgradeChoices[0];
- assert.equal(picked.type,'mod','first compatible offer is a weapon attachment');
+ assert.equal(picked.type,'trait','a normal chest offers a run-only weapon trait');
  nodes.get('chestUpgradeChoices').listeners.click({target:{closest(){return {dataset:{upgradeIndex:'0'}}}}});
- assert.ok(game.stashedMods.includes(picked.id),'clicking a real choice stores the offered attachment');
+ assert.equal(player.slots[picked.weaponSlot].traits.levels[picked.id],1,'clicking a trait equips it immediately');
+ assert.equal(player.slots[picked.weaponSlot].mods[win.DropForgeCatalog.ALL_MODS[picked.id].slot],picked.id,'trait powers real weapon combat');
  assert.equal(api.chestUpgradeOpen,false,'claim closes the chest overlay');
  assert.equal(game.currentChestUpgradeChoices,null,'claimed offer cannot be redeemed twice');
  combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
  game.stashedMods=Array(12).fill('occupied');player.gearBag=Array(20).fill({id:'occupied'});
- const fallbackGold=player.gold;api.interact();
- assert.equal(player.gold,fallbackGold+65,'full inventories receive guaranteed gold plus a fallback');
+ const savedSlots=player.slots;player.slots=[null,null];
+ const fallbackGold=player.gold;api.interact();player.slots=savedSlots;
+ assert.equal(player.gold,fallbackGold+65,'when no gun or inventory can accept a reward, give fallback gold');
  assert.equal(api.chestUpgradeOpen,false,'empty offer does not open an unclaimable modal');
  assert.equal(game.currentChestUpgradeChoices,null);
  // Interact with a duplicate weapon that carries a different attachment.
