@@ -375,7 +375,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(picked.type,'trait','a normal chest offers a run-only weapon trait');
  nodes.get('chestUpgradeChoices').listeners.click({target:{closest(){return {dataset:{upgradeIndex:'0'}}}}});
  assert.equal(player.slots[picked.weaponSlot].traits.levels[picked.id],1,'clicking a trait equips it immediately');
- assert.equal(player.slots[picked.weaponSlot].mods[win.DropForgeCatalog.ALL_MODS[picked.id].slot],picked.id,'trait powers real weapon combat');
+ assert.ok(win.DropForgeWeaponTraits.effectiveMods(player.slots[picked.weaponSlot]).includes(picked.id),'trait powers real weapon combat without using a legacy slot');
  assert.equal(api.chestUpgradeOpen,false,'claim closes the chest overlay');
  assert.equal(game.currentChestUpgradeChoices,null,'claimed offer cannot be redeemed twice');
  combat.chest={x:570,y:530,opened:false,grounded:true};combat.interact={nearChest:true};
