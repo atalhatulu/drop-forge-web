@@ -49,9 +49,9 @@ test('attachment stats reflect actual game modifiers', () => {
   const basic=getStats({weapon:0,mods:[]});
   const upgraded=getStats({weapon:0,mods:['barrel','loader','core','stabilizer']});
   assert.equal(basic.damage,30);
-  assert.equal(upgraded.damage,35);
-  assert.equal(upgraded.fireRate,5);
-  assert.equal(upgraded.reload,.68);
+  assert.equal(upgraded.damage,36);
+  assert.ok(Math.abs(upgraded.fireRate-1/(.25*.9*1.08))<.00001);
+  assert.ok(Math.abs(upgraded.reload-.85*.78)<.00001);
   assert.equal(upgraded.pierce,1);
   assert.equal(upgraded.spread,.7);
 });
@@ -886,4 +886,22 @@ test('compact HUD keeps health ammo and ability while moving control instruction
  assert.match(html,/id="hpText"/);assert.match(html,/id="ammoText"/);assert.match(html,/id="abilityStatus"/);
  assert.match(html,/id="hint" title="A\/D hareket/);assert.match(game,/game\.inHub\?'HAZIRLIK':'DERİNLİK '/);
  assert.match(css,/footer \.hint\{display:none\}/);assert.match(css,/\.inventory \.invLabel,\.inventory \.invHelp\{display:none\}/);
+});
+
+
+test('combat-only mastery rewards and permanent talents are wired',()=>{
+ const game=readFileSync('src/game.js','utf8'),progression=readFileSync('src/progression.js','utf8'),stats=readFileSync('src/weapon-stats.js','utf8');
+ assert.doesNotMatch(game,/if\(!game\.inHub\)grantMastery\(weapon,1\)/,'shooting empty space must not award XP');
+ assert.match(game,/e\.weaponDamage\[weapon\]/);
+ assert.match(game,/room\.weaponDamage\[weapon\]/);
+ assert.match(game,/data-talent-weapon/);
+ assert.match(progression,/saveTalents/);
+ assert.match(stats,/getMasteryTalents/);
+ const root={};new Function('window',stats)(root);
+ const make=(talents)=>root.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:[30],WEAPON_FIRE_RATES:[.25],WEAPON_PROJECTILES:['kinetic'],MAG_SIZE:[15],getMasteryLevel:()=>10,getMasteryTalents:()=>talents});
+ const base=make({})({weapon:0,mods:[]}),precision=make({6:'precision',10:'sustain'})({weapon:0,mods:[]}),damage=make({6:'mobility',10:'execution'})({weapon:0,mods:[]});
+ assert.ok(precision.spread<base.spread);
+ assert.ok(precision.ammoSave>base.ammoSave);
+ assert.ok(damage.movementBonus>base.movementBonus);
+ assert.ok(damage.damage>base.damage);
 });
