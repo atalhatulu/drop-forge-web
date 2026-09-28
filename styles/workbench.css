@@ -123,3 +123,8 @@
 .advancedStats>summary{color:#a9d8ed;font:900 10px monospace;letter-spacing:.05em;cursor:pointer;list-style-position:inside}
 .advancedStats[open]>summary{margin-bottom:10px;color:#f4e4b7}
 .advancedStats:focus-within{outline:1px solid #9ed6eb}
+
+/* Pre-run armor locker: clear equipped state and compact item bonuses. */
+.gearWorkbenchBag .gearItem.chosen{border-color:#a4e7c5;background:#21483f;box-shadow:inset 0 0 0 1px #6ab99b}
+.gearWorkbenchBag .gearItem span{min-width:0}.gearWorkbenchBag .gearItem small{line-height:1.35;white-space:normal}
+.gearWorkbenchBag .gearItem small:last-child{color:#a8e6c7}
