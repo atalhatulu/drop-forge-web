@@ -225,7 +225,7 @@ test('twelve attachment alternatives are grouped three per slot', () => {
  const runtime=readFileSync('src/game.js','utf8');
  assert.match(runtime,/m\.slot===j/);
  assert.match(runtime,/modCatalog\[next\]\.slot!==j/);
- assert.match(readFileSync('src/shop-data.js','utf8'),/Object\.entries\(MODS\)/);
+ assert.match(readFileSync('src/shop-data.js','utf8'),/root\.DropForgeShopData=Object\.freeze/);
 });
 test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
  const source=readFileSync('src/game.js','utf8');
@@ -678,7 +678,7 @@ test('chests offer varied useful fallback when mods or accessories are exhausted
  assert.match(game,/function openChestUpgradeModal\(choices\)/);
  assert.match(game,/dropPickup\(room,'health',room\.chest\.x/);
  assert.match(game,/dropPickup\(room,'ammo',room\.chest\.x/);
- assert.match(game,/p\.slots\.some\(q=>q&&q\.reserve<AMMO_MAX\[q\.weapon\]\)/);
+ assert.match(game,/dropPickup\(room,'ammo',room\.chest\.x-20,room\.chest\.y-35,true\)/);
  assert.match(game,/game\.player\.gold \+= 20/);
  assert.match(game,/grantGear\(room,room\.chest\.x/);
 });
