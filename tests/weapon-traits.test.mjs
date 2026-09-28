@@ -89,7 +89,7 @@ test('trait upgrades affect only their own weapon even when both guns share a tr
 });
 test('chest trait claims do not increase the legacy global mod level',()=>{
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/getModLevel:\(id,slot\)=>slot\?\.traits\?\.levels\?\.\[id\]\?\?game\?\.modLevels\?\.\[id\]\?\?1/);
+ assert.match(game,/getModLevel:\(id,slot\)=>slot\?\.traits\?\.levels\?\.\[id\]\?\?1/);
  assert.doesNotMatch(game,/game\.modLevels\[item\.id\]=Math\.max\(/);
 });
 
@@ -113,7 +113,7 @@ test('TAB prioritizes run traits and shows old equipped attachments as read-only
  assert.match(tab,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
  assert.match(tab,/SİLAHLAR & ÖZELLİKLER/);
  assert.match(tab,/legacyWeaponMods/);
- assert.match(tab,/legacyModArchive/);
+ assert.doesNotMatch(tab,/legacyModArchive|game\.stashedMods/);
  assert.doesNotMatch(tab,/select\.dataset\.modSlot/);
  assert.doesNotMatch(tab,/BOŞTA EKLENTİ YOK/);
  assert.match(css,/\.legacyWeaponMods/);
