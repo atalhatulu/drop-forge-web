@@ -76,17 +76,41 @@
   return JSON.stringify(data);
  }
  function importSaveData(jsonStr){
+  let backup;
   try{
    const parsed=JSON.parse(jsonStr);
-   if(!parsed||typeof parsed!=='object')return false;
-   for(const k of ALL_PROGRESS_KEYS){
-    if(parsed[k]!==undefined){
-     if(parsed[k]===null)localStorage.removeItem(k);
-     else localStorage.setItem(k,typeof parsed[k]==='string'?parsed[k]:JSON.stringify(parsed[k]));
+   if(!parsed||Array.isArray(parsed)||parsed.version!==1)return false;
+   const keys=ALL_PROGRESS_KEYS.filter(k=>Object.prototype.hasOwnProperty.call(parsed,k));
+   if(!keys.length)return false;
+   const expectedArrays=new Set([UNLOCK_KEY,'dropForge.gearLocker.v1']);
+   const expectedNumbers=new Set(['dropForge.bossBlueprints.v1']);
+   const updates=[];
+   for(const key of keys){
+    const value=parsed[key];
+    if(value===null){updates.push([key,null]);continue;}
+    if(typeof value!=='string')return false;
+    const decoded=expectedNumbers.has(key)?Number(value):JSON.parse(value);
+    if(expectedNumbers.has(key)){
+     if(!Number.isSafeInteger(decoded)||decoded<0)return false;
+    }else if(expectedArrays.has(key)){
+     if(!Array.isArray(decoded))return false;
+    }else if(!decoded||typeof decoded!=='object'||Array.isArray(decoded)){
+     return false;
     }
+    updates.push([key,value]);
+   }
+   backup=new Map(ALL_PROGRESS_KEYS.map(key=>[key,localStorage.getItem(key)]));
+   for(const [key,value] of updates){
+    if(value===null)localStorage.removeItem(key);
+    else localStorage.setItem(key,value);
    }
    return true;
-  }catch(e){return false;}
+  }catch(e){
+   if(backup)for(const [key,value] of backup){
+    try{if(value===null)localStorage.removeItem(key);else localStorage.setItem(key,value);}catch(rollbackError){}
+   }
+   return false;
+  }
  }
  root.DropForgeProgression=Object.freeze({legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,saveMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData,ALL_PROGRESS_KEYS});
 })(window);
