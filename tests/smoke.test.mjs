@@ -364,10 +364,10 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  player.slots[0].mods[0]='barrel';
  const beforeLab=win.DropForgeWeaponTraits.snapshot(player.slots[0]);
  api.openTestLab();
- nodes.get('testLabWeapon').value='0';
- nodes.get('testLabEnemy').value='red';
- nodes.get('testLabLevel').value='1';
- nodes.get('testLabCount').value='1';
+ doc.getElementById('testLabWeapon').value='0';
+ doc.getElementById('testLabEnemy').value='red';
+ doc.getElementById('testLabLevel').value='1';
+ doc.getElementById('testLabCount').value='1';
  api.startCombatTest();
  assert.equal(game.testMode,true,'test lab starts a training encounter');
  assert.equal(player.slots[0].rune,'hunt','test lab keeps the actual weapon rune');
