@@ -11,7 +11,7 @@ const WEAPON_ABILITIES=window.DropForgeAbilities;
 function earnLegacy(amount){if(game?.inHub||amount<=0)return;const earned=Math.min(amount,9999-legacy.marks);if(!earned)return;legacy.marks+=earned;game.earnedCores=(game.earnedCores||0)+earned;saveLegacy();floating(game.player.x,game.player.y-48,'+'+earned+' KALICI ÇEKİRDEK','#abf7e0');}
 function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
 function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
-function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0)return;const old=masteryLevel(weapon);mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+amount);if(masteryLevel(weapon)>old){announce(weaponName(weapon)+' USTALIK '+masteryLevel(weapon)+' · YENİ EKLENTİ YUVASI!',2.6);levelUpToast(weapon,masteryLevel(weapon));burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);}saveMastery();updateHud();}
+function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0)return;const old=masteryLevel(weapon);mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+amount);if(masteryLevel(weapon)>old){announce(weaponName(weapon)+' USTALIK '+masteryLevel(weapon)+' · HASAR / ATIŞ / DOLDURMA GELİŞTİ!',2.6);levelUpToast(weapon,masteryLevel(weapon));burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);}saveMastery();updateHud();}
 function getModSlots(weapon){const lv=masteryLevel(weapon);return lv>=8?4:lv>=6?3:lv>=4?2:lv>=2?1:0;}
 function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
 function installMod(slot,mod){const spec=MODS[mod];if(!slot||!spec||masteryLevel(slot.weapon)<spec.level||spec.slot>=getModSlots(slot.weapon)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
@@ -198,7 +198,7 @@ function melee(){
 }
 
 // Single weapon stat model shared by shot simulation, reload and both build screens.
-const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE});
+const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel});
 // Each of the 13 guns owns its own right-click ability and cooldown.
 function abilityCooldown(p,weapon){return p?.abilityCooldowns?.[weapon]||0;}
 function updateStatusStrip(){

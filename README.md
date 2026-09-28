@@ -184,3 +184,7 @@ LV2 ve üstü normal savaş odalarında başlangıç diziliminin ikinci düşman
 ## Sade tüccar kartları
 
 Tüccar kartları artık simge, ürün adı, tek satırlık ana etki, fiyat ve satın alınabilirlik durumunu öne çıkarır. Uzun teknik açıklamalar kartın üzerine gelindiğinde görünür; kalıcı/seferlik ayrımı başlık altında kısa bir etiketle belirtilir.
+
+## Ustalıkla büyüyen silah istatistikleri
+
+Silah ustalığı artık yalnızca eklenti yuvası açmaz. Seviye 1'den 10'a kadar her seviyede temel hasar +%3,5, atış hızı +%1,2 ve doldurma süresi -%1,2 ölçeklenir. LV10'da LV1'e kıyasla yaklaşık +%31,5 hasar, +%10,8 atış hızı ve %10,8 daha kısa doldurma süresi vardır. Bu gelişimler kalıcı ustalık XP'sine bağlıdır ve atölye, çanta ve gerçek atışlar aynı istatistik modelini kullanır.

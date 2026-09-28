@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import vm from 'node:vm';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
 const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
@@ -762,4 +763,16 @@ test('merchant cards prioritize short effects and actionable prices', () => {
  assert.match(shop,/class="shopBuy"/);
  assert.match(shop,/YETERSİZ /);
  assert.match(shop,/title=/);
+});
+
+
+test('weapon mastery levels 1 through 10 improve damage fire rate and reload', () => {
+ const source=readFileSync('src/weapon-stats.js','utf8');
+ const context={window:{}};vm.runInNewContext(source,context);
+ let level=1;const stats=context.window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:[40],WEAPON_FIRE_RATES:[.3],WEAPON_PROJECTILES:['kinetic'],MAG_SIZE:[20],getMasteryLevel:()=>level});
+ const first=stats({weapon:0,mods:[]});level=5;const middle=stats({weapon:0,mods:[]});level=10;const last=stats({weapon:0,mods:[]});
+ assert.ok(first.damage<middle.damage&&middle.damage<last.damage);
+ assert.ok(first.fireRate<middle.fireRate&&middle.fireRate<last.fireRate);
+ assert.ok(first.reload>middle.reload&&middle.reload>last.reload);
+ assert.equal(first.masteryLevel,1);assert.equal(last.masteryLevel,10);
 });
