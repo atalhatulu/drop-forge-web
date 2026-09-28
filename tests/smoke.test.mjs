@@ -847,3 +847,16 @@ test('gold vault and assault room events have distinct generation and gameplay',
  assert.match(game,/room\.type==='assault'\?3:2/);
  assert.match(map,/gold:'\$',assault:'!'/);
 });
+
+
+test('armor sets provide five slots and distinct full-set build bonuses', () => {
+ const src=readFileSync('src/gear.js','utf8'),context={window:{}};vm.runInNewContext(src,context);const gear=context.window.DropForgeGear;
+ assert.equal(gear.SLOTS.length,5);
+ for(const set of Object.keys(gear.SETS)){const equipment=Object.fromEntries(gear.SLOTS.map(slot=>[slot,gear.createGear(set,slot)])),stats=gear.stats(equipment);assert.equal(stats.full[0],set);if(set==='bastion')assert.equal(stats.hp,180);if(set==='runner')assert.ok(stats.speed>.4);if(set==='arsenal')assert.ok(stats.ammo>.4);if(set==='vampire')assert.equal(stats.leech,27);}
+});
+test('gear can drop from enemies chests and wheel and be equipped in loadout', () => {
+ const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
+ assert.match(game,/function grantGear\(room,x,y\)/);assert.match(game,/if\(e\.type==='boss'\|\|Math\.random\(\)<\.07\)grantGear/);
+ assert.match(game,/if\(room\.type==='treasure'&&rand\(\)<\.65\)grantGear/);assert.match(game,/ÇARK ÖDÜLÜ · GİYSİ PARÇASI/);
+ assert.match(game,/data-gear/);assert.match(loot,/item\.kind==='gear'/);
+});
