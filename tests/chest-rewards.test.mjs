@@ -5,59 +5,52 @@ import vm from 'node:vm';
 
 const context={window:{}};
 vm.runInNewContext(readFileSync('src/chest-rewards.js','utf8'),context);
-const {selectChestChoices,availableRewardMods,selectBossAttachment}=context.window.DropForgeChestRewards;
-const mods={barrel:{slot:0,level:2},rapidBarrel:{slot:0,level:2},loader:{slot:1,level:4},extendedMag:{slot:1,level:4},core:{slot:2,level:6}};
+const {selectChestChoices}=context.window.DropForgeChestRewards;
 function choose(config={}){
- const slot=config.slot||{weapon:0,mods:[null,null,null,null]};
- const player={slots:[slot],gearBag:Array(config.gearCount||0).fill({}),chipBag:config.chipBag||[],chips:{helmet:null}};
- return selectChestChoices({room:{x:1,y:4,id:4,type:config.type||'combat',reward:config.reward||'mod'},player,stashedMods:config.stashedMods||[],modCatalog:mods,chipCatalog:{gravity:{},kinetic:{},blood:{}},masteryLevel:()=>config.level??2,modSlotUnlocked:(j)=>[2,4,6,8][j]<=(config.level??2),seed:config.seed||42,hash:(x,y,s)=>Math.abs(s)>>>0,randomGear:()=>({id:'bastion-helmet',set:'bastion',slot:'helmet'}),random:()=>config.random??.2});
+ const player={slots:config.slots||[{weapon:0,mods:[]}],gearBag:Array(config.gearCount||0).fill({}),chipBag:config.chipBag||[],chips:config.chips||{helmet:null}};
+ const pieces=config.pieces||[{id:'bastion-helmet',set:'bastion',slot:'helmet'},{id:'runner-boots',set:'runner',slot:'boots'},{id:'arsenal-belt',set:'arsenal',slot:'belt'}];
+ let calls=0;
+ return selectChestChoices({
+  room:{x:1,y:4,id:4,type:config.type||'combat',reward:config.reward||'mod'},
+  player,chipCatalog:{gravity:{},kinetic:{},blood:{}},seed:config.seed||42,
+  hash:(x,y,z)=>Math.abs(z)>>>0,
+  randomGear:()=>pieces[Math.min(pieces.length-1,Math.floor(calls++/2))]
+ });
 }
-test('chest offers only attachable mods and never owned or already-slotted mods',()=>{
- for(let seed=1;seed<=300;seed++){
-  const choices=choose({seed,level:2});
-  assert.ok(choices.length>0&&choices.length<=3);
-  assert.ok(choices.every(item=>item.type!=='mod'||['barrel','rapidBarrel'].includes(item.id)));
-  assert.equal(new Set(choices.filter(item=>item.type==='mod').map(item=>item.id)).size,choices.filter(item=>item.type==='mod').length);
+test('normal chests offer unique gear without reading legacy mod inventories',()=>{
+ for(let seed=1;seed<=100;seed++){
+  const choices=choose({seed});
+  assert.equal(choices.length,3);
+  assert.equal(new Set(choices.map(item=>item.id)).size,3);
+  assert.ok(choices.every(item=>item.type==='gear'));
  }
- const choices=choose({level:2,stashedMods:['barrel']});
- assert.ok(choices.every(item=>item.type!=='mod'||item.id!=='barrel'));
+ const full=choose({gearCount:20});
+ assert.equal(full.length,0);
 });
-test('full or blocked inventories receive no impossible chest options',()=>{
- assert.equal(choose({level:1,gearCount:20}).length,0);
- assert.equal(choose({level:2,gearCount:20,stashedMods:Array(12).fill('taken')}).length,0);
- const gear=choose({level:1});
- assert.ok(gear.length&&gear.every(item=>item.type==='gear'));
- const chips=choose({type:'elite',chipBag:['gravity','kinetic','blood'],level:1});
- assert.ok(chips.every(item=>item.type==='gear'));
+test('elite and chip chests exclude collected or equipped chips',()=>{
+ const choices=choose({type:'elite',chipBag:['gravity'],chips:{helmet:'kinetic'}});
+ assert.deepEqual(choices.map(item=>item.id),['blood']);
+ assert.equal(choices[0].type,'chip');
+ const exhausted=choose({type:'elite',chipBag:['gravity','kinetic','blood']});
+ assert.ok(exhausted.every(item=>item.type==='gear'));
+ assert.equal(choose({type:'elite',chipBag:['gravity','kinetic','blood'],gearCount:20}).length,0);
 });
-test('elite chest excludes previously collected chips',()=>{
- const opts=choose({type:'elite',chipBag:['gravity']});
- assert.ok(opts.every(item=>item.type==='chip'&&item.id!=='gravity'));
+test('normal chest has a unique gear fallback when no weapon accepts traits',()=>{
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/const choices=selectChestChoices\(\{room,player:p,chipCatalog:GEAR\.CHIPS/);
+ assert.match(source,/if\(traitChoices\.length\)choices\.splice\(0,choices\.length,\.\.\.traitChoices\)/);
+ assert.match(source,/else choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\)\)/);
+ assert.match(source,/p\.gold\+=20;\s*announce\('SANDIK · UYGUN EŞYA YOK/);
+ assert.match(source,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
+ assert.doesNotMatch(source,/data-chest-choice/);
+ assert.match(source,/closeChestUpgradeModal\(\);\s*updateHud\(\)/);
 });
-test('chest rewards grant eligible traits, gear or chips without a legacy attachment claim',()=>{
- const game=readFileSync('src/game.js','utf8');
- assert.match(game,/const choices=selectChestChoices\(/);
- assert.match(game,/choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\|\|item\.type==='chip'\)\)/);
- assert.match(game,/const traitChoices=window\.DropForgeWeaponTraits\.choices/);
- assert.match(game,/p\.gold\+=20;\s*announce\('SANDIK · UYGUN EŞYA YOK/);
- assert.match(game,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
- assert.doesNotMatch(game,/data-chest-choice/);
- assert.match(game,/closeChestUpgradeModal\(\);\s*updateHud\(\)/);
+test('pure chest reward selection has no legacy attachment dependency',()=>{
+ const rewards=readFileSync('src/chest-rewards.js','utf8');
+ assert.doesNotMatch(rewards,/stashedMods|modCatalog|modSlotUnlocked|masteryLevel|availableRewardMods|selectBossAttachment/);
+ assert.match(rewards,/root\.DropForgeChestRewards=Object\.freeze\(\{selectChestChoices\}\)/);
 });
 
-function rewardArgs({level=4,bag=[],slotMods=[null,null,null,null]}={}){
- return {player:{slots:[{weapon:0,mods:slotMods}]},stashedMods:bag,catalog:mods,masteryLevel:()=>level,modSlotUnlocked:j=>level>=[2,4,6,8][j]};
-}
-test('boss and wheel share ownership, capacity and slot validation',()=>{
- const options=availableRewardMods(rewardArgs());
- assert.ok(options.includes('barrel')&&options.includes('loader'));
- assert.equal(availableRewardMods(rewardArgs({bag:Array(12).fill('owned')})).length,0);
- assert.equal(availableRewardMods(rewardArgs({level:1})).length,0);
- assert.equal(availableRewardMods(rewardArgs({level:2,slotMods:['barrel']})).length,0);
- const choice=selectBossAttachment(rewardArgs(),123,2,()=>1);
- assert.equal(choice,options[1]);
- assert.equal(selectBossAttachment(rewardArgs({bag:Array(12).fill('owned')}),123,2,()=>1),null);
-});
 test('wheel fallback pays gold instead of discarding a full gear bag or reserve',()=>{
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/if\(p\.gearBag\.length<20\)\{grantGear/);
@@ -78,32 +71,15 @@ test('boss trait prize recomputes a compatible offer and grants it directly to t
  assert.match(claim,/game\.pendingBossReward=null;renderLoadout\(\)/);
 });
 
-test('three-choice chest never offers the same gear twice when random gear repeats',()=>{
- const player={slots:[{weapon:0,mods:[null,null,null,null]}],gearBag:[],chipBag:[],chips:{}};
- const pieces=[
-  {id:'bastion-helmet',set:'bastion',slot:'helmet'},
-  {id:'runner-boots',set:'runner',slot:'boots'},
-  {id:'arsenal-belt',set:'arsenal',slot:'belt'}
- ];
- let calls=0;
- const result=selectChestChoices({
-  room:{x:2,y:3,id:7,type:'combat',reward:'mod'},player,
-  stashedMods:[],modCatalog:{},chipCatalog:{},masteryLevel:()=>1,modSlotUnlocked:()=>false,
-  seed:17,hash:()=>0,randomGear:()=>pieces[Math.min(2,Math.floor(calls++/2))],random:()=>0
- });
- assert.equal(result.length,3);
- assert.equal(new Set(result.map(item=>item.id)).size,3);
- assert.ok(result.every(item=>item.type==='gear'));
+test('gear fallback retries repeat draws without offering duplicate pieces',()=>{
+ const choices=choose({pieces:[{id:'bastion-helmet',set:'bastion',slot:'helmet'},{id:'runner-boots',set:'runner',slot:'boots'}]});
+ assert.equal(choices.length,2);
+ assert.equal(new Set(choices.map(item=>item.id)).size,2);
 });
-test('three-choice chest returns fewer options rather than repeating an unavailable gear selection',()=>{
- const player={slots:[],gearBag:[],chipBag:[],chips:{}};
- const result=selectChestChoices({
-  room:{x:2,y:3,id:7,type:'combat',reward:'mod'},player,
-  stashedMods:[],modCatalog:{},chipCatalog:{},masteryLevel:()=>1,modSlotUnlocked:()=>false,
-  seed:17,hash:()=>0,randomGear:()=>({id:'bastion-helmet',set:'bastion',slot:'helmet'}),random:()=>0
- });
- assert.equal(result.length,1);
- assert.equal(result[0].id,'bastion-helmet');
+test('gear fallback returns fewer offers if only one piece is available',()=>{
+ const choices=choose({slots:[],pieces:[{id:'bastion-helmet',set:'bastion',slot:'helmet'}]});
+ assert.equal(choices.length,1);
+ assert.equal(choices[0].id,'bastion-helmet');
 });
 
 test('chest cards show run trait details and apply directly to the owning weapon',()=>{
