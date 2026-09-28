@@ -116,3 +116,21 @@ test('same-weapon pickups cannot silently consume distinct legacy mods traits or
  assert.match(source,/rune:item\.rune\|\|null/);
  assert.match(source,/old\.traits,old\.rune\)/);
 });
+
+test('two-weapon reward distribution reaches both equipped guns across deterministic seeds',()=>{
+ const counts=[0,0],kinds={main:0,support:0};
+ for(let seed=1;seed<=512;seed++){
+  const guns=[gun(0),gun(11)];
+  const offers=traits.choices({slots:guns,projectiles:catalog.WEAPON_PROJECTILES,seed,hash});
+  assert.ok(offers.length>0&&offers.length<=3);
+  assert.equal(new Set(offers.map(offer=>offer.id)).size,offers.length);
+  for(const offer of offers){
+   counts[offer.weaponSlot]++;
+   kinds[offer.kind]++;
+   assert.ok(traits.canGrant(guns[offer.weaponSlot],offer.id,catalog.WEAPON_PROJECTILES));
+   assert.ok(!(guns[offer.weaponSlot].weapon===11&&offer.id==='overheat'));
+  }
+ }
+ assert.ok(counts.every(total=>total>=150),'both equipped guns must receive visible opportunities across seeds');
+ assert.ok(kinds.main>0&&kinds.support>0,'reward rolls must include both transformation and support progression');
+});
