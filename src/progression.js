@@ -22,5 +22,11 @@
  function saveLegacy(){try{localStorage.setItem(LEGACY_KEY,JSON.stringify(legacy));}catch(e){}}
  function saveMastery(){try{localStorage.setItem(MASTERY_KEY,JSON.stringify(mastery));}catch(e){}}
  function saveUnlockedWeapons(){try{localStorage.setItem(UNLOCK_KEY,JSON.stringify([...unlockedWeapons]));}catch(e){}}
- root.DropForgeProgression=Object.freeze({legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents});
+ const MATRIX_KEY='dropForge.matrixUnlocks.v1';
+ const matrixCosts=Object.freeze({weapon:50,module:30,hard:80,chip:20});
+ const matrixUnlocks={weapon:0,module:false,hard:false,chip:false};
+ try{const saved=JSON.parse(localStorage.getItem(MATRIX_KEY)||'{}');if(saved&&typeof saved==='object'){matrixUnlocks.weapon=Math.max(0,Math.min(count-2,Math.floor(Number(saved.weapon)||0)));for(const id of ['module','hard','chip'])matrixUnlocks[id]=saved[id]===true;}}catch(e){}
+ function saveMatrix(){localStorage.setItem(MATRIX_KEY,JSON.stringify(matrixUnlocks));}
+ function purchaseMatrix(id){if(!(id in matrixCosts)||legacy.marks<matrixCosts[id]||(id!=='weapon'&&matrixUnlocks[id])||(id==='weapon'&&matrixUnlocks.weapon>=count-2))return false;legacy.marks-=matrixCosts[id];if(id==='weapon')matrixUnlocks.weapon++;else matrixUnlocks[id]=true;saveLegacy();saveMatrix();return true;}
+ root.DropForgeProgression=Object.freeze({legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,saveMatrix});
 })(window);
