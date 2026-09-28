@@ -9,7 +9,7 @@ const {PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPO
 const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
 const GEAR=window.DropForgeGear;
 const {shotProfile,bounceBullet,resolveAttachmentHit,burstPlan,overchargeInterval}=window.DropForgeAttachmentEffects;
-const {selectChestChoices,availableRewardMods,selectBossAttachment}=window.DropForgeChestRewards;
+const {selectChestChoices}=window.DropForgeChestRewards;
 const BOSS_BLUEPRINT_KEY='dropForge.bossBlueprints.v1';
 function availableModules(){const ids=Object.keys(ACTIVE_MODULES);return matrixUnlocks.module?ids:ids.slice(0,Math.max(1,ids.length-3));}
 function availableChips(){const ids=Object.keys(GEAR.CHIPS);return matrixUnlocks.chip?ids:ids.slice(0,Math.max(1,ids.length-3));}
@@ -71,25 +71,9 @@ function earnLegacy(amount){if(game?.inHub||amount<=0)return;const earned=Math.m
 function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
 function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
 function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0||amount<=0)return;const old=masteryLevel(weapon),learning=!permanentShop&&old<=3?1.5:1;mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+Math.round(amount*learning));const level=masteryLevel(weapon);if(level>old){announce(weaponName(weapon)+' · USTALIK SEVİYESİ '+level,2.6);levelUpToast(weapon,level);burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);if(game.inHub)refreshForge();}saveMastery();updateHud();}
-function modSlotUnlocked(index, weaponId){
-  // The same permanent mastery threshold applies in the hub and the expedition.
-  if(!Number.isInteger(index)||index<0||index>3||!Number.isInteger(weaponId)||weaponId<0||weaponId>=WEAPON_NAMES.length)return false;
-  return masteryLevel(weaponId)>=[2,4,6,8][index];
-}
-function getModSlots(weapon){
-  return [0,1,2,3].filter(idx => modSlotUnlocked(idx, weapon)).length;
-}
-function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
-function installMod(slot,mod){const spec=(ALL_MODS||MODS)[mod];if(!slot||!spec||masteryLevel(slot.weapon)<spec.level||!modSlotUnlocked(spec.slot,slot.weapon)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
-function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce((ALL_MODS[m]||MODS[m]).name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
-const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
 let forgeFocusGun=1;
-// Existing attachment metadata is retained for read-only legacy drops and migration.
-const {MOD_ICONS,modNameForWeapon,modEffectForWeapon,modTradeoff}=window.DropForgeModPresentation;
-function modDiffHTML(id,currentMods,mod,slot){const before=[...currentMods],after=[...before];after[slot]=mod||undefined;const a=weaponStats({weapon:id,mods:before}),b=weaponStats({weapon:id,mods:after});
- const fields=[['HASAR',a.damage,b.damage,0],['ATIŞ/SN',a.fireRate,b.fireRate,2],['ŞARJÖR',a.mag,b.mag,0],['DELME',a.pierce,b.pierce,0],['ALAN',a.areaBonus*100,b.areaBonus*100,0],['SAÇILMA',a.spread*100,b.spread*100,0],['GERİ TEPME',a.recoil*100,b.recoil*100,0],['SARSILMA',a.staggerBonus,b.staggerBonus,2],['HAREKET +%',a.movementBonus*100,b.movementBonus*100,0]];
- return fields.filter(([,x,y])=>Math.abs(x-y)>.001).map(([name,x,y,prec])=>'<span class="modDelta"><span>'+name+'</span><b>'+x.toFixed(prec)+' → '+y.toFixed(prec)+'</b></span>').join('')||'<span class="modDelta"><span>ÖZEL ETKİ</span><b>'+((mod&&MODS[mod]?.name)||'BOŞ')+'</b></span>';
-}
+// Legacy attachments on previously acquired guns still use the original combat effects.
+const {modNameForWeapon}=window.DropForgeModPresentation;
 function syncForgeWorkbench(){
  if(!document.getElementById('forgeGun1'))return;
  for(let n=1;n<=2;n++){
@@ -444,20 +428,11 @@ function resolveWheel(room){const w=room.wheel;if(!w||w.used)return;w.used=true;
 const {drawGenerator,drawTrainingHub,drawMerchant,drawWheel}=window.DropForgeSceneProps.createScenePropsRenderer({ctx,getGame:()=>game});
 
 let chestUpgradeOpen = false;
-function chestModDetailsHTML(id,mod){
-  const eligible=game.player.slots.map((slot,index)=>({slot,index})).filter(({slot})=>slot&&masteryLevel(slot.weapon)>=mod.level&&modSlotUnlocked(mod.slot,slot.weapon));
-  if(!eligible.length)return '<small>MEVCUT SİLAHLARDA UYGUN YUVA YOK · ÇANTAYA AL</small>';
-  return eligible.map(({slot,index})=>{
-    const occupied=slot.mods[mod.slot],ready=!occupied;
-    return '<div class="chestModWeapon"><b>'+(index+1)+'. SİLAH · '+weaponName(slot.weapon)+'</b><small>'+(ready?'BOŞ YUVA · TAB MENÜSÜNDEN TAK':'YUVADA '+modNameForWeapon(slot.weapon,occupied)+' VAR · TAB MENÜSÜNDEN DEĞİŞTİR')+'</small><p>'+modEffectForWeapon(slot.weapon,id)+'</p>'+(ready?'<div class="modChoiceDeltas">'+modDiffHTML(slot.weapon,slot.mods,id,mod.slot)+'</div>':'')+'<small>'+modTradeoff(slot.weapon,id)+'</small></div>';
-  }).join('');
-}
 function openChestUpgradeModal(choices){
   if(!game || chestUpgradeOpen || paused) return;
   chestUpgradeOpen = true;
   paused = true;
   mouse.down = false;
-  const modCatalog = ALL_MODS || MODS;
   const root = $('chestUpgradeChoices');
   root.innerHTML = choices.map((item, idx) => {
     if(item.type === 'chip'){
