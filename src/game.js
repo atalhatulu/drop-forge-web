@@ -5,8 +5,8 @@ const canvas=document.getElementById('game'),ctx=canvas.getContext('2d');
 const mapCanvas=document.getElementById('mapCanvas'),mctx=mapCanvas.getContext('2d');
 const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,170,110,360,180,48,220],MAG_SIZE=[15,30,6,30,5,7,30,8,5,25,24,4,18];
 // Seven projectile families are shared by the 13 weapons; each weapon selects one family.
-const {PROJECTILE_FAMILIES,MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
-const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,rememberLoot,weightedLoot}=window.DropForgeProgression;
+const {PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
+const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
 const GEAR=window.DropForgeGear;
 const BOSS_BLUEPRINT_KEY='dropForge.bossBlueprints.v1';
 function availableModules(){const ids=Object.keys(ACTIVE_MODULES);return matrixUnlocks.module?ids:ids.slice(0,Math.max(1,ids.length-3));}
@@ -14,12 +14,34 @@ function availableChips(){const ids=Object.keys(GEAR.CHIPS);return matrixUnlocks
 function matrixCatalogHTML(){const names={weapon:'YENİ SİLAH LİSANSI',module:'YENİ MODÜL KATALOĞU',hard:'ZORLU BİYOM MODU',chip:'CHIP KATALOĞU'};return '<section class="gearStartingSets"><h3>ÇEKİRDEK MATRİSİ · '+legacy.marks+' MATRİS</h3><p>Kalıcı açılımlar başlangıç gücünü artırmaz; seçenek havuzunu genişletir.</p>'+Object.keys(matrixCosts).map(id=>'<button type="button" data-matrix-buy="'+id+'" '+((id==='weapon'?matrixUnlocks.weapon>=WEAPON_NAMES.length-2:matrixUnlocks[id])||legacy.marks<matrixCosts[id]?'disabled':'')+'>'+names[id]+' · '+matrixCosts[id]+' MATRİS'+(id==='weapon'?' · '+matrixUnlocks.weapon+' LİSANS':matrixUnlocks[id]?' · AÇIK':'')+'</button> ').join('')+'</section>';}
 const GEAR_LOCKER_KEY='dropForge.gearLocker.v1',GEAR_BUILD_KEY='dropForge.gearBuild.v1';
 function readGearSave(key,fallback){try{return JSON.parse(localStorage.getItem(key))??fallback;}catch{return fallback;}}
-const gearLocker=new Set((readGearSave(GEAR_LOCKER_KEY,['bastion-helmet'])||[]).filter(id=>typeof id==='string'&&GEAR.SLOTS.some(slot=>Object.keys(GEAR.SETS).some(set=>id===set+'-'+slot))));
+const gearLocker=new Set((readGearSave(GEAR_LOCKER_KEY,[])||[]).filter(id=>typeof id==='string'&&GEAR.SLOTS.some(slot=>Object.keys(GEAR.SETS).some(set=>id===set+'-'+slot))));
 let gearBuild=readGearSave(GEAR_BUILD_KEY,{});if(!gearBuild||typeof gearBuild!=='object'||Array.isArray(gearBuild))gearBuild={};
 function saveGearBuild(){localStorage.setItem(GEAR_BUILD_KEY,JSON.stringify(gearBuild));}
 function unlockGear(item){if(!item||!GEAR.SETS[item.set]||!GEAR.SLOTS.includes(item.slot))return;gearLocker.add(item.id);localStorage.setItem(GEAR_LOCKER_KEY,JSON.stringify([...gearLocker]));}
-function savedGearEquipment(){const set=GEAR.SETS[gearBuild.startSet]?gearBuild.startSet:'bastion';return Object.fromEntries(GEAR.SLOTS.map(slot=>[slot,GEAR.createGear(set,slot)]));}
-function chooseStartingSet(set){if(!GEAR.SETS[set])return;gearBuild.startSet=set;saveGearBuild();if(game?.inHub){const p=game.player,before=p.maxHp;p.equipment=savedGearEquipment();p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));updateHud();}renderGearWorkbench();}
+function savedGearEquipment(){
+  return Object.fromEntries(GEAR.SLOTS.map(slot=>{
+    const set=gearBuild[slot];
+    if(set&&gearLocker.has(set+'-'+slot)){
+      return [slot,GEAR.createGear(set,slot)];
+    }
+    return [slot,null];
+  }));
+}
+function chooseStartingSet(set){
+  if(!GEAR.SETS[set])return;
+  for(const slot of GEAR.SLOTS){
+    if(gearLocker.has(set+'-'+slot))gearBuild[slot]=set;
+  }
+  saveGearBuild();
+  if(game?.inHub){
+    const p=game.player,before=p.maxHp;
+    p.equipment=savedGearEquipment();
+    p.maxHp=p.baseMaxHp+gearStats().hp;
+    p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));
+    updateHud();
+  }
+  renderGearWorkbench();
+}
 function gearLockerHTML(equipment){return [...gearLocker].map(id=>{const index=id.lastIndexOf('-'),set=id.slice(0,index),slot=id.slice(index+1),item=GEAR.createGear(set,slot);if(!item)return '';const selected=equipment[slot]?.id===id;return '<button type="button" class="gearItem'+(selected?' chosen':'')+'" data-locker-gear="'+id+'" aria-pressed="'+selected+'"><img alt="'+GEAR.SLOT_NAMES[slot]+'" src="'+GEAR.icon(item)+'"><span><b>'+GEAR.SETS[set].name+'</b><small>'+GEAR.SLOT_NAMES[slot]+' · '+(selected?'TAKILI':'KUŞAN')+'</small><small>'+gearPieceBonus(item)+'</small></span></button>';}).join('');}
 function selectLockerGear(id){if(!gearLocker.has(id))return;const index=id.lastIndexOf('-'),set=id.slice(0,index),slot=id.slice(index+1),item=GEAR.createGear(set,slot);if(!item)return;gearBuild[slot]=gearBuild[slot]===set?null:set;saveGearBuild();if(game?.inHub){const p=game.player,before=p.maxHp;p.equipment=savedGearEquipment();p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));updateHud();}renderGearWorkbench();}
 
@@ -31,21 +53,37 @@ function activeSet(){const equipment=game?.player?.equipment,set=equipment?.helm
 function upgradeSet(source='chest'){const p=game?.player,set=activeSet();if(!p||!set||p.setLevel>=(source==='boss'?3:2))return false;const before=p.maxHp;p.setLevel++;p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));announce(GEAR.SETS[set].name+' SETİ · SEVİYE '+p.setLevel,3);floating(p.x,p.y-38,'SET GÜÇLENDİRİLDİ','#b5f9ce');updateHud();return true;}
 function gearStats(){const p=game?.player,base=GEAR.stats(p?.equipment),chips=GEAR.chipStats(p?.chips);return {...base,hp:base.hp+chips.hp,speed:base.speed+chips.speed,ammo:base.ammo+chips.ammo,leech:base.leech+chips.leech};}
 function hasChip(id){return !!game?.player&&Object.values(game.player.chips).includes(id);}
-function equipChip(id,slot){const p=game?.player;if(!p||!GEAR.CHIPS[id]||!GEAR.SLOTS.includes(slot)||!p.chipBag.includes(id))return;const old=p.chips[slot],before=p.maxHp;p.chipBag.splice(p.chipBag.indexOf(id),1);p.chips[slot]=id;if(old)p.gold+=8;p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));announce(GEAR.CHIPS[id].name+' · '+GEAR.SLOT_NAMES[slot]+' CHIP TAKILDI'+(old?' · ÖNCEKİ CHIP +8 HURDA':''),2);renderLoadout();updateHud();}
-function chipLoadoutHTML(p){return '<section class="chipPanel"><h3>PASİF CHIP · 5 YUVA</h3><p>Chip herhangi bir ekipman yuvasına takılabilir. Dolu yuvada değişim eski chip yerine +8 hurda verir.</p>'+GEAR.SLOTS.map(slot=>'<div class="chipSlot"><b>'+GEAR.SLOT_NAMES[slot]+'</b><small>'+(p.chips[slot]?GEAR.CHIPS[p.chips[slot]].name+' · '+GEAR.CHIPS[p.chips[slot]].description:'BOŞ CHIP YUVASI')+'</small><div class="chipOptions">'+p.chipBag.map(id=>'<button type="button" data-equip-chip="'+id+'" data-chip-slot="'+slot+'">'+GEAR.CHIPS[id].name+' · '+(p.chips[slot]?'DEĞİŞTİR':'TAK')+'</button>').join('')+'</div></div>').join('')+'<small>CHIP ÇANTASI: '+(p.chipBag.map(id=>GEAR.CHIPS[id].name).join(' · ')||'BOŞ')+'</small></section>';}
+function equipChip(id,slot){const p=game?.player;if(!p||!GEAR.CHIPS[id]||!GEAR.SLOTS.includes(slot)||!p.chipBag.includes(id))return;const old=p.chips[slot],before=p.maxHp;p.chipBag.splice(p.chipBag.indexOf(id),1);p.chips[slot]=id;if(old)p.gold+=8;p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));announce(GEAR.CHIPS[id].name+' · '+GEAR.SLOT_NAMES[slot]+' CHIP TAKILDI'+(old?' · ÖNCEKİ CHIP +8 ALTIN':''),2);renderLoadout();updateHud();}
+function chipLoadoutHTML(p){return '<section class="chipPanel"><h3>PASİF CHIP · 5 YUVA</h3><p>Chip herhangi bir ekipman yuvasına takılabilir. Dolu yuvada değişim eski chip yerine +8 altın verir.</p>'+GEAR.SLOTS.map(slot=>'<div class="chipSlot"><b>'+GEAR.SLOT_NAMES[slot]+'</b><small>'+(p.chips[slot]?GEAR.CHIPS[p.chips[slot]].name+' · '+GEAR.CHIPS[p.chips[slot]].description:'BOŞ CHIP YUVASI')+'</small><div class="chipOptions">'+p.chipBag.map(id=>'<button type="button" data-equip-chip="'+id+'" data-chip-slot="'+slot+'">'+GEAR.CHIPS[id].name+' · '+(p.chips[slot]?'DEĞİŞTİR':'TAK')+'</button>').join('')+'</div></div>').join('')+'<small>CHIP ÇANTASI: '+(p.chipBag.map(id=>GEAR.CHIPS[id].name).join(' · ')||'BOŞ')+'</small></section>';}
 function equipGear(id){const p=game?.player;if(!p)return;const index=p.gearBag.findIndex(q=>q.id===id);if(index<0)return;const item=p.gearBag.splice(index,1)[0],old=p.equipment[item.slot],before=p.maxHp;p.equipment[item.slot]=item;if(old)p.gearBag.push(old);p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.maxHp,p.hp+Math.max(0,p.maxHp-before));announce(GEAR.SETS[item.set].name+' · '+GEAR.SLOT_NAMES[item.slot]+' TAKILDI',1.5);renderLoadout();renderGearWorkbench();updateHud();}
 function unequipGear(slot){const p=game?.player,item=p?.equipment?.[slot];if(!item||p.gearBag.length>=20)return;p.equipment[slot]=null;p.gearBag.push(item);p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.hp,p.maxHp);renderLoadout();renderGearWorkbench();updateHud();}
-function grantGear(room,x,y){const item=GEAR.randomGear();dropPickup(room,'gear',x,y,true,item);}
+function grantGear(room,x,y){
+  const item=GEAR.randomGear();
+  if(item){
+    unlockGear(item);
+    dropPickup(room,'gear',x,y,true,item);
+  }
+}
 
 function earnLegacy(amount){if(game?.inHub||amount<=0)return;const earned=Math.min(game?.difficulty==='hard'&&matrixUnlocks.hard?amount*2:amount,9999-legacy.marks);if(!earned)return;legacy.marks+=earned;game.earnedCores=(game.earnedCores||0)+earned;saveLegacy();floating(game.player.x,game.player.y-48,'+'+earned+' KALICI ÇEKİRDEK','#abf7e0');}
 function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
 function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
 function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0||amount<=0)return;const old=masteryLevel(weapon),learning=!permanentShop&&old<=3?1.5:1;mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+Math.round(amount*learning));const level=masteryLevel(weapon);if(level>old){announce(weaponName(weapon)+' USTALIK '+level+' · YENİ YAPI SEÇENEKLERİ!',2.6);levelUpToast(weapon,level);burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);}saveMastery();updateHud();}
-function modSlotUnlocked(index){if(index===0)return true;if(!game||game.inHub)return false;const kind=['','mechanism','core','grip'][index];return !!game.modUnlocks?.[kind]||(index===2&&game.mainRoomsVisited>=4&&game.player.slots.some(w=>w&&masteryLevel(w.weapon)>=3))||(index===3&&game.mainRoomsVisited>=9&&game.player.slots.some(w=>w&&masteryLevel(w.weapon)>=8));}
-function getModSlots(weapon){if(!game||game.inHub)return masteryLevel(weapon)>=5?1:0;return [0,1,2,3].filter(modSlotUnlocked).length;}
+function modSlotUnlocked(index, weaponId){
+  if(index===0) return true;
+  const activeWep = weaponId !== undefined ? weaponId : (game?.player?.slots?.[game?.player?.activeSlot]?.weapon ?? 0);
+  const lv = masteryLevel(activeWep);
+  if(index===1) return lv >= 2;
+  if(index===2) return lv >= 4;
+  if(index===3) return lv >= 6;
+  return false;
+}
+function getModSlots(weapon){
+  return [0,1,2,3].filter(idx => modSlotUnlocked(idx, weapon)).length;
+}
 function unlockModSlot(kind,label){if(!game||game.modUnlocks[kind])return;game.modUnlocks[kind]=true;announce('YENİ EKLENTİ YUVASI · '+label+' AÇILDI',3);for(const slot of game.player.slots)if(slot)applyStashedMods(slot.weapon);updateHud();}
 function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
-function installMod(slot,mod){const spec=MODS[mod];if(!slot||!spec||!modSlotUnlocked(spec.slot)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
+function installMod(slot,mod){const spec=(ALL_MODS||MODS)[mod];if(!slot||!spec||!modSlotUnlocked(spec.slot)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
 function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce(MODS[m].name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
 const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
 let forgeFocusGun=1,forgeEditors={1:-1,2:-1};
@@ -73,9 +111,9 @@ function syncForgeWorkbench(){
    const node=card?.querySelector('[data-slot="'+j+'"]'),value=forgeMods(n)[j]?.value||'',locked=j>=limit;
    if(!node)continue;
    node.disabled=locked;node.classList.toggle('locked',locked);node.classList.toggle('filled',!locked&&!!value);node.classList.toggle('active',forgeEditors[n]===j&&!locked);
-   node.setAttribute('aria-label',n+'. silah '+FORGE_SLOT_LABELS[j]+': '+(locked?'ustalık '+[2,4,6,8][j]+' gerekli':value?MODS[value].name:'eklentiyi seç'));
+   node.setAttribute('aria-label',n+'. silah '+FORGE_SLOT_LABELS[j]+': '+(locked?(j===0?'SEFERDE AÇILIR (UST 5)':'SEFERDE AÇILIR'):value?(ALL_MODS[value]||MODS[value]).name:'eklentiyi seç'));
    node.querySelector('.attachLabel').textContent=FORGE_SLOT_LABELS[j];
-   node.querySelector('.attachValue').textContent=locked?'UST '+[2,4,6,8][j]:value?modNameForWeapon(weapon,value):'+';
+   node.querySelector('.attachValue').textContent=locked?(j===0?'KİLİTLİ · UST 5':['5. ODA','MİNİ BOSS','10. ODA'][j-1]):value?modNameForWeapon(weapon,value):'+';
   }
   const editor=$('forgeEditor'+n),j=forgeEditors[n],chosen=forgeMods(n)[j];
   if(j<0||j>=limit||!chosen){editor.classList.add('hidden');continue;}
@@ -172,7 +210,7 @@ function requiredBossKeys(stage){return [1,2,2,3][stage-1]||3;}
 function bossGateReady(stage){return game.regionKeys[stage-1]>=requiredBossKeys(stage)&&(stage!==3||game.bossDefenseDone);}
 function bossGateStatus(stage){return game.regionKeys[stage-1]+'/'+requiredBossKeys(stage)+' ANAHTAR'+(stage===3&&!game.bossDefenseDone?' · SAVUNMA GÖREVİ EKSİK':'');}
 function collectBossKey(room){if(!room.bossKey||room.bossKeyCollected)return;room.bossKeyCollected=true;game.regionKeys[room.keyStage-1]++;game.bossKeys=game.regionKeys[room.keyStage-1];game.keyFollowers.push({x:game.player.x+game.player.w/2,y:game.player.y+game.player.h/2});burst(room,W*.5,FLOOR-95,'#ffe58e',24,180);announce('BÖLGE '+room.keyStage+' · ANAHTAR '+game.bossKeys+'/'+requiredBossKeys(room.keyStage)+(bossGateReady(room.keyStage)?' · BOSS KAPISI AÇILDI':''),3);updateHud();}
-function awardRoomReward(room){if(room.type==='start'||room.type==='boss')return;const p=game.player,kind=room.reward||'ammo';if(kind==='gold'){dropPickup(room,'gold',W*.35,FLOOR-115,true,90+room.level*35);dropPickup(room,'gold',W*.65,FLOOR-115,true,90+room.level*35);announce('ALTIN KASASI · ALTINLARI TOPLA',2.2);return;}if(kind==='xp'){const contributions=room.weaponDamage||{},total=Object.values(contributions).reduce((a,b)=>a+b,0);if(total>0){for(const [id,damage] of Object.entries(contributions))grantMastery(Number(id),Math.max(1,Math.round(55*damage/total)));}else for(const slot of p.slots)if(slot)grantMastery(slot.weapon,28);announce('ROTA ÖDÜLÜ · SİLAH XP',2.2);}else if(kind==='mod'){const eligible=Object.keys(MODS).filter(id=>p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[id].level&&q.mods[MODS[id].slot]!==id)),mods=eligible.length?eligible:Object.keys(MODS),id=mods[hash2(room.x,room.y,game.seed)%mods.length];dropPickup(room,'mod',W*.42,FLOOR-110,true,id);}else if(kind==='health')dropPickup(room,'health',W*.42,FLOOR-110,true);else dropPickup(room,'ammo',W*.42,FLOOR-110,true);if(hash2(room.x,room.y,game.seed+4871)%4===0){const ids=availableChips(),id=weightedLoot('chips',ids,hash2(room.x,room.y,game.seed+819));dropPickup(room,'chip',W*.72,FLOOR-110,true,id);}const bonus=hash2(room.x,room.y,game.seed+9187)%5;if(bonus===0)dropPickup(room,'grenade',W*.57,FLOOR-110,true);else if(bonus===1)dropPickup(room,'gold',W*.57,FLOOR-110,true,12+room.level*8);else if(bonus===2&&room.branchEnd)dropPickup(room,'artifact',W*.57,FLOOR-110,true,['shield','stim','filter','coil'][hash2(room.x,room.y,game.seed+337)%4]);}
+function awardRoomReward(room){if(room.type==='start'||room.type==='boss')return;const p=game.player,kind=room.reward||'ammo';if(kind==='gold'){dropPickup(room,'gold',W*.35,FLOOR-115,true,90+room.level*35);dropPickup(room,'gold',W*.65,FLOOR-115,true,90+room.level*35);announce('ALTIN KASASI · ALTINLARI TOPLA',2.2);return;}if(kind==='xp'){const contributions=room.weaponDamage||{},total=Object.values(contributions).reduce((a,b)=>a+b,0);if(total>0){for(const [id,damage] of Object.entries(contributions))grantMastery(Number(id),Math.max(1,Math.round(55*damage/total)));}else for(const slot of p.slots)if(slot)grantMastery(slot.weapon,28);announce('ROTA ÖDÜLÜ · SİLAH XP',2.2);}else if(kind==='mod'){const modCatalog=ALL_MODS||MODS,eligible=Object.keys(modCatalog).filter(id=>p.slots.some(q=>q&&masteryLevel(q.weapon)>=modCatalog[id].level&&q.mods[modCatalog[id].slot]!==id)),mods=eligible.length?eligible:Object.keys(modCatalog),id=mods[hash2(room.x,room.y,game.seed)%mods.length];dropPickup(room,'mod',W*.42,FLOOR-110,true,id);}else if(kind==='health')dropPickup(room,'health',W*.42,FLOOR-110,true);else dropPickup(room,'ammo',W*.42,FLOOR-110,true);if(hash2(room.x,room.y,game.seed+4871)%4===0){const ids=availableChips(),id=weightedLoot('chips',ids,hash2(room.x,room.y,game.seed+819));dropPickup(room,'chip',W*.72,FLOOR-110,true,id);}const bonus=hash2(room.x,room.y,game.seed+9187)%5;if(bonus===0)dropPickup(room,'grenade',W*.57,FLOOR-110,true);else if(bonus===1)dropPickup(room,'gold',W*.57,FLOOR-110,true,12+room.level*8);else if(bonus===2&&room.branchEnd)dropPickup(room,'artifact',W*.57,FLOOR-110,true,['shield','stim','filter','coil'][hash2(room.x,room.y,game.seed+337)%4]);}
 function dropChest(room){if(!room.chest){const positions=[190,310,435,680,815,940],index=hash2(room.x,room.y,game.seed+Math.imul(room.id+1,731))%positions.length;room.chest={x:positions[index],y:75,vy:0,opened:false,grounded:false};}}
 function startArena(room){
  if(room.arenaStarted||room.cleared)return;room.arenaStarted=true;room.threatTime=0;room.threatLevel=0;
@@ -204,7 +242,7 @@ function equipSlot(index){const p=game.player;if(index===p.activeSlot)return;can
 function nearbyGroundKit(room,p){return room?.loot?.find(item=>item.kind==='health'&&!item.taken&&Math.abs(p.x+p.w/2-item.x)<38&&Math.abs(p.y+p.h/2-item.y)<55);}
 function consumeGroundKit(room,item,p){if(!item||item.taken||p.hp<=0||p.hp>=p.maxHp)return false;const gained=Math.min(45,p.maxHp-p.hp);p.hp+=gained;item.taken=true;burst(room,item.x,item.y,'#84ffbb',25,165);floating(item.x,item.y-30,'YERDEN KİT · +'+gained+' CAN','#b9ffdb');sound(790,.19,'sine');updateHud();return true;}
 function useKit(auto=false){if(!game||paused||mapOpen)return;const p=game.player;if(!p.kits||p.hp>=p.maxHp){announce(p.kits?'CANIN ZATEN DOLU':'SAĞLIK KİTİN YOK',.9);return;}p.kits--;p.hp=Math.min(p.maxHp,p.hp+45);burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#8cf8b0',auto?35:22,170);floating(p.x,p.y-24,auto?'OTOMATİK KİT · +45 CAN':'+45 CAN','#8cf8b0');sound(735,.18,'sine');updateHud();}
-function useAmmoBox(){if(!game||paused||mapOpen)return;const p=game.player;if(!p.ammoBoxes){announce('MERMİ KUTUN YOK',.9);return;}saveSlot();const targets=p.slots.filter(q=>q&&q.reserve<AMMO_MAX[q.weapon]);if(!targets.length){announce('TÜM YEDEK MERMİLER DOLU',.9);return;}p.ammoBoxes--;for(const q of targets)q.reserve=Math.min(AMMO_MAX[q.weapon],q.reserve+Math.max(MAG_SIZE[q.weapon]*4,Math.ceil(AMMO_MAX[q.weapon]*.35)));if(p.activeSlot>=0)p.reserve=p.slots[p.activeSlot]?.reserve??0;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#ffd36d',17,130);floating(p.x,p.y-24,'+ MERMİ','#ffd36d');sound(790,.14,'triangle');updateHud();}
+function useAmmoBox(){if(!game||paused||mapOpen)return;const p=game.player;if(!p.ammoBoxes){announce('MERMİ KUTUN YOK',.9);return;}saveSlot();const targets=p.slots.filter(q=>q&&q.reserve<AMMO_MAX[q.weapon]);if(!targets.length){announce('TÜM YEDEK MERMİLER DOLU',.9);return;}p.ammoBoxes--;const boost=activeSet()==='arsenal'?1.5:1;for(const q of targets)q.reserve=Math.min(AMMO_MAX[q.weapon],q.reserve+Math.ceil(Math.max(MAG_SIZE[q.weapon]*4,Math.ceil(AMMO_MAX[q.weapon]*.35))*boost));if(p.activeSlot>=0)p.reserve=p.slots[p.activeSlot]?.reserve??0;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#ffd36d',17,130);floating(p.x,p.y-24,'+ MERMİ','#ffd36d');sound(790,.14,'triangle');updateHud();}
 function throwGrenade(){if(!game||paused||mapOpen||game.dead||game.won)return;const p=game.player;if(!p.grenades){announce('BOMBAN KALMADI',.8);return;}p.grenades--;const dx=mouse.x-(p.x+p.w/2),dy=mouse.y-(p.y+p.h/2),angle=Math.atan2(dy,dx);game.grenades.push({x:p.x+p.w/2,y:p.y+p.h*.4,vx:Math.cos(angle)*450,vy:Math.sin(angle)*360-210,time:1.2});sound(390,.12,'triangle');updateHud();}
 function explodeGrenade(g){const room=currentRoom();burst(room,g.x,g.y,'#ffd07f',36,315);shake=Math.max(shake,12);sound(110,.31,'sawtooth',.04);if(game.inHub&&room.dummy&&Math.hypot(room.dummy.x+room.dummy.w/2-g.x,room.dummy.y+room.dummy.h/2-g.y)<130)hitDummy(room,75,Math.sign(g.vx)||1);for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-g.x,e.y+e.h/2-g.y)<130)hitEnemy(room,e,75);for(const q of room.portals)if(q.alive&&Math.hypot(q.x-g.x,q.y-g.y)<125)hitPortal(room,q,70);const p=game.player;if(Math.hypot(p.x+p.w/2-g.x,p.y+p.h/2-g.y)<72)damagePlayer(9);}
 function useAccessory(index){if(!game||paused||mapOpen)return;const p=game.player,a=p.accessories[index],spec=a&&ACCESSORIES[a.type];if(!spec){announce('ÖZEL EŞYA SLOTU BOŞ',.8);return;}if(a.cooldown>0){announce('EŞYA BEKLEME: '+Math.ceil(a.cooldown)+'sn',.9);return;}p.activeAccessory=a.type;p.accessoryTime=spec.duration;a.cooldown=spec.cooldown;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,spec.color,22,190);announce(spec.name+' AKTİV · '+spec.duration+'sn');updateHud();}
@@ -284,7 +322,7 @@ function grapplePhysics(p,dt){
 function addFlow(points,label){if(!game||game.dead)return;game.flow=clamp((game.flow||0)+points,0,100);game.flowTime=3.8;game.flowChain=(game.flowChain||0)+1;if(label&&game.flowChain%5===0)floating(game.player.x+12,game.player.y-30,'FLOW +'+points,'#94ffce');}
 function hitGenerator(room,damage){const g=room.generator;if(!g||g.failed||g.time<=0)return;g.hp=Math.max(0,g.hp-damage);burst(room,g.x,g.y-18,'#ffaf80',7,95);if(!g.hp){g.failed=true;g.time=0;for(const q of room.portals)q.alive=false;announce('JENERATÖR KAYBEDİLDİ · ÖDÜL İPTAL',2.6);damagePlayer(18);}}
 function damagePlayer(amount){const p=game.player;if(game.testMode){p.hp=Math.max(1,p.hp-Math.max(1,Math.round(amount*game.settings.enemyDamage)));if(p.hp<=1){p.hp=p.maxHp;p.invuln=1.5;announce('TEST · CAN YENİLENDİ',1.5);}return;}if(p.invuln>0||game.dead)return;if(p.setShield>0){p.setShield=Math.max(0,p.setShield-amount);return;}if(p.runeShield>0){p.runeShield=0;if(hasChip('reflex')){const room=currentRoom();for(const e of room.enemies||[])if(e.alive&&Math.hypot(e.x-p.x,e.y-p.y)<160)hitEnemy(room,e,30,'chip');burst(room,p.x+p.w/2,p.y+p.h/2,'#a4e7ff',24,180);announce('AYNA REFLEKS · KALKAN PATLAMASI',1.4);}return;}if(p.activeAccessory==='shield'&&p.accessoryTime>0){burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#a4e7ff',11,130);p.invuln=.25;return;}amount=Math.max(1,Math.round(amount*game.settings.enemyDamage));if(activeSet()==='bastion'&&p.setArmorTime>0)amount=Math.max(1,Math.round(amount*.8));if(p.moduleArmor>0)amount=Math.max(1,Math.round(amount*.4));if(hasChip('steel')&&game.elapsed-(p.lastMoveAt??-100)<=.2)amount=Math.max(1,Math.round(amount*.6));p.hp=Math.max(0,p.hp-amount);p.lastDamageAt=game.elapsed;if(hasChip('breath')&&p.hp>0&&p.hp<p.maxHp*.2&&!p.breathUsed){p.breathUsed=true;p.moduleBoost=Math.max(p.moduleBoost||0,3);announce('İKİNCİ NEFES · HIZ PATLAMASI',2);}if(activeSet()==='bastion'){p.setArmorTime=2;if(p.setLevel>=2&&p.hp>0&&p.hp<p.maxHp*.3&&p.setShockCooldown<=0){p.setShockCooldown=90;for(const enemy of currentRoom().enemies||[])if(enemy.alive&&Math.hypot(enemy.x-p.x,enemy.y-p.y)<145){enemy.hp-=25;if(enemy.hp<=0)killEnemy(currentRoom(),enemy);}burst(currentRoom(),p.x,p.y,'#a8d7ff',30,180);}}if(p.hp>0&&p.hp<p.maxHp*.5&&p.kits>0)useKit(true);game.flow=Math.max(0,(game.flow||0)-18);game.flowChain=0;p.invuln=.8;shake=12;flash=.22;flashTint='255,95,109';hitStop=.045;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#ff7c85',16,205);floating(p.x,p.y-25,'-'+amount+' CAN','#ff9292');sound(130,.18,'sawtooth');if(p.hp===0){game.dead=true;paused=true;showEnd(false);}updateHud();}
-function killEnemy(room,e){e.alive=false;if(game.testMode){burst(room,e.x+e.w/2,e.y+e.h/2,'#b7dbff',17,150);return;}if(e.type==='boss'&&e.bossPhase===1&&e.hp<=e.maxHp*.5){e.bossPhase=2;e.hp=Math.round(e.maxHp*.5);e.alive=true;e.windup=0;e.fire=.7;e.stagger=0;e.dodgeCd=2;burst(room,e.x+e.w/2,e.y+e.h/2,e.bossColor||'#ffd7a3',35,260);announce(e.bossName+' · İKİNCİ FAZ',2.7);sound(180,.5,'sawtooth');return;}if(e.hunted){for(const portal of room.portals)if(portal.alive){portal.alive=false;burst(room,portal.x,portal.y,'#ffe69f',25,210);}announce('HEDEF ETKİSİZ · PORTALLAR KAPANDI',2.3);}const coins=e.miniBoss?85+e.level*30:e.type==='boss'?120+e.level*35:e.type==='purple'?16+e.level*5:8+e.level*5;dropPickup(room,'gold',e.x+e.w/2,e.y+e.h/2,true,coins);if(e.type==='boss'||e.miniBoss||Math.random()<.25)dropPickup(room,'ammo',e.x+e.w/2+16,e.y+e.h/2,true);if(e.type==='boss'||e.miniBoss||Math.random()<.07)grantGear(room,e.x+e.w/2-20,e.y+e.h/2-18);const leech=gearStats().leech+(activeSet()==='vampire'?3:0);if(leech>0){game.player.hp=Math.min(game.player.maxHp,game.player.hp+leech);floating(game.player.x,game.player.y-32,'+'+leech+' CAN · EKİPMAN','#ee9fc7');}if(e.type!=='boss'&&Math.random()<.055)dropPickup(room,'health',e.x+e.w/2-14,e.y+e.h/2,true);if(e.type==='boss'){if(game.player.setLevel<2&&activeSet())dropPickup(room,'setBooster',e.x+e.w/2,e.y+e.h/2-35,true);dropPickup(room,'artifact',e.x+e.w/2+30,e.y+e.h/2,true,['shield','stim','filter','coil'][hash2(room.x,room.y,game.seed+e.level)%4]);dropPickup(room,'grenade',e.x+e.w/2-35,e.y+e.h/2,true);}else if(Math.random()<(e.type==='purple'?.14:e.type==='healer'?.19:.09))dropPickup(room,'grenade',e.x+e.w/2+25,e.y+e.h/2,true);if(activeSet()==='vampire'&&game.player.setLevel>=3&&game.player.hp<game.player.maxHp*.5)game.player.invuln=Math.min(3,Math.max(game.player.invuln||0,1));if(activeSet()==='arsenal'&&game.player.setLevel>=2)game.player.moduleCooldown=Math.max(0,(game.player.moduleCooldown||0)-1);game.player.kills++;if(hasChip('kinetic')&&game.player.kills%10===0)game.player.kineticReady=true;if(game.player.kills%5===0)earnLegacy(1);if(e.type==='boss')earnLegacy(3);else if(e.miniBoss)earnLegacy(2);addFlow(e.type==='boss'?35:17,'KILL');burst(room,e.x+e.w/2,e.y+e.h/2,e.type==='red'?'#ff6278':e.type==='blue'?'#73d7ff':'#d29dff',22,280);if(e.type==='boss')dropPickup(room,'health',e.x+e.w/2-25,e.y+e.h/2,true);floating(e.x,e.y-27,coins+' ALTIN DÜŞTÜ','#ffd78a');shake=Math.max(shake,5);sound(185,.13,'triangle');updateHud();}
+function killEnemy(room,e){e.alive=false;if(game.testMode){burst(room,e.x+e.w/2,e.y+e.h/2,'#b7dbff',17,150);return;}if(e.type==='boss'&&e.bossPhase===1&&e.hp<=e.maxHp*.5){e.bossPhase=2;e.hp=Math.round(e.maxHp*.5);e.alive=true;e.windup=0;e.fire=.7;e.stagger=0;e.dodgeCd=2;burst(room,e.x+e.w/2,e.y+e.h/2,e.bossColor||'#ffd7a3',35,260);announce(e.bossName+' · İKİNCİ FAZ',2.7);sound(180,.5,'sawtooth');return;}if(e.hunted){for(const portal of room.portals)if(portal.alive){portal.alive=false;burst(room,portal.x,portal.y,'#ffe69f',25,210);}announce('HEDEF ETKİSİZ · PORTALLAR KAPANDI',2.3);}const coins=e.miniBoss?85+e.level*30:e.type==='boss'?120+e.level*35:e.type==='purple'?16+e.level*5:8+e.level*5;dropPickup(room,'gold',e.x+e.w/2,e.y+e.h/2,true,coins);if(e.type==='boss'||e.miniBoss||Math.random()<.25)dropPickup(room,'ammo',e.x+e.w/2+16,e.y+e.h/2,true);if(e.type==='boss'||Math.random()<.07)grantGear(room,e.x+e.w/2-20,e.y+e.h/2-18);const leech=gearStats().leech+(activeSet()==='vampire'?3:0);if(leech>0){game.player.hp=Math.min(game.player.maxHp,game.player.hp+leech);floating(game.player.x,game.player.y-32,'+'+leech+' CAN · EKİPMAN','#ee9fc7');}if(e.type!=='boss'&&Math.random()<.055)dropPickup(room,'health',e.x+e.w/2-14,e.y+e.h/2,true);if(e.type==='boss'){if(game.player.setLevel<2&&activeSet())dropPickup(room,'setBooster',e.x+e.w/2,e.y+e.h/2-35,true);dropPickup(room,'artifact',e.x+e.w/2+30,e.y+e.h/2,true,['shield','stim','filter','coil'][hash2(room.x,room.y,game.seed+e.level)%4]);dropPickup(room,'grenade',e.x+e.w/2-35,e.y+e.h/2,true);}else if(Math.random()<(e.type==='purple'?.14:e.type==='healer'?.19:.09))dropPickup(room,'grenade',e.x+e.w/2+25,e.y+e.h/2,true);if(activeSet()==='vampire'&&game.player.setLevel>=3&&game.player.hp<game.player.maxHp*.5)game.player.invuln=Math.min(3,Math.max(game.player.invuln||0,1));if(activeSet()==='arsenal'&&game.player.setLevel>=2)game.player.moduleCooldown=Math.max(0,(game.player.moduleCooldown||0)-1);game.player.kills++;if(hasChip('kinetic')&&game.player.kills%10===0)game.player.kineticReady=true;if(game.player.kills%5===0)earnLegacy(1);if(e.type==='boss')earnLegacy(3);else if(e.miniBoss)earnLegacy(2);addFlow(e.type==='boss'?35:17,'KILL');burst(room,e.x+e.w/2,e.y+e.h/2,e.type==='red'?'#ff6278':e.type==='blue'?'#73d7ff':'#d29dff',22,280);if(e.type==='boss')dropPickup(room,'health',e.x+e.w/2-25,e.y+e.h/2,true);floating(e.x,e.y-27,coins+' ALTIN DÜŞTÜ','#ffd78a');shake=Math.max(shake,5);sound(185,.13,'triangle');updateHud();}
 function collideRect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
 function floorPhysics(o,dt,platforms,prevX=o.x){
  const room=game?currentRoom():null,prevY=o.y,prevBottom=o.y+o.h,wasGrounded=o.grounded;
@@ -329,6 +367,7 @@ function update(dt){
    for(const c of room.crystals)if(c.alive&&bullet.life>0&&Math.hypot(bullet.x-c.x,bullet.y-c.y)<c.r+r){bullet.life=0;c.hp-=bullet.damage;c.flash=.18;projectileImpact(room,bullet);if(c.hp<=0)explodeCrystal(room,c);break;}
    for(const o of room.props)if(o.alive&&bullet.life>0&&collideRect({x:bullet.x-r,y:bullet.y-r,w:r*2,h:r*2},o)){bullet.life=0;hitProp(room,o,bullet.damage);projectileImpact(room,bullet);break;}
  }game.bullets=game.bullets.filter(b=>b.life>0);
+ if(activeSet()==='runner'&&p.setLevel>=2&&p.runnerTunnel>0)for(const e of room.enemies)if(e.alive&&Math.hypot(e.x+e.w/2-(p.x-p.face*65),e.y+e.h/2-(p.y+p.h/2))<110)e.vx*=.65;
  for(const e of room.enemies)enemyUpdate(e,room,dt);room.enemies=room.enemies.filter(e=>e.alive);
  function explodeMageBullet(b){const radius=b.blastRadius||76;burst(room,b.x,b.y,'#dca4ff',24,215);room.mageBlasts.push({x:b.x,y:b.y,radius,life:.24,maxLife:.24});shake=Math.max(shake,4);const cx=p.x+p.w/2,cy=p.y+p.h/2;if(Math.hypot(cx-b.x,cy-b.y)<radius+Math.min(p.w,p.h)*.3&&p.dash<=0){damagePlayer(Math.round(b.damage*1.6)+(b.effect==='lava'?3:0));if(b.effect==='forest'&&!(p.activeAccessory==='filter'&&p.accessoryTime>0))p.poisonCooldown=Math.max(p.poisonCooldown,.7);}if(room.generator&&!room.generator.failed&&Math.hypot(room.generator.x-b.x,room.generator.y-17-b.y)<radius+20)hitGenerator(room,Math.round(b.damage*1.4));}
  for(const b of game.enemyBullets){if(activeSet()==='runner'&&p.setLevel>=3&&p.dash>0&&b.life>0&&Math.hypot(b.x-p.x-p.w/2,b.y-p.y-p.h/2)<95&&game.elapsed-(p.runnerNearMissAt??-100)>.5){p.runnerNearMissAt=game.elapsed;const slot=p.slots[p.activeSlot];if(slot){slot.ammo=weaponStats(slot).mag;p.ammo=slot.ammo;}announce('RÜZGAR · NEAR MISS · ŞARJÖR DOLDU',1.2);}if(activeSet()==='runner'&&p.setLevel>=2&&p.runnerTunnel>0&&b.life>0&&Math.hypot(b.x-p.x+p.face*85,b.y-p.y-p.h/2)<90){b.vx*=.96;b.vy*=.96;}const bulletDt=p.moduleStasis>0?dt*.3:dt;b.x+=b.vx*bulletDt;b.y+=b.vy*bulletDt;if((p.moduleDome>0||p.moduleReflect>0)&&Math.hypot(b.x-p.x-p.w/2,b.y-p.y-p.h/2)<95){if(p.moduleReflect>0){const target=room.enemies?.find(e=>e.alive);if(target)hitEnemy(room,target,Math.max(1,Math.round(b.damage||8)),'module',p.weapon);}b.life=0;burst(room,b.x,b.y,'#9deaff',5,90);continue;}b.life-=dt;const out=b.x<30||b.x>W-30||b.y<25||b.y>FLOOR,nearGenerator=room.generator&&!room.generator.failed&&Math.abs(b.x-room.generator.x)<31&&Math.abs(b.y-(room.generator.y-17))<31,nearPlayer=collideRect({x:b.x-5,y:b.y-5,w:10,h:10},p);if(b.explosive){if(out||b.life<=0||nearGenerator||nearPlayer){b.life=0;explodeMageBullet(b);}continue;}if(out)b.life=0;if(b.life>0&&nearGenerator){b.life=0;hitGenerator(room,b.damage);}if(b.life>0&&nearPlayer){b.life=0;if(p.dash>0){addFlow(24,'DODGE');continue;}damagePlayer(b.damage+(b.effect==='lava'?3:0));if(b.effect==='forest'&&!(p.activeAccessory==='filter'&&p.accessoryTime>0))p.poisonCooldown=Math.max(p.poisonCooldown,.7);}}game.enemyBullets=game.enemyBullets.filter(b=>b.life>0);
@@ -437,13 +476,169 @@ function dropWeapon(room,weapon,x,y,vx=0,ammo=MAG_SIZE[weapon],reserve=AMMO_MAX[
 function spinWheel(room){const w=room.wheel;if(!w||w.used||w.spinTime>0||!room.cleared)return;w.spinTime=2.4;w.spinDuration=2.4;w.spinAngle=0;w.resultTime=0;w.resultLabel='';announce('ŞANS ÇARKI DÖNÜYOR…',1.65);sound(650,.13,'triangle');}
 function resolveWheel(room){const w=room.wheel;if(!w||w.used)return;w.used=true;w.spinTime=0;const rand=rng((game.seed^Math.imul(room.id+1,0x4f1bbcdc)^Math.imul(game.wheelSpins=(game.wheelSpins||0)+1,0x9e3779b9))>>>0),locked=WEAPON_NAMES.map((_,id)=>id).filter(id=>!unlockedWeapons.has(id)),roll=rand(),p=game.player;if(locked.length&&roll<.37){const id=locked[ri(rand,0,locked.length-1)];unlockWeapon(id);dropWeapon(room,id,w.x,w.y-38,0,MAG_SIZE[id],Math.min(AMMO_MAX[id],MAG_SIZE[id]*2));announce('YENİ SİLAH AÇILDI · '+weaponName(id)+' · E İLE AL!',3);floating(w.x,w.y-72,'YENİ SİLAH!','#ffe494');}else if(roll<.65){const eligible=Object.keys(MODS).filter(m=>p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[m].level&&q.mods[MODS[m].slot]!==m));const pool=eligible.filter(m=>!game.stashedMods.includes(m)),mod=pool.length&&game.stashedMods.length<12?pool[ri(rand,0,pool.length-1)]:null;if(mod)game.stashedMods.push(mod);if(mod)announce('ÇARK ÖDÜLÜ · '+MODS[mod].name+' EKLENTİSİ',2.5);else{p.gold+=85;announce('ÇARK ÖDÜLÜ · +85 ALTIN',2.5);}}else if(roll<.72){grantGear(room,w.x,w.y-38);announce('ÇARK ÖDÜLÜ · GİYSİ PARÇASI',2.5);}else if(roll<.82){if(p.kits<3){p.kits++;announce('ÇARK ÖDÜLÜ · +1 SAĞLIK KİTİ',2);}else{p.gold+=65;announce('ÇARK ÖDÜLÜ · +65 ALTIN',2);}}else if(roll<.89){saveSlot();for(const slot of p.slots)if(slot)slot.reserve=Math.min(AMMO_MAX[slot.weapon],slot.reserve+MAG_SIZE[slot.weapon]*4);if(p.activeSlot>=0&&p.slots[p.activeSlot])p.reserve=p.slots[p.activeSlot].reserve;announce('ÇARK ÖDÜLÜ · YEDEK MERMİ',2);}else if(roll<.95){p.gold+=100;announce('ÇARK ÖDÜLÜ · +100 ALTIN',2);}else{if(p.grenades<3){p.grenades++;announce('ÇARK ÖDÜLÜ · +1 BOMBA',2);}else{p.gold+=70;announce('ÇARK ÖDÜLÜ · +70 ALTIN',2);}}w.resultLabel=announcementText;const label=w.resultLabel;w.resultIndex=label.includes('SİLAH')?0:label.includes('EKLENTİ')?1:label.includes('SAĞLIK')?2:label.includes('MERMİ')?3:label.includes('BOMBA')?4:5;const target=(6-w.resultIndex)*Math.PI/3-Math.PI/6;w.resultStartAngle=w.spinAngle;w.resultTargetAngle=w.spinAngle+((target-w.spinAngle)%(Math.PI*2)+Math.PI*2)%(Math.PI*2)+Math.PI*2;w.resultTime=2.3;burst(room,w.x,w.y-22,'#ffe69f',30,215);sound(900,.3,'triangle');updateHud();}
 const {drawGenerator,drawTrainingHub,drawMerchant,drawWheel}=window.DropForgeSceneProps.createScenePropsRenderer({ctx,getGame:()=>game});
+
+let chestUpgradeOpen = false;
+function openChestUpgradeModal(choices){
+  if(!game || chestUpgradeOpen || paused) return;
+  chestUpgradeOpen = true;
+  paused = true;
+  mouse.down = false;
+  const modCatalog = ALL_MODS || MODS;
+  const root = $('chestUpgradeChoices');
+  root.innerHTML = choices.map((item, idx) => {
+    if(item.type === 'chip'){
+      const chip = GEAR.CHIPS[item.id];
+      return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
+        '<span class="chestCardSlotTag" style="background:#1b2d42;border-color:#4a769c;color:#7ee4ff">◈ PASİF CHIP</span>'+
+        '<div class="chestCardIconWrap" style="border-color:#5a9fc4"><span class="chestCardIcon" style="color:#7ee4ff">◈</span></div>'+
+        '<strong class="chestCardName" style="color:#d8f4ff">'+(chip?.name||item.id)+'</strong>'+
+        '<p class="chestCardDesc">'+(chip?.description||'')+'</p>'+
+        '<button type="button" class="chestCardBtn">ÇİPİ ÇANTAYA AL</button>'+
+        '</div>';
+    } else if(item.type === 'gear'){
+      const spec = GEAR.SETS[item.set];
+      const slotName = GEAR.SLOT_NAMES[item.slot] || 'ZIRH';
+      const iconUrl = GEAR.icon(item);
+      const bonus = gearPieceBonus(item);
+      return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
+        '<span class="chestCardSlotTag" style="background:#1b332b;border-color:#3d7a63;color:#85f0b5">🛡 '+slotName+' ('+spec.name+')</span>'+
+        '<div class="chestCardIconWrap" style="border-color:'+spec.color+'"><img src="'+iconUrl+'" style="width:48px;height:48px;image-rendering:pixelated" alt="'+slotName+'"></div>'+
+        '<strong class="chestCardName" style="color:#d5ffe3">'+spec.name+' '+slotName+'</strong>'+
+        '<p class="chestCardDesc">'+bonus+'<br><small style="color:#9ad7b6">'+spec.bonus+'</small></p>'+
+        '<button type="button" class="chestCardBtn">KUŞAN / DOLABA EKLE</button>'+
+        '</div>';
+    } else {
+      const id = item.id;
+      const mod = modCatalog[id] || MODS[id];
+      const icon = DropForgeModPresentation.MOD_ICONS[id] || "✦";
+      const slotName = FORGE_SLOT_LABELS[mod?.slot] || "EKLENTİ";
+      const desc = mod?.description || "";
+      return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
+        '<span class="chestCardSlotTag">⚔ '+slotName+'</span>'+
+        '<div class="chestCardIconWrap"><span class="chestCardIcon">'+icon+'</span></div>'+
+        '<strong class="chestCardName">'+(mod?.name||id)+'</strong>'+
+        '<p class="chestCardDesc">'+desc+'</p>'+
+        '<button type="button" class="chestCardBtn">SEÇ & TAK</button>'+
+        '</div>';
+    }
+  }).join("");
+  $('chestUpgradeOverlay').classList.remove("hidden");
+  sound(750, .25, "triangle");
+}
+
+function closeChestUpgradeModal(){
+  if(!chestUpgradeOpen) return;
+  chestUpgradeOpen = false;
+  $('chestUpgradeOverlay').classList.add("hidden");
+  game.currentChestUpgradeChoices = null;
+  paused = false;
+  canvas.focus();
+}
+
+$('chestUpgradeChoices').addEventListener("click", e => {
+  const card = e.target.closest("[data-upgrade-index]");
+  if(!card || !chestUpgradeOpen || !game?.currentChestUpgradeChoices) return;
+  const idx = Number(card.dataset.upgradeIndex);
+  const item = game.currentChestUpgradeChoices[idx];
+  if(!item) return;
+
+  if(item.type === 'gear'){
+    const p = game.player;
+    if(p.gearBag.length < 20){
+      p.gearBag.push(item);
+      gearLocker.add(item.id);
+      saveGearBuild();
+      // If current equipment slot is empty, automatically equip it
+      if(!p.equipment[item.slot]){
+        equipGear(item.id);
+      }
+      announce("ZIRH ALINDI · "+GEAR.SETS[item.set].name+" "+GEAR.SLOT_NAMES[item.slot], 2.5);
+      burst(currentRoom(), p.x+p.w/2, p.y+p.h/2, GEAR.SETS[item.set].color, 24, 180);
+      sound(880, .2, "triangle");
+    } else {
+      announce("ZIRH ÇANTASI DOLU", 2);
+    }
+  } else if(item.type === 'chip'){
+    const p = game.player;
+    if(p.chipBag.length < 15 && GEAR.CHIPS[item.id]){
+      p.chipBag.push(item.id);
+      rememberLoot('chips', item.id);
+      announce("CHIP ALINDI · "+GEAR.CHIPS[item.id].name, 2.5);
+      burst(currentRoom(), p.x+p.w/2, p.y+p.h/2, "#7ee4ff", 24, 180);
+      sound(880, .2, "triangle");
+    } else {
+      announce("CHIP ÇANTASI DOLU", 2);
+    }
+  } else {
+    const pick = item.id;
+    const modCatalog = ALL_MODS || MODS;
+    if(game.stashedMods.length < 12){
+      game.stashedMods.push(pick);
+      game.modLevels[pick] ??= 1;
+      announce("EKLENTİ KUŞANILDI · "+(modCatalog[pick]?.name || pick), 2.5);
+      burst(currentRoom(), game.player.x+game.player.w/2, game.player.y+game.player.h/2, "#ffdf89", 24, 180);
+      sound(880, .2, "triangle");
+    } else {
+      announce("ÇANTA DOLU · EKLENTİ ALINAMADI", 2);
+    }
+  }
+  closeChestUpgradeModal();
+  updateHud();
+});
+
+$('rejectChestUpgradeBtn').onclick = () => {
+  if(!chestUpgradeOpen) return;
+  game.player.gold += 20;
+  floating(game.player.x, game.player.y - 30, "+20 ALTIN", "#ffe197");
+  announce("SANDIK ÖDÜLÜ REDDEDİLDİ · +20 ALTIN", 2);
+  sound(550, .15, "sine");
+  closeChestUpgradeModal();
+  updateHud();
+};
+
 function interact(){
  if(!game||paused||mapOpen||game.testMode)return;const room=currentRoom(),p=game.player,near=room.interact;
  if(game.inHub){if(near?.nearHubGate){enterExpedition();return;}if(near?.nearForge){openHubForge();return;}if(near?.nearMerchant){openShop();return;}}if(near?.nearMerchant){openShop();return;}if(near?.nearSecret){const secret=room.secret;secret.opened=true;earnLegacy(1);burst(room,secret.x,FLOOR-62,'#ffe59a',22,145);if(secret.kind==='gold'){dropPickup(room,'gold',secret.x-35,FLOOR-115,true,100+room.stage*35);dropPickup(room,'gold',secret.x+35,FLOOR-115,true,100+room.stage*35);announce('GİZLİ BÖLME · ALTIN ZULASI');}else if(secret.kind==='module'){const ids=availableModules(),id=ids[hash2(room.x,room.y,game.seed+728)%ids.length];p.activeModule=id;p.moduleCooldown=0;announce('İLK MODÜL · '+ACTIVE_MODULES[id].name+' · SAĞ TIK',3);burst(room,secret.x,FLOOR-100,'#a8f5df',28,160);}else if(secret.kind==='rune'){const ids=Object.keys(WEAPON_RUNES),id=weightedLoot('runes',ids,hash2(room.x,room.y,game.seed+1907));rememberLoot('runes',id);game.pendingRune={id};announce('SİLAH RUNU · '+WEAPON_RUNES[id].name+' · TAB MENÜSÜNDE SİLAH SEÇ',3);burst(room,secret.x,FLOOR-100,'#d5b6ff',26,160);}else if(secret.kind==='wheel'){room.wheel={x:secret.x,y:FLOOR-20,used:false,spinTime:0};announce('GİZLİ BÖLME · ŞANS ÇARKI BULUNDU');}else{dropChest(room);announce('GİZLİ BÖLME · SANDIK BULUNDU');}sound(790,.16,'triangle');return;}if(near?.nearWheel){spinWheel(room);return;}if(near?.nearChest){room.chest.opened=true;p.gold+=45;
-   const rand=rng((game.seed^room.id*70001)>>>0),special=room.type==='treasure'||room.type==='elite'||rand()<.58;
-   if(special){if(room.type==='elite'&&p.activeModule&&!p.moduleOffer){const ids=availableModules().filter(id=>id!==p.activeModule);p.moduleOffer=ids[ri(rand,0,ids.length-1)];announce('ELİT SANDIĞI · MODÜL DEĞİŞİMİ TAB MENÜSÜNDE',3);}const eligible=Object.keys(MODS).filter(k=>p.slots.some(q=>q&&masteryLevel(q.weapon)>=MODS[k].level&&modSlotUnlocked(MODS[k].slot)&&q.mods[MODS[k].slot]!==k)&&!game.stashedMods.includes(k));const reward=rand();if(eligible.length&&game.stashedMods.length<12&&reward<.55){const mod=eligible[ri(rand,0,eligible.length-1)];dropPickup(room,'mod',room.chest.x,room.chest.y-40,true,mod);announce('+45 ALTIN · '+MODS[mod].name+' EKLENTİSİ');}else if(reward<.72&&p.kits<3){dropPickup(room,'health',room.chest.x,room.chest.y-40,true);announce('+45 ALTIN · SAĞLIK KİTİ');}else if(reward<.84&&p.grenades<3){dropPickup(room,'grenade',room.chest.x,room.chest.y-40,true);announce('+45 ALTIN · BOMBA');}else if(reward<.94&&p.slots.some(q=>q&&q.reserve<AMMO_MAX[q.weapon])){dropPickup(room,'ammo',room.chest.x,room.chest.y-40,true);announce('+45 ALTIN · MÜHİMMAT');}else{const bonus=35+room.level*15;p.gold+=bonus;for(const slot of p.slots)if(slot)grantMastery(slot.weapon,25);announce('SANDIK · +'+bonus+' ALTIN · +25 SİLAH XP');}}
-   else{if(rand()<.86)dropPickup(room,'ammo',room.chest.x-17,room.chest.y-32,true);if(rand()<.35)dropPickup(room,'health',room.chest.x+19,room.chest.y-35,true);announce('+45 ALTIN · MÜHİMMAT SANDIĞI');}
-   if(room.type==='treasure'&&rand()<.65)grantGear(room,room.chest.x+8,room.chest.y-45);if(room.type==='treasure'){const accessory=p.accessories.some(a=>!a)?['shield','stim','filter','coil'].filter(id=>!p.accessories.some(a=>a?.type===id)):[];if(accessory.length)dropPickup(room,'artifact',room.chest.x+38,room.chest.y-42,true,accessory[ri(rand,0,accessory.length-1)]);else{p.gold+=35;announce('HAZİNE BONUSU · +35 ALTIN',2);}}if(rand()<.65)dropPickup(room,'grenade',room.chest.x-36,room.chest.y-38,true);if(rand()<.45)dropPickup(room,'health',room.chest.x+32,room.chest.y-36,true);updateHud();return;
+   const rand=rng((game.seed^room.id*70001)>>>0);
+   const modCatalog=ALL_MODS||MODS;
+   const eligibleMods=Object.keys(modCatalog).filter(k=>modSlotUnlocked(modCatalog[k].slot)&&!game.stashedMods.includes(k)&&!p.slots.some(w=>w?.mods?.includes(k)));
+   const modPool=eligibleMods.length>=2?eligibleMods:Object.keys(modCatalog);
+   const tempMods=[...modPool];
+   
+   const choices=[];
+   // Elite rooms or specific chip reward offer chips, otherwise weapon mods/hybrid
+   if(room.type==='elite'||room.reward==='chip'){
+     const chipIds=Object.keys(GEAR.CHIPS);
+     const tempChips=[...chipIds];
+     for(let c=0;c<3&&tempChips.length;c++){
+       const pickIdx=hash2(room.x,room.y,game.seed+room.id*41+c*773)%tempChips.length;
+       choices.push({type:'chip',id:tempChips.splice(pickIdx,1)[0]});
+     }
+   } else {
+     // Mod / Hybrid Chest: 2 mods + 1 gear or 3 mods if gear bag full
+     const numMods=rand()<.5?2:3;
+     for(let c=0;c<numMods&&tempMods.length;c++){
+       const pickIdx=hash2(room.x,room.y,game.seed+room.id*37+c*911)%tempMods.length;
+       choices.push({type:'mod',id:tempMods.splice(pickIdx,1)[0]});
+     }
+     const neededGear=3-choices.length;
+     for(let g=0;g<neededGear;g++){
+       const piece=GEAR.randomGear(()=>Math.abs(Math.sin(game.seed+room.id*97+g*313)));
+       if(piece)choices.push({type:'gear',...piece});
+     }
+   }
+   
+   if(choices.length){
+     game.currentChestUpgradeChoices=choices;
+     openChestUpgradeModal(choices);
+     announce('SANDIK AÇILDI · YÜKSELTME SEÇİMİ',2.5);
+   }else{
+     announce('+45 ALTIN · SANDIK AÇILDI');
+   }
+   if(room.type==='treasure'&&rand()<.65)grantGear(room,room.chest.x+8,room.chest.y-45);
+   if(rand()<.65)dropPickup(room,'ammo',room.chest.x-20,room.chest.y-35,true);
+   if(rand()<.45)dropPickup(room,'health',room.chest.x+20,room.chest.y-35,true);
+   updateHud();return;
  }
  if(near?.nearbyLoot){const item=near.nearbyLoot;cancelReload(p);saveSlot();const duplicate=p.slots.find(q=>q&&q.weapon===item.weapon);if(duplicate){const gained=Math.max(0,(item.ammo??MAG_SIZE[item.weapon])+(item.reserve??AMMO_MAX[item.weapon]));const magSpace=Math.max(0,weaponStats(duplicate).mag-duplicate.ammo),magAdded=Math.min(gained,magSpace),reserveAdded=Math.min(gained-magAdded,Math.max(0,AMMO_MAX[item.weapon]-duplicate.reserve));if(magAdded+reserveAdded===0){announce('BU SİLAHIN MÜHİMMATI DOLU',1);return;}duplicate.ammo+=magAdded;duplicate.reserve+=reserveAdded;if(p.activeSlot>=0&&p.slots[p.activeSlot]===duplicate){p.ammo=duplicate.ammo;p.reserve=duplicate.reserve;}room.loot.splice(room.loot.indexOf(item),1);announce(weaponName(item.weapon)+' · +'+(magAdded+reserveAdded)+' MERMİ'+(gained>magAdded+reserveAdded?' · DEPO DOLU':''),1.4);burst(room,p.x+p.w/2,p.y,'#ffdc89',12,100);updateHud();return;}let target=p.slots.findIndex(q=>q===null);if(target<0)target=p.activeSlot>=0?p.activeSlot:0;const old=p.slots[target];p.slots[target]={weapon:item.weapon,ammo:item.ammo??MAG_SIZE[item.weapon],reserve:item.reserve??AMMO_MAX[item.weapon],mods:[...(item.mods||[])]};room.loot.splice(room.loot.indexOf(item),1);if(old)dropWeapon(room,old.weapon,p.x+p.w/2,p.y+12,p.face*170,old.ammo,old.reserve,old.mods||[]);p.activeSlot=target;p.weapon=p.slots[target].weapon;p.ammo=p.slots[target].ammo;p.reserve=p.slots[target].reserve;announce(weaponName(p.weapon)+' · '+(target+1)+'. SLOT'+(old?' · ESKİ SİLAH DÜŞTÜ':''));highlightFirstLoot('weapon',p.weapon,weaponName(p.weapon));updateHud();
  }
@@ -621,22 +816,164 @@ function gearComparisonHTML(equipment,item){
  return '<div class="gearComparison"><b>TAKILIRSA · TOPLAM KARAKTER ETKİSİ</b><div class="gearCompareGrid">'+changes+'</div>'+(gained.length?'<small>YENİ SET BONUSU: '+gained.map(set=>GEAR.SETS[set].bonus).join(' · ')+'</small>':'')+(lost.length?'<small>KAYBEDİLEN SET BONUSU: '+lost.map(set=>GEAR.SETS[set].bonus).join(' · ')+'</small>':'')+'</div>';
 }
 function gearSlotChoicesHTML(p){if(!activeGearSlot)return '';const choices=[...gearLocker].filter(id=>id.endsWith('-'+activeGearSlot));return '<div class="gearSlotChoices"><div class="gearSlotChoicesHead"><b>'+GEAR.SLOT_NAMES[activeGearSlot]+' · SEÇ</b><button type="button" data-close-gear-slot aria-label="Seçimi kapat">✕</button></div><div class="gearItemGrid">'+(choices.map(id=>{const set=id.slice(0,id.lastIndexOf('-')),item=GEAR.createGear(set,activeGearSlot),selected=p.equipment[activeGearSlot]?.id===id;return '<div class="gearChoiceCard"><button type="button" class="gearItem'+(selected?' chosen':'')+'" data-locker-gear="'+id+'" aria-pressed="'+selected+'"><img alt="'+GEAR.SLOT_NAMES[activeGearSlot]+'" src="'+GEAR.icon(item)+'"><span><b>'+GEAR.SETS[set].name+'</b><small>'+gearPieceBonus(item)+'</small><small>'+(selected?'TAKILI · ÇIKAR':'KUŞAN')+'</small></span></button>'+gearComparisonHTML(p.equipment,selected?null:item)+'</div>';}).join('')||'<p>Bu yuvada zırh yok. Seferde buldukça açılır.</p>')+'</div></div>';}
-function renderGearWorkbench(){const root=$('forgeGearContent');if(!root)return;const p=game?.inHub?game.player:{equipment:savedGearEquipment(),gearBag:[]},st=GEAR.stats(p.equipment),chosen=GEAR.SETS[gearBuild.startSet]?gearBuild.startSet:'bastion';root.innerHTML=matrixCatalogHTML()+'<section class="gearStartingSets"><b>BAŞLANGIÇ SETİ · 5 PARÇA</b><p>Sefer başında seçtiğin setin beş parçasını da kuşanırsın. Set değişimi yalnızca hazırlık alanında yapılır.</p><div class="gearSetOptions">'+Object.entries(GEAR.SETS).map(([id,set])=>'<button type="button" data-start-gear-set="'+id+'" aria-pressed="'+(chosen===id)+'" class="gearSetOption'+(chosen===id?' chosen':'')+'"><strong>'+set.name+'</strong><small>'+set.bonus+'</small></button>').join('')+'</div></section>'+gearEquipmentHTML(p,st,false);drawGearPreview(root,p);}
-function renderLoadout(){if(!game)return;saveSlot();const p=game.player,root=$('loadoutContent');root.innerHTML='';if(game.pendingBossReward){const offer=document.createElement('section');offer.className='bagCard';const available=Object.keys(MODS).filter(id=>modSlotUnlocked(MODS[id].slot)&&!game.stashedMods.includes(id)&&!p.slots.some(w=>w?.mods?.includes(id)));const id=available[hash2(game.seed,game.pendingBossReward.stage,918)%Math.max(1,available.length)];offer.innerHTML='<h3>BOSS '+game.pendingBossReward.stage+' · 3 BÜYÜK ÖDÜL</h3><p>Yalnızca birini seç.</p><button type="button" data-boss-reward="attachment" '+(id?'':'disabled')+'>EKLENTİ · '+(MODS[id]?.name||'UYGUN EKLENTİ YOK')+'</button> <button type="button" data-boss-reward="set" '+(activeSet()&&p.setLevel<3?'':'disabled')+'>SET GÜÇLENDİRİCİ · '+(activeSet()?GEAR.SETS[activeSet()].name+' SEV '+Math.min(3,p.setLevel+1):'TAM SET GEREKLİ')+'</button> <button type="button" data-boss-reward="blueprint">ATÖLYE TASLAĞI · KALICI AÇILIM</button>';offer.dataset.attachment=id||'';root.append(offer);}if(game.pendingRune){const rune=game.pendingRune,offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>YENİ SİLAH RUNU · '+WEAPON_RUNES[rune.id].name+'</h3><p>'+WEAPON_RUNES[rune.id].description+'</p>'+p.slots.map((w,i)=>w?'<button type="button" data-rune-slot="'+i+'">'+weaponName(w.weapon)+(w.rune?' · '+WEAPON_RUNES[w.rune].name+' DEĞİŞECEK':' · BOŞ RUN YUVASI')+'</button> ':'').join('')+'<button type="button" data-rune-slot="reject">REDDET</button>';root.append(offer);}for(let i=0;i<2;i++){const w=p.slots[i],card=document.createElement('section');card.className='gunCard';if(!w){card.innerHTML='<h3>SİLAH '+(i+1)+' · BOŞ</h3><p>Bu slotta silah bulunmuyor.</p>';root.append(card);continue;}const picture=WEAPON_SPRITES[w.weapon].toDataURL('image/png');card.innerHTML='<h3>SİLAH '+(i+1)+' · '+weaponType(w.weapon)+'</h3><div class="gunVisual"><img alt="'+weaponName(w.weapon)+' piksel silah görseli" src="'+picture+'"><div><strong>'+weaponName(w.weapon)+'</strong><small>'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[w.weapon]].name+' · '+w.ammo+'/'+w.reserve+' MERMİ</small>'+xpBarHTML(w.weapon)+'</div></div><div class="weaponAbilityBadge"><b>RUN · '+(WEAPON_RUNES[w.rune]?.name||'BOŞ')+'</b><small>'+(WEAPON_RUNES[w.rune]?.description||'Gizli bölmeden silah runu bulunur.')+'</small></div><div class="weaponAbilityBadge"><b>AKTİF MODÜL · '+(ACTIVE_MODULES[p.activeModule]?.name||'BOŞ')+'</b><small>'+(ACTIVE_MODULES[p.activeModule]?.description||'İlk modül gizli bölmeden gelir.')+'</small></div><details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(w)+'</details>'+talentHTML(w.weapon);for(let j=0;j<4;j++){const row=document.createElement('label');row.className='modRow'+(!modSlotUnlocked(j)?' locked':'');const select=document.createElement('select');select.dataset.weaponSlot=String(i);select.dataset.modSlot=String(j);select.disabled=!modSlotUnlocked(j);const current=w.mods[j]||'';let options='<option value="">'+(select.disabled?'KİLİTLİ · '+(['','5. ANA ODA','MİNİ BOSS','10. ANA ODA'][j]):'BOŞ EKLENTİ')+'</option>';for(const [id,spec] of Object.entries(MODS)){if(spec.slot===j&&(id===current||game.stashedMods.includes(id)))options+='<option value="'+id+'" '+(id===current?'selected':'')+'>'+modNameForWeapon(w.weapon,id)+(id===current?' · TAKILI':' · ÇANTADA')+'</option>';}select.innerHTML=options;row.innerHTML='<span>'+FORGE_SLOT_LABELS[j]+'</span>';row.append(select);const hint=document.createElement('small');hint.className='modBagHint';hint.textContent=current?modEffectForWeapon(w.weapon,current):!modSlotUnlocked(j)?'Sev '+[2,4,6,8][j]+' gerekli.':'Eklenti seç.';row.append(hint);card.append(row);}root.append(card);}const bag=document.createElement('section');bag.className='bagCard';bag.innerHTML='<h3>ÇANTA</h3><div class="bagItems"></div>';const bagItems=bag.querySelector('.bagItems');const pieces=['SAĞLIK KİTİ ×'+p.kits,'BOMBA ×'+p.grenades,'MERMİ KUTUSU ×'+p.ammoBoxes,...p.accessories.filter(Boolean).map(a=>ACCESSORIES[a.type].name),...game.stashedMods.map(m=>MODS[m]?.name||m)];for(const name of pieces){const chip=document.createElement('span');chip.className='bagChip';chip.textContent=name;bagItems.append(chip);}if(!game.stashedMods.length){const chip=document.createElement('span');chip.className='bagChip';chip.textContent='BOŞTA EKLENTİ YOK';bagItems.append(chip);}root.append(bag);if(game.pendingModSwap){const swap=game.pendingModSwap,offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>EKLENTİ DEĞİŞİMİ</h3><p>'+MODS[swap.old].name+' → '+MODS[swap.next].name+' · Eski eklenti +10 hurdaya dönüşür.</p><button type="button" data-mod-swap="accept">DEĞİŞTİR · +10 HURDA</button> <button type="button" data-mod-swap="reject">VAZGEÇ</button>';root.append(offer);}if(game.pendingMod){const pending=game.pendingMod,mod=MODS[pending.id],level=game.modLevels[pending.id]||1;const offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>KOPYA EKLENTİ · '+mod.name+'</h3><p>Mevcut seviye: '+level+'/3 · Karar verilene kadar kopya bekletilir.</p><button type="button" data-mod-duplicate="upgrade" '+(level>=3?'disabled':'')+'>SEV '+Math.min(3,level+1)+' YÜKSELT</button> <button type="button" data-mod-duplicate="reject">REDDET · +10 HURDA</button>';root.append(offer);}if(p.moduleOffer){const offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>ELİT MODÜL TEKLİFİ</h3><p>Mevcut: '+ACTIVE_MODULES[p.activeModule].name+' · Teklif: '+ACTIVE_MODULES[p.moduleOffer].name+'</p><p>'+ACTIVE_MODULES[p.moduleOffer].description+'</p><button type="button" data-module-choice="accept">MODÜLÜ DEĞİŞTİR</button> <button type="button" data-module-choice="reject">MEVCUT MODÜLÜ KORU</button>';root.append(offer);}const gear=document.createElement('section');gear.className='bagCard gearCard';const st=gearStats();gear.innerHTML='<h3>ZIRH · 5 YUVA</h3>'+gearEquipmentHTML(p,st)+'<h3>SET SEVİYESİ · '+p.setLevel+'/3</h3><p>Sandıktaki Set Güçlendirici Sev 2 açar; boss ödül seçimi Sev 3 açar. '+(activeSet()==='bastion'?'Kale: hasar sonrası zırh; Sev 2 düşük canda şok; Sev 3 sabit dururken yenilenen kalkan.':activeSet()==='runner'?'Rüzgâr: Sev 1 dash sonrası hızlı atış; Sev 2 yavaşlatma tüneli; Sev 3 near miss ile şarjör dolumu.':activeSet()==='arsenal'?'Cephanelik: Sev 1 mühimmat kutusu +%50; Sev 2 öldürmede modül CD -1 sn; Sev 3 şarjör sonunda mini taret.':activeSet()==='vampire'?'Kanbağı: Sev 1 öldürmede +3 can; Sev 2 düşük canda hızlı atış; Sev 3 düşük canda öldürmeyle dokunulmazlık.':'Tam set giyerek seviye etkilerini etkinleştir.')+'</p><h3>ZIRH ÇANTASI · '+p.gearBag.length+'/20</h3><div class="gearItemGrid">'+gearBagHTML(p)+'</div>';root.append(gear);const chipPanel=document.createElement('section');chipPanel.className='bagCard';chipPanel.innerHTML=chipLoadoutHTML(p);root.append(chipPanel);drawGearPreview(gear,p);root.insertAdjacentHTML('beforeend',enemyCodexHTML());}
-function switchModFromBag(select){if(!game)return;const i=Number(select.dataset.weaponSlot),j=Number(select.dataset.modSlot),w=game.player.slots[i],next=select.value,old=w?.mods[j]||'';if(!w||!modSlotUnlocked(j)||next===old)return;if(next&&(!MODS[next]||!game.stashedMods.includes(next)||MODS[next].slot!==j||w.mods.includes(next))){renderLoadout();return;}if(next&&old){game.pendingModSwap={i,j,next,old};renderLoadout();announce('EKLENTİ DEĞİŞİMİ · TAB MENÜSÜNDE ONAYLA',2);return;}applyModSwap(i,j,next,old,false);}
-function applyModSwap(i,j,next,old,scrap){const w=game.player.slots[i];if(!w||w.mods[j]!==old)return;if(next)game.stashedMods.splice(game.stashedMods.indexOf(next),1);if(old){if(scrap)game.player.gold+=10;else game.stashedMods.push(old);}w.mods[j]=next||undefined;const cap=weaponStats(w).mag;if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}if(game.player.activeSlot===i){game.player.ammo=w.ammo;game.player.reserve=w.reserve;}renderLoadout();updateHud();}
+function renderGearWorkbench(){
+  const root=$('forgeGearContent');if(!root)return;
+  const p=game?.inHub?game.player:{equipment:savedGearEquipment(),gearBag:[]},st=GEAR.stats(p.equipment);
+  const availableSets=Object.entries(GEAR.SETS).filter(([id])=>GEAR.SLOTS.some(slot=>gearLocker.has(id+'-'+slot)));
+  const startingSetsSection=availableSets.length?('<section class="gearStartingSets"><b>BAŞLANGIÇ SETİ · AÇILAN PARÇALAR</b><p>Kazanıp açtığın zırh setlerini buradan hızlıca kuşanabilirsin.</p><div class="gearSetOptions">'+availableSets.map(([id,set])=>{
+    const ownedCount=GEAR.SLOTS.filter(slot=>gearLocker.has(id+'-'+slot)).length;
+    const isEquipped=GEAR.SLOTS.every(slot=>p.equipment[slot]?.set===id);
+    return '<button type="button" data-start-gear-set="'+id+'" aria-pressed="'+isEquipped+'" class="gearSetOption'+(isEquipped?' chosen':'')+'"><strong>'+set.name+' ('+ownedCount+'/5)</strong><small>'+set.bonus+'</small></button>';
+  }).join('')+'</div></section>'):'<section class="gearStartingSets"><b>ZIRH KOLEKSİYONU HENÜZ BOŞ</b><p>Başlangıçta zırhın yok. Seferdeki sandıklardan, düşmanlardan veya çarktan zırh parçası bularak dolabını doldurabilirsin.</p></section>';
+  root.innerHTML=matrixCatalogHTML()+startingSetsSection+gearEquipmentHTML(p,st,true)+gearSlotChoicesHTML(p);
+  drawGearPreview(root,p);
+}
+let activeLoadoutTab = "weapons";
+function renderLoadout(){if(!game)return;saveSlot();const p=game.player,root=$('loadoutContent'),modCatalog=ALL_MODS||MODS;root.innerHTML='';
+let nav = document.getElementById("loadoutTabNav");
+if(!nav){
+  nav = document.createElement("div");
+  nav.id = "loadoutTabNav";
+  nav.className = "loadoutTabNav";
+  root.parentNode.insertBefore(nav, root);
+  nav.addEventListener("click", e => {
+    const btn = e.target.closest("button[data-tab]");
+    if(btn){
+      activeLoadoutTab = btn.dataset.tab;
+      renderLoadout();
+    }
+  });
+}
+nav.innerHTML = '<button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="weapons"?"active":"")+'" data-tab="weapons">⚔ SİLAHLAR & EKLENTİLER</button><button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="gear"?"active":"")+'" data-tab="gear">🛡 ZIRH & CHIPLER</button><button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="bag"?"active":"")+'" data-tab="bag">🎒 ÇANTA & TÜM ENVANTER</button>';
+if(game.pendingChestChoices){
+  const chestOffer=document.createElement('section');
+  chestOffer.className='bagCard chestChoicesCard';
+  const choices=game.pendingChestChoices.choices;
+  chestOffer.innerHTML='<h3>SANDIK AÇILDI · 3 EKLENTİDEN BİRİNİ SEÇ</h3><p>Seçtiğin eklenti çantana eklenir veya uygun boş yuvaya takılır. İstemezsen reddedip altın alabilirsin.</p><div class="chestChoicesGrid">'+choices.map(id=>{
+    const mod=modCatalog[id]||MODS[id];
+    return '<button type="button" class="chestChoiceBtn" data-chest-choice="'+id+'"><strong>'+(mod?.name||id)+'</strong><small>'+FORGE_SLOT_LABELS[mod?.slot]+' · '+(mod?.description||'')+'</small></button>';
+  }).join('')+'</div><button type="button" data-chest-choice="reject">TÜMÜNÜ REDDET · +20 ALTIN</button>';
+  root.append(chestOffer);
+}if(game.pendingBossReward){const offer=document.createElement('section');offer.className='bagCard';const available=Object.keys(modCatalog).filter(id=>modSlotUnlocked(modCatalog[id].slot)&&!game.stashedMods.includes(id)&&!p.slots.some(w=>w?.mods?.includes(id)));const id=available[hash2(game.seed,game.pendingBossReward.stage,918)%Math.max(1,available.length)];offer.innerHTML='<h3>BOSS '+game.pendingBossReward.stage+' · 3 BÜYÜK ÖDÜL</h3><p>Yalnızca birini seç.</p><button type="button" data-boss-reward="attachment" '+(id?'':'disabled')+'>EKLENTİ · '+(modCatalog[id]?.name||'UYGUN EKLENTİ YOK')+'</button> <button type="button" data-boss-reward="set" '+(activeSet()&&p.setLevel<3?'':'disabled')+'>SET GÜÇLENDİRİCİ · '+(activeSet()?GEAR.SETS[activeSet()].name+' SEV '+Math.min(3,p.setLevel+1):'TAM SET GEREKLİ')+'</button> <button type="button" data-boss-reward="blueprint">ATÖLYE TASLAĞI · KALICI AÇILIM</button>';offer.dataset.attachment=id||'';root.append(offer);}if(game.pendingRune){const rune=game.pendingRune,offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>YENİ SİLAH RUNU · '+WEAPON_RUNES[rune.id].name+'</h3><p>'+WEAPON_RUNES[rune.id].description+'</p>'+p.slots.map((w,i)=>w?'<button type="button" data-rune-slot="'+i+'">'+weaponName(w.weapon)+(w.rune?' · '+WEAPON_RUNES[w.rune].name+' DEĞİŞECEK':' · BOŞ RUN YUVASI')+'</button> ':'').join('')+'<button type="button" data-rune-slot="reject">REDDET</button>';root.append(offer);}if(activeLoadoutTab==="weapons"){
+for(let i=0;i<2;i++){const w=p.slots[i],card=document.createElement('section');card.className='gunCard';if(!w){card.innerHTML='<h3>SİLAH '+(i+1)+' · BOŞ</h3><p>Bu slotta silah bulunmuyor.</p>';root.append(card);continue;}const picture=WEAPON_SPRITES[w.weapon].toDataURL('image/png');card.innerHTML='<h3>SİLAH '+(i+1)+' · '+weaponType(w.weapon)+'</h3><div class="gunVisual"><img alt="'+weaponName(w.weapon)+' piksel silah görseli" src="'+picture+'"><div><strong>'+weaponName(w.weapon)+'</strong><small>'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[w.weapon]].name+' · '+w.ammo+'/'+w.reserve+' MERMİ</small>'+xpBarHTML(w.weapon)+'</div></div><div class="weaponAbilityBadge"><b>RUN · '+(WEAPON_RUNES[w.rune]?.name||'BOŞ')+'</b><small>'+(WEAPON_RUNES[w.rune]?.description||'Gizli bölmeden silah runu bulunur.')+'</small></div><div class="weaponAbilityBadge"><b>AKTİF MODÜL · '+(ACTIVE_MODULES[p.activeModule]?.name||'BOŞ')+'</b><small>'+(ACTIVE_MODULES[p.activeModule]?.description||'İlk modül gizli bölmeden gelir.')+'</small></div><details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(w)+'</details>'+talentHTML(w.weapon);for(let j=0;j<4;j++){const row=document.createElement('label');row.className='modRow'+(!modSlotUnlocked(j)?' locked':'');const select=document.createElement('select');select.dataset.weaponSlot=String(i);select.dataset.modSlot=String(j);select.disabled=!modSlotUnlocked(j);const current=w.mods[j]||'';let options='<option value="">'+(select.disabled?'KİLİTLİ · '+(['','5. ANA ODA','MİNİ BOSS','10. ANA ODA'][j]):'BOŞ EKLENTİ')+'</option>';for(const [id,spec] of Object.entries(modCatalog)){if(spec.slot===j&&(id===current||game.stashedMods.includes(id)))options+='<option value="'+id+'" '+(id===current?'selected':'')+'>'+modNameForWeapon(w.weapon,id)+(id===current?' · TAKILI':' · ÇANTADA')+'</option>';}select.innerHTML=options;row.innerHTML='<span>'+FORGE_SLOT_LABELS[j]+'</span>';row.append(select);const hint=document.createElement('small');hint.className='modBagHint';hint.textContent=current?modEffectForWeapon(w.weapon,current):!modSlotUnlocked(j)?'Sev '+[2,4,6,8][j]+' gerekli.':'Eklenti seç.';row.append(hint);card.append(row);}root.append(card);}} // end weapons tab
+if(activeLoadoutTab==="bag"){
+const bag=document.createElement('section');bag.className='bagCard';bag.innerHTML='<h3>ÇANTA</h3><div class="bagItems"></div>';const bagItems=bag.querySelector('.bagItems');const pieces=['SAĞLIK KİTİ ×'+p.kits,'BOMBA ×'+p.grenades,'MERMİ KUTUSU ×'+p.ammoBoxes,...p.accessories.filter(Boolean).map(a=>ACCESSORIES[a.type].name),...game.stashedMods.map(m=>modCatalog[m]?.name||m)];for(const name of pieces){const chip=document.createElement('span');chip.className='bagChip';chip.textContent=name;bagItems.append(chip);}if(!game.stashedMods.length){const chip=document.createElement('span');chip.className='bagChip';chip.textContent='BOŞTA EKLENTİ YOK';bagItems.append(chip);}root.append(bag);if(game.pendingModSwap){const swap=game.pendingModSwap,offer=document.createElement('section');offer.className='bagCard';const modLv=game.modLevels[swap.old]||1,scrapAmount=modLv===3?40:modLv===2?20:10;offer.innerHTML='<h3>EKLENTİ DEĞİŞİMİ</h3><p>'+modCatalog[swap.old].name+' → '+modCatalog[swap.next].name+' · Eski eklenti +'+scrapAmount+' altına dönüşür.</p><button type="button" data-mod-swap="accept">DEĞİŞTİR · +'+scrapAmount+' ALTIN</button> <button type="button" data-mod-swap="reject">VAZGEÇ</button>';root.append(offer);}if(game.pendingMod){const pending=game.pendingMod,mod=modCatalog[pending.id]||MODS[pending.id],level=game.modLevels[pending.id]||1;const offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>KOPYA EKLENTİ · '+mod.name+'</h3><p>Mevcut seviye: '+level+'/3 · Karar verilene kadar kopya bekletilir.</p><button type="button" data-mod-duplicate="upgrade" '+(level>=3?'disabled':'')+'>SEV '+Math.min(3,level+1)+' YÜKSELT</button> <button type="button" data-mod-duplicate="reject">REDDET · +10 ALTIN</button>';root.append(offer);}if(p.moduleOffer){const offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>ELİT MODÜL TEKLİFİ</h3><p>Mevcut: '+ACTIVE_MODULES[p.activeModule].name+' · Teklif: '+ACTIVE_MODULES[p.moduleOffer].name+'</p><p>'+ACTIVE_MODULES[p.moduleOffer].description+'</p><button type="button" data-module-choice="accept">MODÜLÜ DEĞİŞTİR</button> <button type="button" data-module-choice="reject">MEVCUT MODÜLÜ KORU</button>';root.append(offer);}} // end bag tab
+if(activeLoadoutTab==="gear"){
+const gear=document.createElement('section');gear.className='bagCard gearCard';const st=gearStats();gear.innerHTML='<h3>ZIRH · 5 YUVA</h3>'+gearEquipmentHTML(p,st)+'<h3>SET SEVİYESİ · '+p.setLevel+'/3</h3><p>Sandıktaki Set Güçlendirici Sev 2 açar; boss ödül seçimi Sev 3 açar. '+(activeSet()==='bastion'?'Kale: hasar sonrası zırh; Sev 2 düşük canda şok; Sev 3 sabit dururken yenilenen kalkan.':activeSet()==='runner'?'Rüzgâr: Sev 1 dash sonrası hızlı atış; Sev 2 yavaşlatma tüneli; Sev 3 near miss ile şarjör dolumu.':activeSet()==='arsenal'?'Cephanelik: Sev 1 mühimmat kutusu +%50; Sev 2 öldürmede modül CD -1 sn; Sev 3 şarjör sonunda mini taret.':activeSet()==='vampire'?'Kanbağı: Sev 1 öldürmede +3 can; Sev 2 düşük canda hızlı atış; Sev 3 düşük canda öldürmeyle dokunulmazlık.':'Tam set giyerek seviye etkilerini etkinleştir.')+'</p><h3>ZIRH ÇANTASI · '+p.gearBag.length+'/20</h3><div class="gearItemGrid">'+gearBagHTML(p)+'</div>';root.append(gear);const chipPanel=document.createElement('section');chipPanel.className='bagCard';chipPanel.innerHTML=chipLoadoutHTML(p);root.append(chipPanel);drawGearPreview(gear,p);} // end gear tab
+}
+function switchModFromBag(select){if(!game)return;const modCatalog=ALL_MODS||MODS,i=Number(select.dataset.weaponSlot),j=Number(select.dataset.modSlot),w=game.player.slots[i],next=select.value,old=w?.mods[j]||'';if(!w||!modSlotUnlocked(j)||next===old)return;if(next&&(!modCatalog[next]||!game.stashedMods.includes(next)||modCatalog[next].slot!==j||w.mods.includes(next))){renderLoadout();return;}if(next&&old){game.pendingModSwap={i,j,next,old};renderLoadout();announce('EKLENTİ DEĞİŞİMİ · TAB MENÜSÜNDE ONAYLA',2);return;}applyModSwap(i,j,next,old,false);}
+function applyModSwap(i,j,next,old,scrap){const w=game.player.slots[i];if(!w||w.mods[j]!==old)return;if(next)game.stashedMods.splice(game.stashedMods.indexOf(next),1);if(old){if(scrap){const modLv=game.modLevels[old]||1,scrapAmount=modLv===3?40:modLv===2?20:10;game.player.gold+=scrapAmount;floating(game.player.x,game.player.y-25,'+'+scrapAmount+' ALTIN','#ffd78a');}else game.stashedMods.push(old);}w.mods[j]=next||undefined;const cap=weaponStats(w).mag;if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}if(game.player.activeSlot===i){game.player.ammo=w.ammo;game.player.reserve=w.reserve;}renderLoadout();updateHud();}
 function toggleLoadout(force){if(shopOpen||hubForgeOpen||helpOpen||!game||game.dead||game.won)return;const show=typeof force==='boolean'?force:!loadoutOpen;loadoutOpen=show;$('loadoutOverlay').classList.toggle('hidden',!show);if(show){if(mapOpen)setMap(false);paused=true;$('gamePauseMenu').classList.add('hidden');$('pause').classList.add('hidden');renderLoadout();}else{paused=false;canvas.focus();}}
-$('loadoutContent').addEventListener('click',e=>{const button=e.target.closest('button[data-gear]');if(button)equipGear(button.dataset.gear);const remove=e.target.closest('button[data-unequip-gear]');if(remove)unequipGear(remove.dataset.unequipGear);const chip=e.target.closest('button[data-equip-chip]');if(chip)equipChip(chip.dataset.equipChip,chip.dataset.chipSlot);const bossButton=e.target.closest('button[data-boss-reward]');if(bossButton&&game?.pendingBossReward){const choice=bossButton.dataset.bossReward;if(choice==='attachment'){const id=bossButton.closest('section').dataset.attachment;if(!id||!MODS[id])return;game.stashedMods.push(id);game.modLevels[id]??=1;announce('BOSS ÖDÜLÜ · '+MODS[id].name,2);}else if(choice==='set'){if(!upgradeSet('boss'))return;}else if(choice==='blueprint'){const count=Number(localStorage.getItem(BOSS_BLUEPRINT_KEY)||0)+1;localStorage.setItem(BOSS_BLUEPRINT_KEY,String(count));const next=WEAPON_NAMES.findIndex((_,i)=>!unlockedWeapons.has(i));if(next>=0){unlockWeapon(next);announce('ATÖLYE TASLAĞI · '+weaponName(next)+' LİSANSI AÇILDI',2);}else{legacy.marks=Math.min(9999,legacy.marks+20);saveLegacy();announce('ATÖLYE TASLAĞI · +20 ÇEKİRDEK MATRİSİ',2);}}else return;game.pendingBossReward=null;renderLoadout();updateHud();}const runeButton=e.target.closest('button[data-rune-slot]');if(runeButton&&game?.pendingRune){const choice=runeButton.dataset.runeSlot;if(choice!=='reject'){const w=game.player.slots[Number(choice)];if(w){w.rune=game.pendingRune.id;announce(weaponName(w.weapon)+' · '+WEAPON_RUNES[w.rune].name+' TAKILDI',2);}}game.pendingRune=null;renderLoadout();updateHud();}const swapButton=e.target.closest('button[data-mod-swap]');if(swapButton&&game?.pendingModSwap){const swap=game.pendingModSwap;game.pendingModSwap=null;if(swapButton.dataset.modSwap==='accept')applyModSwap(swap.i,swap.j,swap.next,swap.old,true);else renderLoadout();}const duplicate=e.target.closest('button[data-mod-duplicate]');if(duplicate&&game?.pendingMod){const id=game.pendingMod.id,level=game.modLevels[id]||1;if(duplicate.dataset.modDuplicate==='upgrade'&&level<3){game.modLevels[id]=level+1;for(const w of game.player.slots)if(w){const cap=weaponStats(w).mag;if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}}announce(MODS[id].name+' · SEVİYE '+game.modLevels[id],2);}else if(duplicate.dataset.modDuplicate==='reject'){game.player.gold+=10;announce(MODS[id].name+' · +10 HURDA',2);}else return;game.pendingMod=null;renderLoadout();updateHud();}const choice=e.target.closest('button[data-module-choice]');if(choice&&game?.player?.moduleOffer){const p=game.player;if(choice.dataset.moduleChoice==='accept'){p.activeModule=p.moduleOffer;p.moduleCooldown=0;announce('MODÜL DEĞİŞTİRİLDİ · '+ACTIVE_MODULES[p.activeModule].name,2);}p.moduleOffer=null;renderLoadout();updateHud();}});$('loadoutContent').addEventListener('change',e=>{if(e.target.matches('select[data-weapon-slot]'))switchModFromBag(e.target);if(e.target.matches('select[data-talent-weapon]')){const id=Number(e.target.dataset.talentWeapon),level=Number(e.target.dataset.talentLevel),choice=e.target.value,allowed=level===6?['precision','mobility']:level===10?['sustain','execution']:[];if(masteryLevel(id)>=level&&allowed.includes(choice)){talents[id]??={};talents[id][level]=choice;saveTalents();renderLoadout();updateHud();}}});$('forgeGearContent').addEventListener('click',e=>{const matrix=e.target.closest('button[data-matrix-buy]');if(matrix&&game?.inHub){const id=matrix.dataset.matrixBuy;if(id==='weapon'&&!WEAPON_NAMES.some((_,i)=>!unlockedWeapons.has(i)))return;if(purchaseMatrix(id)){if(id==='weapon'){const next=WEAPON_NAMES.findIndex((_,i)=>!unlockedWeapons.has(i));if(next>=0)unlockWeapon(next);}if(id==='hard'){const option=$('difficulty').querySelector('option[value="hard"]');if(option)option.disabled=false;}announce('ÇEKİRDEK MATRİSİ · KALICI AÇILIM',2);refreshForge();renderGearWorkbench();}return;}const equip=e.target.closest('button[data-gear]'),remove=e.target.closest('button[data-unequip-gear]');if(equip)equipGear(equip.dataset.gear);if(remove){gearBuild[remove.dataset.unequipGear]=null;saveGearBuild();if(game?.inHub){const p=game.player;p.equipment=savedGearEquipment();p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.hp,p.maxHp);updateHud();}renderGearWorkbench();}const slot=e.target.closest('button[data-select-gear-slot]');if(slot){activeGearSlot=activeGearSlot===slot.dataset.selectGearSlot?null:slot.dataset.selectGearSlot;renderGearWorkbench();}const close=e.target.closest('button[data-close-gear-slot]');if(close){activeGearSlot=null;renderGearWorkbench();}const starting=e.target.closest('button[data-start-gear-set]');if(starting)chooseStartingSet(starting.dataset.startGearSet);});$('loadoutBtn').onclick=()=>toggleLoadout();$('pauseLoadoutBtn').onclick=()=>toggleLoadout(true);$('closeLoadout').onclick=()=>toggleLoadout(false);
+$('loadoutContent').addEventListener('click',e=>{const button=e.target.closest('button[data-gear]');if(button)equipGear(button.dataset.gear);const remove=e.target.closest('button[data-unequip-gear]');if(remove)unequipGear(remove.dataset.unequipGear);const chip=e.target.closest('button[data-equip-chip]');if(chip)equipChip(chip.dataset.equipChip,chip.dataset.chipSlot);const chestBtn=e.target.closest('button[data-chest-choice]');
+if(chestBtn&&game?.pendingChestChoices){
+  const pick=chestBtn.dataset.chestChoice;
+  if(pick==='reject'){
+    game.player.gold+=20;
+    announce('SANDIK SEÇİMİ REDDEDİLDİ · +20 ALTIN',2);
+  }else{
+    const modCatalog=ALL_MODS||MODS;
+    if(game.stashedMods.length<12){
+      game.stashedMods.push(pick);
+      game.modLevels[pick]??=1;
+      announce('EKLENTİ ALINDI · '+(modCatalog[pick]?.name||pick),2);
+    }else{
+      announce('ÇANTA DOLU · EKLENTİ ALINAMADI',2);
+    }
+  }
+  game.pendingChestChoices=null;
+  renderLoadout();
+  updateHud();
+}
+const bossButton=e.target.closest('button[data-boss-reward]');if(bossButton&&game?.pendingBossReward){const choice=bossButton.dataset.bossReward;if(choice==='attachment'){const id=bossButton.closest('section').dataset.attachment;if(!id||!MODS[id])return;game.stashedMods.push(id);game.modLevels[id]??=1;announce('BOSS ÖDÜLÜ · '+MODS[id].name,2);}else if(choice==='set'){if(!upgradeSet('boss'))return;}else if(choice==='blueprint'){const count=Number(localStorage.getItem(BOSS_BLUEPRINT_KEY)||0)+1;localStorage.setItem(BOSS_BLUEPRINT_KEY,String(count));const next=WEAPON_NAMES.findIndex((_,i)=>!unlockedWeapons.has(i));if(next>=0){unlockWeapon(next);announce('ATÖLYE TASLAĞI · '+weaponName(next)+' LİSANSI AÇILDI',2);}else{legacy.marks=Math.min(9999,legacy.marks+20);saveLegacy();announce('ATÖLYE TASLAĞI · +20 ÇEKİRDEK MATRİSİ',2);}}else return;game.pendingBossReward=null;renderLoadout();updateHud();}const runeButton=e.target.closest('button[data-rune-slot]');if(runeButton&&game?.pendingRune){const choice=runeButton.dataset.runeSlot;if(choice!=='reject'){const w=game.player.slots[Number(choice)];if(w){w.rune=game.pendingRune.id;announce(weaponName(w.weapon)+' · '+WEAPON_RUNES[w.rune].name+' TAKILDI',2);}}game.pendingRune=null;renderLoadout();updateHud();}const swapButton=e.target.closest('button[data-mod-swap]');if(swapButton&&game?.pendingModSwap){const swap=game.pendingModSwap;game.pendingModSwap=null;if(swapButton.dataset.modSwap==='accept')applyModSwap(swap.i,swap.j,swap.next,swap.old,true);else renderLoadout();}const duplicate=e.target.closest('button[data-mod-duplicate]');if(duplicate&&game?.pendingMod){const id=game.pendingMod.id,level=game.modLevels[id]||1;if(duplicate.dataset.modDuplicate==='upgrade'&&level<3){game.modLevels[id]=level+1;for(const w of game.player.slots)if(w){const cap=weaponStats(w).mag;if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}}announce(MODS[id].name+' · SEVİYE '+game.modLevels[id],2);}else if(duplicate.dataset.modDuplicate==='reject'){game.player.gold+=10;announce(MODS[id].name+' · +10 ALTIN',2);}else return;game.pendingMod=null;renderLoadout();updateHud();}const choice=e.target.closest('button[data-module-choice]');if(choice&&game?.player?.moduleOffer){const p=game.player;if(choice.dataset.moduleChoice==='accept'){p.activeModule=p.moduleOffer;p.moduleCooldown=0;announce('MODÜL DEĞİŞTİRİLDİ · '+ACTIVE_MODULES[p.activeModule].name,2);}p.moduleOffer=null;renderLoadout();updateHud();}});$('loadoutContent').addEventListener('change',e=>{if(e.target.matches('select[data-weapon-slot]'))switchModFromBag(e.target);if(e.target.matches('select[data-talent-weapon]')){const id=Number(e.target.dataset.talentWeapon),level=Number(e.target.dataset.talentLevel),choice=e.target.value,allowed=level===6?['precision','mobility']:level===10?['sustain','execution']:[];if(masteryLevel(id)>=level&&allowed.includes(choice)){talents[id]??={};talents[id][level]=choice;saveTalents();renderLoadout();updateHud();}}});$('forgeGearContent').addEventListener('click',e=>{const matrix=e.target.closest('button[data-matrix-buy]');if(matrix&&game?.inHub){const id=matrix.dataset.matrixBuy;if(id==='weapon'&&!WEAPON_NAMES.some((_,i)=>!unlockedWeapons.has(i)))return;if(purchaseMatrix(id)){if(id==='weapon'){const next=WEAPON_NAMES.findIndex((_,i)=>!unlockedWeapons.has(i));if(next>=0)unlockWeapon(next);}if(id==='hard'){const option=$('difficulty').querySelector('option[value="hard"]');if(option)option.disabled=false;}announce('ÇEKİRDEK MATRİSİ · KALICI AÇILIM',2);refreshForge();renderGearWorkbench();}return;}const equip=e.target.closest('button[data-gear]'),remove=e.target.closest('button[data-unequip-gear]');if(equip)equipGear(equip.dataset.gear);if(remove){gearBuild[remove.dataset.unequipGear]=null;saveGearBuild();if(game?.inHub){const p=game.player;p.equipment=savedGearEquipment();p.maxHp=p.baseMaxHp+gearStats().hp;p.hp=Math.min(p.hp,p.maxHp);updateHud();}renderGearWorkbench();}const slot=e.target.closest('button[data-select-gear-slot]');if(slot){activeGearSlot=activeGearSlot===slot.dataset.selectGearSlot?null:slot.dataset.selectGearSlot;renderGearWorkbench();}const close=e.target.closest('button[data-close-gear-slot]');if(close){activeGearSlot=null;renderGearWorkbench();}const starting=e.target.closest('button[data-start-gear-set]');if(starting)chooseStartingSet(starting.dataset.startGearSet);});$('loadoutBtn').onclick=()=>toggleLoadout();$('pauseLoadoutBtn').onclick=()=>toggleLoadout(true);$('closeLoadout').onclick=()=>toggleLoadout(false);
 function openHelp(){if(!game||paused||helpOpen||shopOpen||hubForgeOpen||loadoutOpen||mapOpen||game.dead||game.won)return;helpOpen=true;paused=true;mouse.down=false;$('helpOverlay').classList.remove('hidden');}
 function closeHelp(){if(!helpOpen)return;helpOpen=false;$('helpOverlay').classList.add('hidden');paused=false;canvas.focus();}
 $('closeHelp').onclick=closeHelp;
-function togglePause(){if(helpOpen){closeHelp();return;}if(shopOpen){closeShop();return;}if(loadoutOpen){toggleLoadout(false);return;}if(hubForgeOpen){closeHubForge();return;}if(!game||game.dead||game.won)return;paused=!paused;$('gamePauseMenu').classList.toggle('hidden',!paused);if(!paused)canvas.focus();}
+let saveOverlayOpen=false;
+function updateSaveSummary(){
+  const box=$('saveSummaryText');if(!box)return;
+  const wepCount=unlockedWeapons.size;
+  const chipCount=lootLocker.chips.length;
+  const runeCount=lootLocker.runes.length;
+  const gearCount=gearLocker.size;
+  const marks=legacy.marks||0;
+  box.innerHTML='<b>MEVCUT İLERLEME VERİLERİ:</b><br>• Açık Silahlar: '+wepCount+'/'+DropForgeCatalog.WEAPON_PROJECTILES.length+'<br>• Kalıcı Çekirdek Matrisi: '+marks+'<br>• Açık Zırh Koleksiyonu: '+gearCount+' parça<br>• Keşfedilen Çipler: '+chipCount+' · Rünler: '+runeCount+'<br>• Otomatik Kayıt: <b>AKTİF (Oyun içi hamlelerde anlık kaydedilir)</b>';
+}
+function openSaveOverlay(){
+  if(!game)return;
+  saveSlot();
+  updateSaveSummary();
+  saveOverlayOpen=true;
+  paused=true;
+  $('gamePauseMenu').classList.add('hidden');
+  $('saveOverlay').classList.remove('hidden');
+}
+function closeSaveOverlay(){
+  if(!saveOverlayOpen)return;
+  saveOverlayOpen=false;
+  $('saveOverlay').classList.add('hidden');
+  paused=false;
+  canvas.focus();
+}
+function triggerManualSave(){
+  saveSlot();
+  saveLegacy();
+  saveMastery();
+  saveUnlockedWeapons();
+  saveBuilds();
+  saveTalents();
+  saveMatrix();
+  saveGearBuild();
+  announce('OYUN KAYDEDİLDİ · TÜM VERİLER SAKLANDI',2.5);
+  floating(game?.player?.x||W/2,(game?.player?.y||H/2)-40,'OYUN KAYDEDİLDİ','#9ef5c2');
+  sound(780,.15,'sine');
+}
+function triggerLoadBackup(){
+  const input=prompt('Yedeklediğin JSON formatındaki kayıt verisini yapıştır:');
+  if(!input)return;
+  if(importSaveData(input)){
+    alert('Kayıt verisi başarıyla yüklendi! Oyun yeniden başlatılıyor...');
+    window.location.reload();
+  }else{
+    alert('Geçersiz kayıt verisi formatı!');
+  }
+}
+function triggerResetAll(){
+  const ok=confirm('DİKKAT: Sahip olduğunuz tüm kalıcı kazanımlar, silah kilitleri, rünler, zırhlar ve ustalıklar SIFIRLANACAK! Emin misiniz?');
+  if(!ok)return;
+  const doubleOk=confirm('Bu işlem geri alınamaz. Oyun ilk başlangıç anındaki haline dönecektir. Devam edilsin mi?');
+  if(!doubleOk)return;
+  try{
+    localStorage.clear();
+  }catch(e){}
+  resetAllProgress();
+  alert('Tüm kayıtlar silindi. Oyun sıfırdan başlatılıyor...');
+  window.location.reload();
+}
+if($('quickSaveBtn'))$('quickSaveBtn').onclick=triggerManualSave;
+if($('quickLoadBtn'))$('quickLoadBtn').onclick=triggerLoadBackup;
+if($('quickResetBtn'))$('quickResetBtn').onclick=triggerResetAll;
+if($('pauseSaveBtn'))$('pauseSaveBtn').onclick=triggerManualSave;
+if($('pauseLoadBtn'))$('pauseLoadBtn').onclick=triggerLoadBackup;
+if($('pauseResetBtn'))$('pauseResetBtn').onclick=triggerResetAll;
+if($('closeSaveOverlay'))$('closeSaveOverlay').onclick=()=>closeSaveOverlay();
+if($('manualSaveBtn'))$('manualSaveBtn').onclick=()=>{triggerManualSave();updateSaveSummary();closeSaveOverlay();};
+if($('exportSaveBtn'))$('exportSaveBtn').onclick=()=>{
+  const json=exportSaveData();
+  navigator.clipboard?.writeText(json).then(()=>{
+    announce('KAYIT YEDEĞİ PANOLARA KOPYALANDI',2.5);
+  }).catch(()=>{
+    prompt('Kayıt Verisi (Kopyala ve sakla):',json);
+  });
+};
+if($('importSaveBtn'))$('importSaveBtn').onclick=triggerLoadBackup;
+if($('resetAllSaveBtn'))$('resetAllSaveBtn').onclick=triggerResetAll;
+function togglePause(){if(saveOverlayOpen){closeSaveOverlay();return;}if(chestUpgradeOpen){closeChestUpgradeModal();return;}if(helpOpen){closeHelp();return;}if(shopOpen){closeShop();return;}if(loadoutOpen){toggleLoadout(false);return;}if(hubForgeOpen){closeHubForge();return;}if(!game||game.dead||game.won)return;paused=!paused;$('gamePauseMenu').classList.toggle('hidden',!paused);if(!paused)canvas.focus();}
 function returnToMainMenu(){if(!game)return;saveSlot();const seed=game.seed;buildGame(seed);setupHub();}
 $('resumeGameBtn').onclick=()=>togglePause();$('muteGameBtn').onclick=()=>{muted=!muted;$('muteGameBtn').textContent=muted?'♪ SESİ AÇ':'♪ SESİ KAPAT';};$('mainMenuBtn').onclick=()=>returnToMainMenu();
 const drawMap=window.DropForgeMapView.createMapRenderer({getGame:()=>game,mapCanvas,mctx});
 function roomRouteLabel(r){const reward={ammo:'MERMİ',mod:'EKLENTİ',xp:'SİLAH XP',health:'SAĞLIK'}[r.reward]||'ÖDÜL';return roomName(r)+(r.bossKey?(r.bossKeyCollected?' · ANAHTAR ALINDI':' · BOSS ANAHTARI'):'')+(r.type==='boss'?' '+r.bossStage+'/4':r.type==='start'?'':' · '+reward)+' · '+BIOMES[r.biome].name+' · LV '+r.level;}
 function setMap(on){if(shopOpen||hubForgeOpen||helpOpen||!game||game.dead||game.won)return;mapOpen=on;$('mapOverlay').classList.toggle('hidden',!on);if(on){drawMap();const routes=Object.entries(currentRoom().links).map(([dir,id])=>({dir,room:game.rooms[id]}));const names={left:'SOL',right:'SAĞ',up:'YUKARI',down:'AŞAĞI'};$('mapRoute').textContent=routes.length?'BÖLGE '+currentRoom().stage+' · ANAHTAR '+bossGateStatus(currentRoom().stage)+' · KOMŞU ODALAR: '+routes.map(({dir,room})=>names[dir]+' → '+roomRouteLabel(room)).join('  |  '):'Bu odadan başka geçiş bulunmuyor.';}else canvas.focus();}
-window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright','shift','tab'].includes(k))e.preventDefault();if(k==='m'){if(shopOpen||hubForgeOpen||helpOpen||testLabOpen)return;if(!e.repeat)setMap(!mapOpen);return;}if(k==='escape'){if(!e.repeat){if(testLabOpen)closeTestLab();else if(helpOpen)closeHelp();else if(hubForgeOpen)closeHubForge();else if(shopOpen)closeShop();else if(loadoutOpen)toggleLoadout(false);else if(mapOpen)setMap(false);else togglePause();}return;}if(k==='tab'||k==='i'){if(shopOpen||hubForgeOpen||helpOpen||testLabOpen)return;if(!e.repeat)toggleLoadout();return;}if(k==='e'&&!e.repeat)interact();if(['1','2'].includes(k)&&!e.repeat&&game&&!paused)equipSlot(Number(k)-1);if((k==='3'||k==='h')&&!e.repeat)useKit();if(k==='4'&&!e.repeat)throwGrenade();if(k==='5'&&!e.repeat)useAccessory(0);if(k==='q'&&!e.repeat&&game&&!paused&&!mapOpen)equipSlot(1-game.player.activeSlot);if(k==='r'&&!e.repeat)reloadWeapon();if(k==='v'&&!e.repeat&&game&&!paused&&!mapOpen&&shootTimer<=0)melee();if(!game||paused||mapOpen)return;const p=game.player;if((k===' '||k==='w'||k==='arrowup')&&!e.repeat&&(p.jumps<2||p.wallSide)){if(p.grapple)p.grapple=null;if(p.wallSide){p.vy=-575;p.vx=-p.wallSide*390;p.face=-p.wallSide;p.wallKick=.19;p.moveCharge=1.6;p.wallSide=0;p.jumps=1;p.grounded=false;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#a9e6ff',13,145);sound(470,.1,'triangle');keys.add(k);return;}if(p.jumps===1){p.spin=0;p.spinDuration=.49;burst(currentRoom(),p.x+p.w/2,p.y+p.h,'#9adffd',11,160);sound(590,.1,'triangle');}p.vy=p.jumps===0?-580:-515;p.jumps++;p.grounded=false;p.dash=0;}if(k==='shift'&&!e.repeat&&(p.dashCooldown<=0||(hasChip('step')&&p.extraDashReady))){const secondDash=p.dashCooldown>0;if(secondDash)p.extraDashReady=false;else p.extraDashReady=hasChip('step');burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#98e8ff',14,185);sound(310,.13,'sawtooth');p.grapple=null;p.dash=secondDash?.08:.16;if(activeSet()==='runner'){p.runnerShot=true;if(p.setLevel>=2)p.runnerTunnel=1.5;}p.moveCharge=1.6;if(!secondDash)p.dashCooldown=.95;p.invuln=Math.max(p.invuln,.19);game.motionTrails.push({x:p.x+p.w/2,y:p.y+p.h/2,face:p.face,life:.32,maxLife:.32,kind:'dash'});shake=Math.max(shake,3);}if(k==='z'&&!e.repeat){if(game.player.activeModule==='hook')useActiveModule();else announce('KANCA İÇİN MANYETİK KANCA MODÜLÜ GEREKLİ',1.2);}keys.add(k);});window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();mouse.down=false;if(game&&!paused&&!game.dead&&!game.won)togglePause();});canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height;});canvas.addEventListener('mousedown',e=>{if(e.button===0){mouse.down=true;canvas.focus();}else if(e.button===2){e.preventDefault();canvas.focus();useActiveModule();}});window.addEventListener('mouseup',()=>mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());$('mapBtn').onclick=()=>setMap(!mapOpen);$('closeMap').onclick=()=>setMap(false);$('helpBtn').onclick=openHelp;$('startBtn').onclick=()=>{if(game?.inHub&&hubForgeOpen){applyHubForge();return;}let raw=$('seedInput').value.trim(),seed=raw?Number(raw):Math.floor(Math.random()*2147483647);if(!Number.isSafeInteger(seed)||seed<1)seed=382711;buildGame(seed>>>0);setupHub();};
+window.addEventListener('keydown',e=>{const k=e.key.toLowerCase();if([' ','arrowup','arrowdown','arrowleft','arrowright','shift','tab'].includes(k))e.preventDefault();if(k==='m'){if(shopOpen||hubForgeOpen||helpOpen||testLabOpen||saveOverlayOpen)return;if(!e.repeat)setMap(!mapOpen);return;}if(k==='escape'){if(!e.repeat){if(saveOverlayOpen)closeSaveOverlay();else if(chestUpgradeOpen)closeChestUpgradeModal();else if(testLabOpen)closeTestLab();else if(helpOpen)closeHelp();else if(hubForgeOpen)closeHubForge();else if(shopOpen)closeShop();else if(loadoutOpen)toggleLoadout(false);else if(mapOpen)setMap(false);else togglePause();}return;}if(k==='tab'||k==='i'){if(shopOpen||hubForgeOpen||helpOpen||testLabOpen)return;if(!e.repeat)toggleLoadout();return;}if(k==='e'&&!e.repeat)interact();if(['1','2'].includes(k)&&!e.repeat&&game&&!paused)equipSlot(Number(k)-1);if((k==='3'||k==='h')&&!e.repeat)useKit();if(k==='4'&&!e.repeat)throwGrenade();if(k==='5'&&!e.repeat)useAccessory(0);if(k==='q'&&!e.repeat&&game&&!paused&&!mapOpen)equipSlot(1-game.player.activeSlot);if(k==='r'&&!e.repeat)reloadWeapon();if(k==='v'&&!e.repeat&&game&&!paused&&!mapOpen&&shootTimer<=0)melee();if(!game||paused||mapOpen)return;const p=game.player;if((k===' '||k==='w'||k==='arrowup')&&!e.repeat&&(p.jumps<2||p.wallSide)){if(p.grapple)p.grapple=null;if(p.wallSide){p.vy=-575;p.vx=-p.wallSide*390;p.face=-p.wallSide;p.wallKick=.19;p.moveCharge=1.6;p.wallSide=0;p.jumps=1;p.grounded=false;burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#a9e6ff',13,145);sound(470,.1,'triangle');keys.add(k);return;}if(p.jumps===1){p.spin=0;p.spinDuration=.49;burst(currentRoom(),p.x+p.w/2,p.y+p.h,'#9adffd',11,160);sound(590,.1,'triangle');}p.vy=p.jumps===0?-580:-515;p.jumps++;p.grounded=false;p.dash=0;}if(k==='shift'&&!e.repeat&&(p.dashCooldown<=0||(hasChip('step')&&p.extraDashReady))){const secondDash=p.dashCooldown>0;if(secondDash)p.extraDashReady=false;else p.extraDashReady=hasChip('step');burst(currentRoom(),p.x+p.w/2,p.y+p.h/2,'#98e8ff',14,185);sound(310,.13,'sawtooth');p.grapple=null;p.dash=secondDash?.08:.16;if(activeSet()==='runner'){p.runnerShot=true;if(p.setLevel>=2)p.runnerTunnel=1.5;}p.moveCharge=1.6;if(!secondDash)p.dashCooldown=.95;p.invuln=Math.max(p.invuln,.19);game.motionTrails.push({x:p.x+p.w/2,y:p.y+p.h/2,face:p.face,life:.32,maxLife:.32,kind:'dash'});shake=Math.max(shake,3);}if(k==='z'&&!e.repeat){if(game.player.activeModule==='hook')useActiveModule();else announce('KANCA İÇİN MANYETİK KANCA MODÜLÜ GEREKLİ',1.2);}keys.add(k);});window.addEventListener('keyup',e=>keys.delete(e.key.toLowerCase()));window.addEventListener('blur',()=>{keys.clear();mouse.down=false;if(game&&!paused&&!game.dead&&!game.won)togglePause();});canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();mouse.x=(e.clientX-r.left)*W/r.width;mouse.y=(e.clientY-r.top)*H/r.height;});canvas.addEventListener('mousedown',e=>{if(e.button===0){mouse.down=true;canvas.focus();}else if(e.button===2){e.preventDefault();canvas.focus();useActiveModule();}});window.addEventListener('mouseup',()=>mouse.down=false);canvas.addEventListener('contextmenu',e=>e.preventDefault());$('mapBtn').onclick=()=>setMap(!mapOpen);$('closeMap').onclick=()=>setMap(false);$('helpBtn').onclick=openHelp;$('startBtn').onclick=()=>{if(game?.inHub&&hubForgeOpen){applyHubForge();return;}let raw=$('seedInput').value.trim(),seed=raw?Number(raw):Math.floor(Math.random()*2147483647);if(!Number.isSafeInteger(seed)||seed<1)seed=382711;buildGame(seed>>>0);setupHub();};
 for(let i=0;i<2;i++)$('slot'+(i+1)).onclick=()=>{if(game&&!paused)equipSlot(i);};$('slot3').onclick=()=>useKit();$('slot4').onclick=()=>throwGrenade();$('slot5').onclick=()=>useAccessory(0);
 buildGame(Math.floor(Math.random()*2147483646)+1);setupHub();
 function loop(ts){const dt=Math.min((ts-last)/1000||0,.04);last=ts;if(hitStop>0)hitStop-=dt;else update(dt);draw();requestAnimationFrame(loop);}requestAnimationFrame(loop);

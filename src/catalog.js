@@ -25,10 +25,25 @@ const MODS={
  lightGrip:{name:'HAFİF KABZA',level:8,slot:3,description:'Hareketli atış bonusu +%25'},
  heavyGrip:{name:'AĞIR KABZA',level:8,slot:3,description:'%35 az geri tepme · isabette daha uzun sarsılma'}
 };
+const ALL_MODS={
+ ...MODS,
+ mirrorBarrel:{name:'AYNA NAMLU',level:2,slot:0,description:'Mermiler duvardan 1 kez seker.'},
+ shockMuzzle:{name:'ŞOK AĞZI',level:2,slot:0,description:'İsabette düşmanı geri iter, yakındakilere alan hasarı.'},
+ laserSweep:{name:'LAZER SÜPÜRME',level:2,slot:0,description:'Sürekli delici lazer hattı çizer.'},
+ overheat:{name:'AŞIRI ISINMA',level:4,slot:1,description:'Şarjör bitince son mermi patlayıcı olur.'},
+ refundPiston:{name:'GERİ KAZANIM PİSTONU',level:4,slot:1,description:'Kritik vuruşta şarjöre 1 mermi iade edilir.'},
+ tripleBurst:{name:'ÜÇLÜ ATIŞ',level:4,slot:1,description:'3’lü kısa seri atışa geçer.'},
+ cryoCore:{name:'KRİYO ÇEKİRDEK',level:6,slot:2,description:'Yavaşlatır; 3 sn içinde 3 kez vurursan dondurur.'},
+ resonanceCore:{name:'REZONANS ÇEKİRDEĞİ',level:6,slot:2,description:'İki silah aynı element ise her ikisi +%20 hasar.'},
+ hunterMark:{name:'AVCI İŞARETİ',level:6,slot:2,description:'Hedefe işaret koyar; 5 sn kritik garantisi.'},
+ heavyStabilizer:{name:'AĞIR STABİLİZATÖR',level:8,slot:3,description:'Sabit dururken kritik +%25.'},
+ overchargeGrip:{name:'HIZ AŞIMI',level:8,slot:3,description:'Kısa süre atış hızı 2 kat artar.'},
+ steadyGrip:{name:'DENGELİ KABZA',level:8,slot:3,description:'Saçılma azalır, uzun mesafe isabeti artar.'}
+};
 const MOD_SLOT_NAMES=['NAMLU · HASAR / ATIŞ / DELME','MEKANİZMA · HIZ / ŞARJÖR / TASARRUF','ÇEKİRDEK · FAZ / ŞOK / YANMA','KABZA · DENGE / HAREKET / TEPKİ'];
 const WEAPON_PROJECTILES=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
 const WEAPON_TYPES=['TABANCA','HAFİF OTOMATİK','POMPALI','ENERJİ TÜFEĞİ','KESKİN NİŞANCI','AĞIR TABANCA','ENERJİ OTOMATİĞİ','POMPALI','KESKİN NİŞANCI','HAFİF OTOMATİK','LAZER TÜFEĞİ','PATLAYICI ATAR','ARK TÜFEĞİ'];
 const WEAPON_FIRE_RATES=[.23,.115,.39,.14,.72,.3,.145,.48,.65,.095,.105,.82,.24];
 const WEAPON_DAMAGE=[21,12,11,15,75,34,14,12,62,11,10,52,22];
-root.DropForgeCatalog=Object.freeze({PROJECTILE_FAMILIES,MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE});
+root.DropForgeCatalog=Object.freeze({PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE});
 })(window);

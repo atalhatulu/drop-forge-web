@@ -33,5 +33,60 @@
  try{const saved=JSON.parse(localStorage.getItem(MATRIX_KEY)||'{}');if(saved&&typeof saved==='object'){matrixUnlocks.weapon=Math.max(0,Math.min(count-2,Math.floor(Number(saved.weapon)||0)));for(const id of ['module','hard','chip'])matrixUnlocks[id]=saved[id]===true;}}catch(e){}
  function saveMatrix(){localStorage.setItem(MATRIX_KEY,JSON.stringify(matrixUnlocks));}
  function purchaseMatrix(id){if(!(id in matrixCosts)||legacy.marks<matrixCosts[id]||(id!=='weapon'&&matrixUnlocks[id])||(id==='weapon'&&matrixUnlocks.weapon>=count-2))return false;legacy.marks-=matrixCosts[id];if(id==='weapon')matrixUnlocks.weapon++;else matrixUnlocks[id]=true;saveLegacy();saveMatrix();return true;}
- root.DropForgeProgression=Object.freeze({legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,saveMatrix,lootLocker,rememberLoot,weightedLoot});
+ const ALL_PROGRESS_KEYS=[
+  LEGACY_KEY,
+  MASTERY_KEY,
+  UNLOCK_KEY,
+  BUILDS_KEY,
+  TALENTS_KEY,
+  LOOT_LOCKER_KEY,
+  MATRIX_KEY,
+  'dropForge.gearLocker.v1',
+  'dropForge.gearBuild.v1',
+  'dropForge.bossBlueprints.v1'
+ ];
+ function resetAllProgress(){
+  try{for(const k of ALL_PROGRESS_KEYS)localStorage.removeItem(k);}catch(e){}
+  for(const k of Object.keys(legacy))legacy[k]=0;
+  for(const k of Object.keys(mastery))delete mastery[k];
+  for(let i=0;i<count;i++)mastery[i]=0;
+  unlockedWeapons.clear();
+  unlockedWeapons.add(0);
+  unlockedWeapons.add(1);
+  for(const k of Object.keys(savedBuilds))delete savedBuilds[k];
+  for(const k of Object.keys(talents))delete talents[k];
+  lootLocker.chips.length=0;
+  lootLocker.runes.length=0;
+  matrixUnlocks.weapon=0;
+  matrixUnlocks.module=false;
+  matrixUnlocks.hard=false;
+  matrixUnlocks.chip=false;
+  saveLegacy();
+  saveMastery();
+  saveUnlockedWeapons();
+  saveBuilds();
+  saveTalents();
+  saveMatrix();
+ }
+ function exportSaveData(){
+  const data={version:1,timestamp:Date.now()};
+  for(const k of ALL_PROGRESS_KEYS){
+   try{data[k]=localStorage.getItem(k);}catch(e){}
+  }
+  return JSON.stringify(data);
+ }
+ function importSaveData(jsonStr){
+  try{
+   const parsed=JSON.parse(jsonStr);
+   if(!parsed||typeof parsed!=='object')return false;
+   for(const k of ALL_PROGRESS_KEYS){
+    if(parsed[k]!==undefined){
+     if(parsed[k]===null)localStorage.removeItem(k);
+     else localStorage.setItem(k,typeof parsed[k]==='string'?parsed[k]:JSON.stringify(parsed[k]));
+    }
+   }
+   return true;
+  }catch(e){return false;}
+ }
+ root.DropForgeProgression=Object.freeze({legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,saveMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData,ALL_PROGRESS_KEYS});
 })(window);
