@@ -1,8 +1,9 @@
 'use strict';
 /* Deterministic combat attachment effects, separately testable from the canvas runtime. */
 (function(root){
+function effectiveMods(slot){return [...new Set([...(slot?.mods||[]),slot?.traits?.main,...(slot?.traits?.supports||[])].filter(Boolean))];}
 function shotProfile(slot,remainingAmmo,stats,spentAmmo=true){
- const mods=slot.mods||[],overheat=spentAmmo&&mods.includes('overheat')&&remainingAmmo===0&&stats.family!=='explosive',laserSweep=mods.includes('laserSweep');
+ const mods=effectiveMods(slot),overheat=spentAmmo&&mods.includes('overheat')&&remainingAmmo===0&&stats.family!=='explosive',laserSweep=mods.includes('laserSweep');
  return {family:overheat?'explosive':laserSweep?'laser':stats.family,pellets:overheat||laserSweep?1:stats.pellets,...(laserSweep?{damageMultiplier:stats.family==='scatter'?3:1}:{})};
 }
 function bounceBullet(bullet,bounds){
@@ -34,10 +35,10 @@ function resolveAttachmentHit(enemy,bullet,now,stationary,roll){
  return {critical,multiplier:critical?1.5:1};
 }
 function burstPlan(slot){
- return (slot.mods||[]).includes('tripleBurst')?{remaining:2,delay:.085}:null;
+ return effectiveMods(slot).includes('tripleBurst')?{remaining:2,delay:.085}:null;
 }
 function overchargeInterval(player,slot,interval){
- if(!(slot.mods||[]).includes('overchargeGrip'))return interval;
+ if(!effectiveMods(slot).includes('overchargeGrip'))return interval;
  if((player.overchargeCooldown||0)<=0){
   player.overchargeTime=2;
   player.overchargeCooldown=10;
