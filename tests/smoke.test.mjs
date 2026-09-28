@@ -564,3 +564,15 @@ test('blue flying enemies pursue and evade faster without removing attack windup
  assert.match(ai,/e\.type==='blue'\?1\.45:2\.35/);
  assert.match(ai,/e\.type==='blue'\?\.42:\.36/);
 });
+
+
+test('purple mage projectiles explode with area damage and a visible blast', () => {
+ const ai=readFileSync('src/enemy-ai.js','utf8'),game=readFileSync('src/game.js','utf8');
+ assert.match(ai,/explosive:e\.type==='purple',blastRadius:e\.type==='purple'\?76:0/);
+ assert.match(game,/function explodeMageBullet\(b\)/);
+ assert.match(game,/room\.mageBlasts\.push\(/);
+ assert.match(game,/if\(b\.explosive\)\{if\(out\|\|b\.life<=0\|\|nearGenerator\|\|nearPlayer\)/);
+ assert.match(game,/Math\.hypot\(cx-b\.x,cy-b\.y\)<radius/);
+ assert.match(game,/p\.dash<=0/);
+ assert.match(game,/hitGenerator\(room,Math\.round\(b\.damage\*1\.4\)\)/);
+});
