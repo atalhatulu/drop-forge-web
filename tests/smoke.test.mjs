@@ -303,7 +303,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(css,/max-height:min\(calc\(100dvh - 182px\)/);
  assert.match(css,/object-fit:fill/);
  assert.match(readFileSync('src/world.js','utf8'),/y:FLOOR\}:null;room\.wheel/);
- assert.match(readFileSync('src/world.js','utf8'),/\?\{x:805,y:FLOOR-20,used:false/);
+ assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
  const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useWeaponAbility,get legacy(){return legacy},get shopOpen(){return shopOpen}};})();');
@@ -795,4 +795,19 @@ test('hub test lab configures weapon enemy level and count without progression r
  assert.match(game,/if\(game\.testMode\)\{p\.hp=/);
  assert.match(game,/room\.level=level;room\.enemyCap=12/);
  assert.match(game,/if\(testLabOpen\)closeTestLab\(\)/);
+});
+
+
+test('wheel rewards vary between spins and rare wheels appear only in treasure rooms', () => {
+ const game=readFileSync('src/game.js','utf8'),world=readFileSync('src/world.js','utf8');
+ assert.match(game,/game\.wheelSpins=\(game\.wheelSpins\|\|0\)\+1/);
+ assert.match(game,/ÇARK ÖDÜLÜ · \+100 ALTIN/);
+ assert.match(game,/if\(p\.kits<5\)/);
+ assert.match(world,/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
+});
+test('first boss door consumes and animates three follower keys', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/!game\.rooms\[id\]\.keysConsumed/);
+ assert.match(game,/game\.bossKeys=0;for\(const key of game\.keyFollowers\)/);
+ assert.match(game,/game\.keyFollowers\.length=0/);
 });
