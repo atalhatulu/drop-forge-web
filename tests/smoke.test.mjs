@@ -306,7 +306,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,chosenForgeMods,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -432,6 +432,44 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  player.kits=2;player.grenades=2;tick();
  assert.ok(!combat.loot.includes(kit)&&!combat.loot.includes(grenade),'consumables can be claimed after spending supplies');
  assert.equal(player.kits,3);assert.equal(player.grenades,3);
+ // Explicit ammo families should survive the drop generator and stay until a matching gun can use them.
+ const ammo=ground('ammo','kinetic');
+ const relevant=player.slots.filter(slot=>slot&&win.DropForgeCatalog.WEAPON_PROJECTILES[slot.weapon]==='kinetic');
+ assert.ok(relevant.length>0,'starting weapon can accept kinetic ammunition');
+ for(const slot of relevant)slot.reserve=AMMO_MAX[slot.weapon];
+ player.reserve=AMMO_MAX[player.weapon];tick();
+ assert.ok(combat.loot.includes(ammo),'maxed reserves leave the ammo pickup on the floor');
+ relevant[0].reserve-=15;if(player.slots[player.activeSlot]===relevant[0])player.reserve=relevant[0].reserve;
+ tick();assert.ok(!combat.loot.includes(ammo),'ammo can be collected after reserve space opens');
+ assert.ok(relevant[0].reserve>AMMO_MAX[relevant[0].weapon]-15,'ammo is added to the matching reserve');
+ player.accessories=[{type:'shield',cooldown:0},{type:'stim',cooldown:0}];
+ const artifact=ground('artifact','coil');tick();
+ assert.ok(combat.loot.includes(artifact),'a full accessory bar does not consume the pickup');
+ player.accessories[1]=null;tick();
+ assert.ok(!combat.loot.includes(artifact),'artifact can be picked up when an accessory slot opens');
+ assert.equal(player.accessories[1].type,'coil');
+ // Cleared rooms preserve unclaimed physical loot across actual room transitions.
+ player.chipBag=Array(15).fill('steel');
+ const waiting=ground('chip','gravity');
+ tick();assert.ok(combat.loot.includes(waiting));
+ const beforeCount=combat.loot.length;
+ api.enterRoom(0,'down');assert.equal(game.roomId,0);
+ api.enterRoom(combat.id,'up');assert.equal(game.roomId,combat.id);
+ assert.equal(combat.loot.length,beforeCount,'unclaimed loot persists when revisiting a cleared room');
+ assert.ok(combat.loot.includes(waiting));
+ player.chipBag.pop();tick();
+ assert.ok(!combat.loot.includes(waiting),'revisited pickup remains claimable after freeing capacity');
+});
+
+test('explicit ammo-family drops retain their requested family',()=>{
+ const source=readFileSync('src/game.js','utf8');
+ const a=source.indexOf('function dropPickup(room,kind,x,y,force=false,artifact=null)'),b=source.indexOf('function saveSlot()',a);
+ const drop=new Function('Math','burst','WEAPON_PROJECTILES','game',source.slice(a,b)+'return dropPickup;')({random:()=>.5},()=>{},['kinetic'],{player:{weapon:0,slots:[]}});
+ const room={loot:[]};
+ drop(room,'ammo',100,100,true,'scatter');
+ drop(room,'ammo',120,100,true);
+ assert.equal(room.loot[0].artifact,'scatter','explicit pickup families are not replaced by equipped weapon');
+ assert.equal(room.loot[1].artifact,'kinetic','unspecified pickups use the equipped weapon family');
 });
 
 test('forced boss ammunition and health never reroll into grenades',()=>{
