@@ -128,3 +128,11 @@
 .gearWorkbenchBag .gearItem.chosen{border-color:#a4e7c5;background:#21483f;box-shadow:inset 0 0 0 1px #6ab99b}
 .gearWorkbenchBag .gearItem span{min-width:0}.gearWorkbenchBag .gearItem small{line-height:1.35;white-space:normal}
 .gearWorkbenchBag .gearItem small:last-child{color:#a8e6c7}
+
+/* Slot-first armor selection: no permanently expanding armor inventory. */
+.gearSlotSelect,.gearSlotReadOnly{display:flex;align-items:center;gap:9px;flex:1;min-width:0;text-align:left;background:transparent;border:0;color:inherit;padding:0}
+.gearSlotSelect{cursor:pointer}.gearSlotSelect:hover .gearSlotDetails>b,.gearSlotSelect:focus-visible .gearSlotDetails>b{color:#a7f2cd}
+.gearSlotSelect:focus-visible{outline:2px solid #a7f2cd;outline-offset:4px}.gearVisualSlot.selected{border-color:#a7f2cd;box-shadow:inset 0 0 0 1px #a7f2cd;background:#203d47}
+.gearSlotDetails{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;flex:1}.gearSlotDetails small,.gearPieceBonus{white-space:normal}
+.gearSlotChoices{margin-top:12px;padding:12px;border:1px solid #79a4ad;background:#10283b}.gearSlotChoicesHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.gearSlotChoicesHead>b{font:900 12px monospace;color:#f4e4b7}.gearSlotChoicesHead>button{background:#203a51;border:1px solid #67899e;color:#e6edf0;padding:5px 10px;cursor:pointer}
+.gearSlotChoices .gearItemGrid{grid-template-columns:repeat(auto-fit,minmax(175px,1fr));max-height:250px;overflow:auto;padding-right:4px}.gearSlotChoices .gearItem.chosen{border-color:#a7f2cd;background:#21483f}
