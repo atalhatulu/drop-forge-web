@@ -163,3 +163,26 @@ test('manual weapon drop preserves run traits just like a weapon swap',()=>{
  const game=readFileSync('src/game.js','utf8');
  assert.match(game,/dropWeapon\(currentRoom\(\),p\.weapon,[^;]*p\.slots\[p\.activeSlot\]\?\.traits\)/);
 });
+
+test('same-socket main and support both change real projectile behavior and firing stats',()=>{
+ const effectsContext={window:{}};
+ vm.runInNewContext(readFileSync('src/attachment-effects.js','utf8'),effectsContext);
+ const combat=effectsContext.window.DropForgeAttachmentEffects;
+ const statsContext={window:{}};
+ vm.runInNewContext(readFileSync('src/weapon-stats.js','utf8'),statsContext);
+ const stats=statsContext.window.DropForgeWeaponStats.createWeaponStats({
+  WEAPON_DAMAGE:[24],WEAPON_FIRE_RATES:[.4],WEAPON_PROJECTILES:['scatter'],MAG_SIZE:[6],
+  getModLevel:(id,slot)=>slot.traits?.levels?.[id]??1
+ });
+ const weapon=gun();
+ assert.equal(traits.grant(weapon,'overheat',projectiles),true);
+ assert.equal(traits.grant(weapon,'loader',projectiles),true);
+ assert.equal(combat.shotProfile(weapon,0,stats(weapon)).family,'explosive');
+ assert.equal(stats(weapon).reload,.85*.78);
+ assert.equal(weapon.mods[1],null,'run traits must never fill the old mechanism socket');
+ const player={};
+ const charged=gun();
+ traits.grant(charged,'overchargeGrip',projectiles);
+ assert.equal(combat.overchargeInterval(player,charged,.4),.2);
+ assert.equal(player.overchargeTime,2);
+});
