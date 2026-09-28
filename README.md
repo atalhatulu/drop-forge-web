@@ -200,3 +200,7 @@ Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman 
 ## Daha seyrek şans çarkı ve boss anahtarları
 
 Şans çarkı artık yalnızca hazine odalarının yaklaşık dörtte birinde bulunur; normal savaş odalarında çıkmaz. Her dönüş farklı bir rastgelelik tohumu kullanır. Dolu sağlık kiti/bomba veya kullanılamayan eklenti yerine altın verilir; doğrudan altın ödülü de eklendi. İlk boss kapısına üç anahtarla girildiğinde anahtarlar parıltı efektiyle tüketilir ve takip eden anahtarlar kaybolur.
+
+## Silah ailesine göre mühimmat ganimeti
+
+Yedi mühimmat ailesi (standart, saçmalı, delici, plazma, lazer, patlayıcı, elektrik) artık ayrı renkli ve harf simgeli 2D kutularla düşer. Düşmandan çıkan mühimmat, öldürme anında elde tutulan silahın ailesini taşır. Yalnızca aynı mühimmat ailesini kullanan ve yedek mühimmatı eksik silahlar kutuyu toplayabilir; uyumsuz veya dolu silahlar için kutu yerde kalır. Aynı aileden iki silah taşınıyorsa ikisi de ikmal edilir.
