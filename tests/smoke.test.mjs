@@ -738,3 +738,16 @@ test('collected boss keys follow the player outside combat and first boss gate s
  assert.match(game,/needsKeys=target\.type==='boss'&&target\.bossStage===1/);
  assert.match(game,/ctx\.fillText\('⚿ '\+game\.bossKeys\+'\/'\+required/);
 });
+
+
+test('summoner enemy types spawn bounded blockers and temporary portals', () => {
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(game,/type==='warlock'\?115:type==='riftcaller'\?90:type==='brute'\?225/);
+ assert.match(game,/r\(\)<\.3,type=special\?\(r\(\)<\.5\?'warlock':'riftcaller'\)/);
+ assert.match(ai,/if\(e\.type==='warlock'\)/);
+ assert.match(ai,/active<2&&room\.enemies\.length/);
+ assert.match(ai,/spawnEnemy\(room,'brute'/);
+ assert.match(ai,/if\(e\.type==='riftcaller'\)/);
+ assert.match(ai,/spawnLimit:3,owner:e/);
+ assert.match(game,/portal\.spawnLimit&&portal\.produced>=portal\.spawnLimit/);
+});
