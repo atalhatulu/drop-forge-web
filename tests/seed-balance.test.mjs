@@ -46,25 +46,32 @@ test('seeded room layouts, rewards and early treasure remain deterministic',()=>
 const start=gameSource.indexOf('function awardRoomReward(room){');
 const end=gameSource.indexOf('function dropChest(room){',start);
 assert.ok(start>=0&&end>start,'reward generator must be independently testable');
-function rewardScenario({level=1,bagSize=0,slots=[{weapon:0,mods:[]}],catalog={barrel:{level:2,slot:0}},unlockedLevel=1}={}){
- const drops=[],game={seed:19,stashedMods:Array.from({length:bagSize},(_,i)=>`owned-${i}`),player:{slots}};
- const fn=new Function('game','ALL_MODS','MODS','masteryLevel','modSlotUnlocked','hash2','dropPickup','grantMastery','announce','availableChips','weightedLoot','W','FLOOR',gameSource.slice(start,end)+'return awardRoomReward;')(
-  game,catalog,catalog,()=>unlockedLevel,(slot)=>unlockedLevel>=[2,4,6,8][slot],()=>3,(...args)=>drops.push(args),()=>{},()=>{},()=>[],()=>null,1120,548);
+function rewardScenario({level=1,slots=[{weapon:0,mods:[]}],offers=[{type:'trait',id:'shockCore',weaponSlot:0,kind:'main'}],paused=false,chestUpgradeOpen=false}={}){
+ const drops=[],opened=[],messages=[],game={seed:19,player:{slots},currentChestUpgradeChoices:null};
+ const traits={choices(args){assert.equal(args.slots,slots);return offers;}};
+ const fn=new Function('game','window','paused','chestUpgradeOpen','openChestUpgradeModal','WEAPON_PROJECTILES','hash2','dropPickup','grantMastery','announce','availableChips','weightedLoot','W','FLOOR',gameSource.slice(start,end)+'return awardRoomReward;')(
+  game,{DropForgeWeaponTraits:traits},paused,chestUpgradeOpen,choices=>opened.push(choices),['kinetic'],()=>3,(...args)=>drops.push(args),()=>{},message=>messages.push(message),()=>[],()=>null,1120,548);
  fn({id:1,x:1,y:1,level,reward:'mod',type:'combat',branchEnd:false});
- return drops;
+ return {drops,opened,messages,game};
 }
 
-test('mod reward pays usable gold when mastery is insufficient, bag is full or slots are occupied',()=>{
- assert.deepEqual(rewardScenario().map(drop=>drop[1]),['gold']);
- assert.equal(rewardScenario()[0][5],70);
- assert.deepEqual(rewardScenario({level:4,unlockedLevel:10,bagSize:12}).map(drop=>drop[1]),['gold']);
- assert.deepEqual(rewardScenario({unlockedLevel:2,slots:[{weapon:0,mods:['rapidBarrel']}]}).map(drop=>drop[1]),['gold']);
+test('room reward offers run traits immediately without dropping legacy attachments',()=>{
+ const {drops,opened,messages,game}=rewardScenario();
+ assert.equal(drops.length,0);
+ assert.equal(opened.length,1);
+ assert.deepEqual(opened[0],game.currentChestUpgradeChoices);
+ assert.equal(opened[0][0].id,'shockCore');
+ assert.ok(messages.some(message=>message.includes('SİLAHINA ÖZELLİK SEÇ')));
 });
 
-test('mod reward drops a compatible new attachment when a matching slot is available',()=>{
- const drops=rewardScenario({unlockedLevel:2});
- assert.deepEqual(drops.map(drop=>drop[1]),['mod']);
- assert.equal(drops[0][5],'barrel');
+test('room reward gives scaled gold when no trait is eligible or a choice modal is already open',()=>{
+ for(const options of [{offers:[]},{chestUpgradeOpen:true},{paused:true},{slots:[],offers:[]}]){
+  const {drops,opened,game}=rewardScenario({...options,level:4});
+  assert.equal(opened.length,0);
+  assert.deepEqual(drops.map(drop=>drop[1]),['gold']);
+  assert.equal(drops[0][5],115);
+  assert.equal(game.currentChestUpgradeChoices,null);
+ }
 });
 
 test('enemy health and damage increase across all four regions with a distinct fourth-region shield',()=>{
