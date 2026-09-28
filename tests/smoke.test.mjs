@@ -225,7 +225,7 @@ test('twelve attachment alternatives are grouped three per slot', () => {
  assert.ok(Object.values(mods).every(mod=>mod.level===[2,4,6,8][mod.slot]));
  const runtime=readFileSync('src/game.js','utf8');
  assert.match(runtime,/mods:\[\],traits:null,rune:null/);
- assert.match(runtime,/modCatalog\[next\]\.slot!==j/);
+ assert.doesNotMatch(runtime,/function applyModSwap\(/);
  assert.match(readFileSync('src/shop-data.js','utf8'),/root\.DropForgeShopData=Object\.freeze/);
 });
 test('shared weapon stat calculations include shotgun damage, magazine, ammo savings and alternatives', () => {
