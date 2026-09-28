@@ -307,7 +307,7 @@ test('720p canvas, viewport HUD and grounded props are configured',()=>{
  assert.match(readFileSync('src/world.js','utf8'),/room\.type==='treasure'&&hash2\(room\.x,room\.y,seed\+9823\)%4===0/);
 });
 test('physical hub boots, target dummy handles practice and E portal starts the expedition',()=>{
- const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get masteryStyles(){return masteryStyles},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,openShop,closeShop,buyShopItem,useActiveModule,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
+ const source=readFileSync('src/game.js','utf8').replace(/\}\)\(\);\s*$/, 'window.__testHub={get game(){return game},get mastery(){return mastery},get masteryStyles(){return masteryStyles},get mouse(){return mouse},get hubForgeOpen(){return hubForgeOpen},get helpOpen(){return helpOpen},openHubForge,applyHubForge,enterExpedition,enterRoom,openHelp,closeHelp,interact,fire,hitEnemy,update,draw,openShop,closeShop,buyShopItem,useActiveModule,openTestLab,startCombatTest,stopCombatTest,get legacy(){return legacy},get shopOpen(){return shopOpen},get chestUpgradeOpen(){return chestUpgradeOpen}};})();');
  const nodes=new Map(),frames=[],ctx=new Proxy({},{get:(object,key)=>key==='createRadialGradient'||key==='createLinearGradient'?()=>({addColorStop(){}}):key==='measureText'?()=>({width:24}):()=>{},set:()=>true});
  class Node{
   constructor(id='',tag='DIV'){this.id=id;this.tagName=tag;this.value='';this.style={};this.classList={add(){},remove(){},toggle(){}};this.dataset={};this.children=[];this.firstChild={textContent:''};this.options=[];this.width=id==='game'?1280:1120;this.height=id==='game'?720:630;this.textContent='';}
@@ -360,6 +360,25 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.equal(player.slots[0].traits.supports[0],'stabilizer','saving the two-gun loadout preserves an existing run trait');
  assert.equal(game.inHub,true);
  assert.equal(api.masteryStyles[player.weapon],'focused','hub save leaves the permanent style attached to its weapon model');
+ player.slots[0].rune='hunt';
+ player.slots[0].mods[0]='barrel';
+ const beforeLab=win.DropForgeWeaponTraits.snapshot(player.slots[0]);
+ api.openTestLab();
+ nodes.get('testLabWeapon').value='0';
+ nodes.get('testLabEnemy').value='red';
+ nodes.get('testLabLevel').value='1';
+ nodes.get('testLabCount').value='1';
+ api.startCombatTest();
+ assert.equal(game.testMode,true,'test lab starts a training encounter');
+ assert.equal(player.slots[0].rune,'hunt','test lab keeps the actual weapon rune');
+ assert.equal(player.slots[0].mods[0],'barrel','test lab keeps existing equipped compatibility parts');
+ assert.equal(player.slots[0].traits.supports[0],'stabilizer','test lab keeps current run traits');
+ assert.equal(player.slots[0].ammo,win.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:win.DropForgeCatalog.WEAPON_DAMAGE,WEAPON_FIRE_RATES:win.DropForgeCatalog.WEAPON_FIRE_RATES,WEAPON_PROJECTILES:win.DropForgeCatalog.WEAPON_PROJECTILES,MAG_SIZE:[15,30,6,30,5,7,30,8,5,25,24,4,18],getMasteryLevel:()=>4,getMasteryStyle:()=> 'focused',getModLevel:()=>1})(player.slots[0]).mag,'test starts with the actual modified magazine size');
+ player.slots[0].traits.supports.push('loader');
+ api.stopCombatTest();
+ assert.equal(game.testMode,false);
+ assert.equal(player.slots[0].rune,'hunt','test restores the weapon rune');
+ assert.deepEqual(player.slots[0].traits,beforeLab,'test restores a deep copy of the actual run build');
  player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
  api.interact();
