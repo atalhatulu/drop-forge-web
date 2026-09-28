@@ -879,3 +879,11 @@ test('seven seeded bosses cover four stages and have phase two combat profiles',
  assert.equal(bosses.phaseFor(49,100),2);assert.equal(bosses.phaseFor(51,100),1);
  const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');assert.match(game,/boss\.bossPhase=1/);assert.match(game,/e\.bossPhase=2/);assert.match(ai,/e\.bossStyle==='summon'/);assert.match(ai,/e\.bossStyle==='blink'/);
 });
+
+
+test('compact HUD keeps health ammo and ability while moving control instructions to help', () => {
+ const html=readFileSync('index.html','utf8'),game=readFileSync('src/game.js','utf8'),css=readFileSync('styles/game.css','utf8');
+ assert.match(html,/id="hpText"/);assert.match(html,/id="ammoText"/);assert.match(html,/id="abilityStatus"/);
+ assert.match(html,/id="hint" title="A\/D hareket/);assert.match(game,/game\.inHub\?'HAZIRLIK':'DERİNLİK '/);
+ assert.match(css,/footer \.hint\{display:none\}/);assert.match(css,/\.inventory \.invLabel,\.inventory \.invHelp\{display:none\}/);
+});
