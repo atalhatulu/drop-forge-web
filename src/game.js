@@ -9,6 +9,7 @@ const {PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPO
 const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
 const GEAR=window.DropForgeGear;
 const {shotProfile,bounceBullet,resolveAttachmentHit,burstPlan,overchargeInterval}=window.DropForgeAttachmentEffects;
+const {selectChestChoices}=window.DropForgeChestRewards;
 const BOSS_BLUEPRINT_KEY='dropForge.bossBlueprints.v1';
 function availableModules(){const ids=Object.keys(ACTIVE_MODULES);return matrixUnlocks.module?ids:ids.slice(0,Math.max(1,ids.length-3));}
 function availableChips(){const ids=Object.keys(GEAR.CHIPS);return matrixUnlocks.chip?ids:ids.slice(0,Math.max(1,ids.length-3));}
@@ -571,7 +572,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
   } else {
     const pick = item.id;
     const modCatalog = ALL_MODS || MODS;
-    if(game.stashedMods.length < 12){
+    if(game.stashedMods.length < 12&&!game.stashedMods.includes(pick)&&!game.player.slots.some(slot=>slot?.mods?.includes(pick))){
       game.stashedMods.push(pick);
       game.modLevels[pick] ??= 1;
       announce("EKLENTİ KUŞANILDI · "+(modCatalog[pick]?.name || pick), 2.5);
@@ -600,40 +601,14 @@ function interact(){
  if(!game||paused||mapOpen||game.testMode)return;const room=currentRoom(),p=game.player,near=room.interact;
  if(game.inHub){if(near?.nearHubGate){enterExpedition();return;}if(near?.nearForge){openHubForge();return;}if(near?.nearMerchant){openShop();return;}}if(near?.nearMerchant){openShop();return;}if(near?.nearSecret){const secret=room.secret;secret.opened=true;earnLegacy(1);burst(room,secret.x,FLOOR-62,'#ffe59a',22,145);if(secret.kind==='gold'){dropPickup(room,'gold',secret.x-35,FLOOR-115,true,100+room.stage*35);dropPickup(room,'gold',secret.x+35,FLOOR-115,true,100+room.stage*35);announce('GİZLİ BÖLME · ALTIN ZULASI');}else if(secret.kind==='module'){const ids=availableModules(),id=ids[hash2(room.x,room.y,game.seed+728)%ids.length];p.activeModule=id;p.moduleCooldown=0;announce('İLK MODÜL · '+ACTIVE_MODULES[id].name+' · SAĞ TIK',3);burst(room,secret.x,FLOOR-100,'#a8f5df',28,160);}else if(secret.kind==='rune'){const ids=Object.keys(WEAPON_RUNES),id=weightedLoot('runes',ids,hash2(room.x,room.y,game.seed+1907));rememberLoot('runes',id);game.pendingRune={id};announce('SİLAH RUNU · '+WEAPON_RUNES[id].name+' · TAB MENÜSÜNDE SİLAH SEÇ',3);burst(room,secret.x,FLOOR-100,'#d5b6ff',26,160);}else if(secret.kind==='wheel'){room.wheel={x:secret.x,y:FLOOR-20,used:false,spinTime:0};announce('GİZLİ BÖLME · ŞANS ÇARKI BULUNDU');}else{dropChest(room);announce('GİZLİ BÖLME · SANDIK BULUNDU');}sound(790,.16,'triangle');return;}if(near?.nearWheel){spinWheel(room);return;}if(near?.nearChest){room.chest.opened=true;p.gold+=45;
    const rand=rng((game.seed^room.id*70001)>>>0);
-   const modCatalog=ALL_MODS||MODS;
-   const eligibleMods=Object.keys(modCatalog).filter(k=>p.slots.some(w=>w&&masteryLevel(w.weapon)>=modCatalog[k].level&&modSlotUnlocked(modCatalog[k].slot,w.weapon)&&!w.mods.includes(k))&&!game.stashedMods.includes(k));
-   const modPool=eligibleMods.length>=2?eligibleMods:Object.keys(modCatalog);
-   const tempMods=[...modPool];
-   
-   const choices=[];
-   // Elite rooms or specific chip reward offer chips, otherwise weapon mods/hybrid
-   if(room.type==='elite'||room.reward==='chip'){
-     const chipIds=Object.keys(GEAR.CHIPS);
-     const tempChips=[...chipIds];
-     for(let c=0;c<3&&tempChips.length;c++){
-       const pickIdx=hash2(room.x,room.y,game.seed+room.id*41+c*773)%tempChips.length;
-       choices.push({type:'chip',id:tempChips.splice(pickIdx,1)[0]});
-     }
-   } else {
-     // Mod / Hybrid Chest: 2 mods + 1 gear or 3 mods if gear bag full
-     const numMods=rand()<.5?2:3;
-     for(let c=0;c<numMods&&tempMods.length;c++){
-       const pickIdx=hash2(room.x,room.y,game.seed+room.id*37+c*911)%tempMods.length;
-       choices.push({type:'mod',id:tempMods.splice(pickIdx,1)[0]});
-     }
-     const neededGear=3-choices.length;
-     for(let g=0;g<neededGear;g++){
-       const piece=GEAR.randomGear(()=>Math.abs(Math.sin(game.seed+room.id*97+g*313)));
-       if(piece)choices.push({type:'gear',...piece});
-     }
-   }
-   
+   const choices=selectChestChoices({room,player:p,stashedMods:game.stashedMods,modCatalog:ALL_MODS||MODS,chipCatalog:GEAR.CHIPS,masteryLevel,modSlotUnlocked,seed:game.seed,hash:hash2,randomGear:GEAR.randomGear,random:rand});
    if(choices.length){
      game.currentChestUpgradeChoices=choices;
      openChestUpgradeModal(choices);
      announce('SANDIK AÇILDI · YÜKSELTME SEÇİMİ',2.5);
    }else{
-     announce('+45 ALTIN · SANDIK AÇILDI');
+     p.gold+=20;
+     announce('SANDIK · UYGUN EŞYA YOK · +65 ALTIN');
    }
    if(room.type==='treasure'&&rand()<.65)grantGear(room,room.chest.x+8,room.chest.y-45);
    if(rand()<.65)dropPickup(room,'ammo',room.chest.x-20,room.chest.y-35,true);
@@ -872,13 +847,11 @@ if(chestBtn&&game?.pendingChestChoices){
     announce('SANDIK SEÇİMİ REDDEDİLDİ · +20 ALTIN',2);
   }else{
     const modCatalog=ALL_MODS||MODS;
-    if(game.stashedMods.length<12){
-      game.stashedMods.push(pick);
-      game.modLevels[pick]??=1;
-      announce('EKLENTİ ALINDI · '+(modCatalog[pick]?.name||pick),2);
-    }else{
-      announce('ÇANTA DOLU · EKLENTİ ALINAMADI',2);
-    }
+    if(!game.pendingChestChoices.choices.includes(pick)||!modCatalog[pick])return;
+    if(game.stashedMods.length>=12||game.stashedMods.includes(pick)||game.player.slots.some(slot=>slot?.mods?.includes(pick))){announce('EKLENTİ ALINAMIYOR · ÇANTANI DÜZENLE',2);return;}
+    game.stashedMods.push(pick);
+    game.modLevels[pick]??=1;
+    announce('EKLENTİ ALINDI · '+(modCatalog[pick]?.name||pick),2);
   }
   game.pendingChestChoices=null;
   renderLoadout();
