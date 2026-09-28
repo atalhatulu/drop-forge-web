@@ -112,3 +112,7 @@ Her silahın kendine ait **sağ tık yeteneği** ve bağımsız bekleme süresi 
 ## Tank hücumu
 
 Kırmızı tank düşmanları oyuncu yatay menzildeyken kısa süre hücumu zeminde işaretler, ardından sabit yöne yüksek hızla atılır. Hücum isabeti normal temastan daha yüksek hasar ve belirgin geri itme uygular; aynı hücum yalnızca bir kez vurur. Hücum bitince bekleme süresi başlar. Jeneratör savunması ve diğer düşman davranışları korunur.
+
+## Uçan düşmanların hızı
+
+Mavi uçan düşmanlar oyuncuyu daha hızlı takip eder (azami yatay hız 245), dikey konumlarını daha çevik düzeltir ve mermilerden daha hızlı sıyrılır. Atış aralıkları kısaltılmıştır; saldırı öncesi nişan alma uyarısı korunur.
