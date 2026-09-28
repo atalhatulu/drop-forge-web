@@ -440,7 +440,7 @@ function buyShopItem(id){
 $('shopItems').addEventListener('click',e=>{const button=e.target.closest('[data-shop-item]');if(button)buyShopItem(button.dataset.shopItem);});$('closeShop').onclick=closeShop;
 function dropHeldWeapon(){if(!game||paused||mapOpen)return;const p=game.player;if(p.weapon===null)return;cancelReload(p);dropWeapon(currentRoom(),p.weapon,p.x+p.w/2,p.y+12,p.face*170,p.ammo,p.reserve,p.slots[p.activeSlot]?.mods||[]);p.slots[p.activeSlot]=null;p.weapon=null;p.ammo=0;p.reserve=0;announce('SİLAH YERE BIRAKILDI');updateHud();}
 function drawWheelScreen(w){
- if(!w||w.spinTime<=0&&w.resultTime<=0)return;
+ if(!w||!(w.spinTime>0||w.resultTime>0))return;
  const cx=W/2,cy=H/2+22,r=177,labels=['SİLAH','EKLENTİ','SAĞLIK','MERMİ','BOMBA','SÜRPRİZ'],colors=['#e3a654','#6559ad','#4aa782','#438fb5','#b45e76','#b68c49'];
  ctx.save();ctx.fillStyle='rgba(5,9,22,.92)';ctx.fillRect(0,0,W,H);
  ctx.textAlign='center';ctx.fillStyle='#fbe6ac';ctx.font='bold 32px monospace';ctx.fillText(w.spinTime>0?'ŞANS ÇARKI':'ÖDÜL KAZANDIN',cx,89);
