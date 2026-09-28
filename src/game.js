@@ -83,8 +83,8 @@ function getModSlots(weapon){
 }
 function unlockModSlot(kind,label){if(!game||game.modUnlocks[kind])return;game.modUnlocks[kind]=true;announce('YENİ EKLENTİ YUVASI · '+label+' AÇILDI',3);for(const slot of game.player.slots)if(slot)applyStashedMods(slot.weapon);updateHud();}
 function slotForWeapon(weapon){return game?.player.slots.find(q=>q&&q.weapon===weapon);}
-function installMod(slot,mod){const spec=(ALL_MODS||MODS)[mod];if(!slot||!spec||!modSlotUnlocked(spec.slot)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
-function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce(MODS[m].name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
+function installMod(slot,mod){const spec=(ALL_MODS||MODS)[mod];if(!slot||!spec||!modSlotUnlocked(spec.slot,slot.weapon)||slot.mods[spec.slot]||slot.mods.includes(mod))return false;slot.mods[spec.slot]=mod;return true;}
+function applyStashedMods(weapon){if(!game)return;const slot=slotForWeapon(weapon);if(!slot)return;for(const m of [...game.stashedMods])if(installMod(slot,m)){game.stashedMods.splice(game.stashedMods.indexOf(m),1);announce((ALL_MODS[m]||MODS[m]).name+' · '+weaponName(weapon)+' EKLENDİ',1.5);}}
 const FORGE_SLOT_LABELS=['NAMLU','MEKANİZMA','ÇEKİRDEK','KABZA'];
 let forgeFocusGun=1,forgeEditors={1:-1,2:-1};
 function ensureForgeModSlots(){/* Four dedicated hidden selectors are part of the workbench markup. */}
@@ -942,9 +942,6 @@ function triggerResetAll(){
   if(!ok)return;
   const doubleOk=confirm('Bu işlem geri alınamaz. Oyun ilk başlangıç anındaki haline dönecektir. Devam edilsin mi?');
   if(!doubleOk)return;
-  try{
-    localStorage.clear();
-  }catch(e){}
   resetAllProgress();
   alert('Tüm kayıtlar silindi. Oyun sıfırdan başlatılıyor...');
   window.location.reload();
