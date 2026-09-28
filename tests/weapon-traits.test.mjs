@@ -108,3 +108,37 @@ test('TAB shows run traits separately and prevents legacy editor overwriting the
  assert.match(game,/if\(w\.traits\?\.levels&&Object\.keys\(w\.traits\.levels\)\.some\(id=>modCatalog\[id\]\?\.slot===j\)\)continue/);
  assert.match(css,/\.weaponTraitRow/);
 });
+
+test('a dropped weapon keeps an independent snapshot of all its run trait levels',()=>{
+ const source=gun();
+ traits.grant(source,'shockCore',projectiles);
+ traits.grant(source,'shockCore',projectiles);
+ traits.grant(source,'stabilizer',projectiles);
+ const ground={weapon:source.weapon,mods:[...source.mods],traits:traits.snapshot(source)};
+ assert.equal(ground.traits.levels.shockCore,2);
+ assert.equal(ground.traits.supports[0],'stabilizer');
+ source.traits.levels.shockCore=3;
+ source.traits.supports.push('loader');
+ assert.equal(ground.traits.levels.shockCore,2);
+ assert.equal(ground.traits.supports.length,1);
+ assert.equal(traits.hasInvestment(ground),true);
+ assert.equal(traits.hasInvestment(gun()),false);
+});
+test('reforge gives three distinct main transformations for the newly picked-up gun only',()=>{
+ const incoming=gun(1),old=gun();
+ traits.grant(old,'shockCore',projectiles);
+ const offers=traits.choices({slots:[old,incoming],projectiles,kind:'main',seed:43,hash:(_a,_b,c)=>c});
+ assert.equal(offers.length,3);
+ assert.ok(offers.every(offer=>offer.kind==='main'));
+ assert.equal(new Set(offers.map(offer=>offer.id)).size,3);
+ const forIncoming=traits.choices({slots:[null,incoming],projectiles,kind:'main',seed:43,hash:(_a,_b,c)=>c});
+ assert.ok(forIncoming.every(offer=>offer.weaponSlot===1));
+ assert.equal(forIncoming.length,3);
+});
+test('live swap retains old weapon traits on the ground and equips any traits on the pickup',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/old\.mods\|\|\[\],old\.traits\)/);
+ assert.match(game,/traits:window\.DropForgeWeaponTraits\.snapshot\(item\)/);
+ assert.match(game,/hasInvestment\(old\)/);
+ assert.match(game,/openChestUpgradeModal\(offers\)/);
+});
