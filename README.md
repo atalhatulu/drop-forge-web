@@ -208,3 +208,7 @@ Av odasının işaretli hedefi artık 2,5 kat temel cana, %35 daha hızlı harek
 ## Yedi farklı mühimmat ganimeti
 
 Düşmanlardan ve oda ödüllerinden çıkan mühimmat, düşüş anında eldeki silahın yedi mermi ailesinden biriyle eşleşir: standart, saçmalı, delici, plazma, lazer, patlayıcı ve elektrik. Her aile ayrı renk ve simgeli yer ganimetine sahiptir. Toplanan paket yalnızca aynı aileyi kullanan silahların yedek mühimmatını doldurur; uyumsuz paketler yerde kalır.
+
+## Yeni oda olayları: Altın Kasası ve Saldırı Odası
+
+Bazı yan kollar, anahtar odalarını değiştirmeden **Altın Kasası** olur: savaş yerine seviyeye göre artan iki altın ödülü ve sandık içerir. Bazı normal savaş odaları **Saldırı Odası**na dönüşür: başlangıçta daha fazla düşman, iki yerine üç portal ve artırılmış oda düşman kapasitesi vardır. Haritada Altın Kasası `$`, Saldırı Odası `!` simgesiyle görünür. Şans çarkı yalnızca seyrek hazine odalarında kalır.
