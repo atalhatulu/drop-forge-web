@@ -811,3 +811,19 @@ test('first boss door consumes and animates three follower keys', () => {
  assert.match(game,/game\.bossKeys=0;for\(const key of game\.keyFollowers\)/);
  assert.match(game,/game\.keyFollowers\.length=0/);
 });
+
+
+test('hunt target has more health speed attack tempo and damage', () => {
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(game,/target\.maxHp=Math\.round\(target\.maxHp\*2\.5\)/);
+ assert.match(game,/target\.moveMultiplier=1\.35;target\.attackMultiplier=1\.3;target\.damageScale\*=1\.45/);
+ assert.match(ai,/\*\(e\.moveMultiplier\|\|1\)/);
+ assert.match(ai,/e\.fire-=dt\*\(e\.attackMultiplier\|\|1\)/);
+});
+test('ground enemies drop through platforms to pursue player below', () => {
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(game,/!\(\(o\.dropThrough\|\|0\)>0\)/);
+ assert.match(ai,/p\.y>e\.y\+e\.h\+85/);
+ assert.match(ai,/e\.dropThrough=\.48/);
+ assert.match(ai,/e\.dropThrough=Math\.max\(0/);
+});
