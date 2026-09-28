@@ -704,8 +704,8 @@ test('merchant currency follows merchant type and permanent cores reward room mi
  assert.match(game,/room\.cleared=true;earnLegacy\(1\);collectBossKey\(room\)/);
  assert.match(game,/if\(room\.type==='elite'\|\|room\.type==='hunt'\)earnLegacy\(1\)/);
  assert.match(game,/game\.earnedCores=\(game\.earnedCores\|\|0\)\+earned/);
- assert.match(shop,/BU SEFER \+'/);
- assert.match(shop,/ÇEKİRDEKLER KALICI:/);
+ assert.match(shop,/BU SEFERLİK · Aldıkların sefer bitince sıfırlanır/);
+ assert.match(shop,/ÇEKİRDEK/);
 });
 
 
