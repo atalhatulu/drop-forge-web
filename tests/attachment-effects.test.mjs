@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const context={window:{}};
 vm.runInNewContext(readFileSync('src/attachment-effects.js','utf8'),context);
-const {shotProfile,bounceBullet,resolveAttachmentHit}=context.window.DropForgeAttachmentEffects;
+const {shotProfile,bounceBullet,resolveAttachmentHit,burstPlan,overchargeInterval}=context.window.DropForgeAttachmentEffects;
 
 test('overheat converts only the final shot into one explosive projectile',()=>{
  const slot={mods:['overheat']},stats={family:'scatter',pellets:5};
@@ -72,4 +72,40 @@ test('critical ammo refund is capped and shared by shotgun pellet volley',()=>{
  const ai=readFileSync('src/enemy-ai.js','utf8');
  assert.match(ai,/if\(e\.freezeTime>0\)\{e\.vx=0;return;\}/);
  assert.match(ai,/e\.cryoSlowTime>0\?\.65:1/);
+});
+
+test('triple burst queues two follow-up rounds and does not queue ordinary weapons',()=>{
+ assert.deepEqual({...burstPlan({mods:['tripleBurst']})},{remaining:2,delay:.085});
+ assert.equal(burstPlan({mods:['loader']}),null);
+ const g=readFileSync('src/game.js','utf8');
+ assert.match(g,/function fire\(burstContinuation=false\)/);
+ assert.match(g,/if\(game\.burstFire\)\{/);
+ assert.match(g,/burst\.remaining--/);
+ assert.match(g,/fire\(true\)/);
+ assert.match(g,/if\(burstContinuation\)\{game\.burstFire=null;return;\}/);
+});
+test('laser sweep converts shotgun pellets to one powerful piercing beam',()=>{
+ const shotgun=shotProfile({mods:['laserSweep']},3,{family:'scatter',pellets:5});
+ assert.deepEqual({...shotgun},{family:'laser',pellets:1,damageMultiplier:3});
+ const ordinary=shotProfile({mods:[]},3,{family:'scatter',pellets:5});
+ assert.deepEqual({...ordinary},{family:'scatter',pellets:5});
+ const game=readFileSync('src/game.js','utf8'),stats=readFileSync('src/weapon-stats.js','utf8');
+ assert.match(game,/Math\.max\(st\.speed,1600\)/);
+ assert.match(game,/shot\.damageMultiplier\|\|1/);
+ assert.match(game,/b\.mods\?\.includes\('laserSweep'\)/);
+ assert.match(stats,/mods\.includes\('laserSweep'\)\?2:0/);
+});
+test('overcharge doubles firing speed only during a two-second activation',()=>{
+ const p={},slot={mods:['overchargeGrip']};
+ assert.equal(overchargeInterval(p,slot,.2),.1);
+ assert.equal(p.overchargeTime,2);
+ assert.equal(p.overchargeCooldown,10);
+ p.overchargeTime=0;p.overchargeCooldown=7;
+ assert.equal(overchargeInterval(p,slot,.2),.2);
+ assert.equal(overchargeInterval(p,{mods:[]},.2),.2);
+ const stats=readFileSync('src/weapon-stats.js','utf8');
+ assert.doesNotMatch(stats,/mods\.includes\('overchargeGrip'\)\?scaled\('overchargeGrip',1\.35\)/);
+ const g=readFileSync('src/game.js','utf8');
+ assert.match(g,/overchargeInterval\(p,slot,stForAmmo\.interval\)/);
+ assert.match(g,/p\.overchargeTime=Math\.max\(0/);
 });

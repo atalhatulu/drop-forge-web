@@ -29,15 +29,15 @@ const ALL_MODS={
  ...MODS,
  mirrorBarrel:{name:'AYNA NAMLU',level:2,slot:0,description:'Mermiler duvardan 1 kez seker.'},
  shockMuzzle:{name:'ŞOK AĞZI',level:2,slot:0,description:'İsabette düşmanı geri iter, yakındakilere alan hasarı.'},
- laserSweep:{name:'LAZER SÜPÜRME',level:2,slot:0,description:'Sürekli delici lazer hattı çizer.'},
+ laserSweep:{name:'LAZER SÜPÜRME',level:2,slot:0,description:'Her atışta delici lazer hattı çizer; pompalıda tek, güçlü ışın.'},
  overheat:{name:'AŞIRI ISINMA',level:4,slot:1,description:'Şarjör bitince son mermi patlayıcı olur.'},
  refundPiston:{name:'GERİ KAZANIM PİSTONU',level:4,slot:1,description:'Kritik vuruşta şarjöre 1 mermi iade edilir.'},
- tripleBurst:{name:'ÜÇLÜ ATIŞ',level:4,slot:1,description:'3’lü kısa seri atışa geçer.'},
+ tripleBurst:{name:'ÜÇLÜ ATIŞ',level:4,slot:1,description:'Tetikle kısa aralıklarla 3 atış yapar; her atış kendi mermisini harcar.'},
  cryoCore:{name:'KRİYO ÇEKİRDEK',level:6,slot:2,description:'Yavaşlatır; 3 sn içinde 3 kez vurursan dondurur.'},
  resonanceCore:{name:'REZONANS ÇEKİRDEĞİ',level:6,slot:2,description:'İki silah aynı element ise her ikisi +%20 hasar.'},
  hunterMark:{name:'AVCI İŞARETİ',level:6,slot:2,description:'Hedefe işaret koyar; 5 sn kritik garantisi.'},
  heavyStabilizer:{name:'AĞIR STABİLİZATÖR',level:8,slot:3,description:'Sabit dururken kritik +%25.'},
- overchargeGrip:{name:'HIZ AŞIMI',level:8,slot:3,description:'Kısa süre atış hızı 2 kat artar.'},
+ overchargeGrip:{name:'HIZ AŞIMI',level:8,slot:3,description:'İlk atışla 2 sn boyunca 2 kat atış hızı; 10 sn bekleme.'},
  steadyGrip:{name:'DENGELİ KABZA',level:8,slot:3,description:'Saçılma azalır, uzun mesafe isabeti artar.'}
 };
 const MOD_SLOT_NAMES=['NAMLU · HASAR / ATIŞ / DELME','MEKANİZMA · HIZ / ŞARJÖR / TASARRUF','ÇEKİRDEK · FAZ / ŞOK / YANMA','KABZA · DENGE / HAREKET / TEPKİ'];

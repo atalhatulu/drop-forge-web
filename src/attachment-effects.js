@@ -2,8 +2,8 @@
 /* Deterministic combat attachment effects, separately testable from the canvas runtime. */
 (function(root){
 function shotProfile(slot,remainingAmmo,stats,spentAmmo=true){
- const overheat=spentAmmo&&(slot.mods||[]).includes('overheat')&&remainingAmmo===0&&stats.family!=='explosive';
- return {family:overheat?'explosive':stats.family,pellets:overheat?1:stats.pellets};
+ const mods=slot.mods||[],overheat=spentAmmo&&mods.includes('overheat')&&remainingAmmo===0&&stats.family!=='explosive',laserSweep=mods.includes('laserSweep');
+ return {family:overheat?'explosive':laserSweep?'laser':stats.family,pellets:overheat||laserSweep?1:stats.pellets,...(laserSweep?{damageMultiplier:stats.family==='scatter'?3:1}:{})};
 }
 function bounceBullet(bullet,bounds){
  if(!(bullet.bounces>0))return false;
@@ -33,5 +33,16 @@ function resolveAttachmentHit(enemy,bullet,now,stationary,roll){
  }
  return {critical,multiplier:critical?1.5:1};
 }
-root.DropForgeAttachmentEffects=Object.freeze({shotProfile,bounceBullet,resolveAttachmentHit});
+function burstPlan(slot){
+ return (slot.mods||[]).includes('tripleBurst')?{remaining:2,delay:.085}:null;
+}
+function overchargeInterval(player,slot,interval){
+ if(!(slot.mods||[]).includes('overchargeGrip'))return interval;
+ if((player.overchargeCooldown||0)<=0){
+  player.overchargeTime=2;
+  player.overchargeCooldown=10;
+ }
+ return player.overchargeTime>0?interval*.5:interval;
+}
+root.DropForgeAttachmentEffects=Object.freeze({shotProfile,bounceBullet,resolveAttachmentHit,burstPlan,overchargeInterval});
 })(window);
