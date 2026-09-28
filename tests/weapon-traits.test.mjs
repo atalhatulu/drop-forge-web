@@ -64,3 +64,27 @@ test('normal chest offers do not fall back to legacy attachment cards',()=>{
  const game=readFileSync('src/game.js','utf8');
  assert.match(game,/choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\)\)/);
 });
+
+test('trait upgrades affect only their own weapon even when both guns share a trait',()=>{
+ const context={window:{}};
+ vm.runInNewContext(readFileSync('src/weapon-stats.js','utf8'),context);
+ const stats=context.window.DropForgeWeaponStats.createWeaponStats({
+  WEAPON_DAMAGE:[20],WEAPON_FIRE_RATES:[.25],WEAPON_PROJECTILES:['kinetic'],MAG_SIZE:[12],
+  getModLevel:(id,slot)=>slot.traits?.levels?.[id]??3
+ });
+ const first=gun(),second=gun();
+ assert.equal(traits.grant(first,'loader',projectiles),true);
+ assert.equal(traits.grant(second,'loader',projectiles),true);
+ assert.equal(traits.grant(first,'loader',projectiles),true);
+ assert.equal(traits.grant(first,'loader',projectiles),true);
+ assert.equal(first.traits.levels.loader,3);
+ assert.equal(second.traits.levels.loader,1);
+ assert.ok(stats(first).fireRate>stats(second).fireRate);
+ assert.ok(stats(first).reload<stats(second).reload);
+ assert.equal(stats(second).reload,stats({...second,traits:{main:null,supports:[],levels:{loader:1}}}).reload);
+});
+test('chest trait claims do not increase the legacy global mod level',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/getModLevel:\(id,slot\)=>slot\?\.traits\?\.levels\?\.\[id\]\?\?game\?\.modLevels\?\.\[id\]\?\?1/);
+ assert.doesNotMatch(game,/game\.modLevels\[item\.id\]=Math\.max\(/);
+});
