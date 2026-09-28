@@ -61,7 +61,8 @@ test('wheel fallback pays gold instead of discarding a full gear bag or reserve'
  assert.match(source,/if\(p\.gearBag\.length<20\)\{grantGear/);
  assert.match(source,/ZIRH ÇANTASI DOLU · \+85 ALTIN/);
  assert.match(source,/MÜHİMMAT DOLU · \+75 ALTIN/);
- assert.match(source,/game\.modLevels\[mod\]\?\?=1/);
+ assert.match(source,/w\.traitOffers=offers/);
+ assert.match(source,/ÇARK ÖDÜLÜ · \+85 ALTIN/);
 });
 test('boss claim recomputes the offer and only consumes a valid rewarded attachment',()=>{
  const source=readFileSync('src/game.js','utf8');
