@@ -7,7 +7,7 @@ const SETS={
  bastion:{name:'KALE',color:'#9dd6ff',bonus:'5 PARÇA: HASAR SONRASI ZIRH',hp:20,speed:0,ammo:0,leech:0},
  runner:{name:'RÜZGÂR',color:'#a4f6c1',bonus:'5 PARÇA: DASH SONRASI HIZLI ATIŞ',hp:0,speed:.055,ammo:0,leech:0},
  arsenal:{name:'CEPHANELİK',color:'#ffd78e',bonus:'5 PARÇA: MÜHİMMAT KUTUSU +%50',hp:0,speed:0,ammo:.055,leech:0},
- vampire:{name:'KANBAĞI',color:'#ee9fc7',bonus:'5 PARÇA: ÖLDÜRMEDE +3 CAN',hp:0,speed:0,ammo:0,leech:3}
+ vampire:{name:'KANBAĞI',color:'#ee9fc7',bonus:'5 PARÇA: ÖLDÜRMEDE +3 CAN',hp:0,speed:0,ammo:0,leech:0}
 };
 const CHIPS=Object.freeze({steel:{name:'ÇELİK REFLEKS',description:'Hasar öncesi 0,2 sn içinde hareket ettiysen alınan hasar %40 azalır.'},gravity:{name:'YERÇEKİMİ TABAN',description:'Yerdeyken ateş hızı +%25.'},kinetic:{name:'KİNETİK YÜK',description:'Her 10 öldürmeden sonraki atış kritik.'},blood:{name:'KAN KOKUSU',description:'Canı %30 altında olan düşmana ekstra hasar.'},momentum:{name:'MOMENTUM',description:'3 sn koşunca mermi hızı +%20.'},breath:{name:'İKİNCİ NEFES',description:'Can %20 altına düşünce bir kez hız patlaması.'},reflex:{name:'AYNA REFLEKS',description:'Kalkan kırılınca çevreye patlama.'},step:{name:'ÇİFT ADIM',description:'İkinci dash hakkı; ikinci dash %50 mesafe.'}});
 function chipStats(chips){const result={hp:0,speed:0,ammo:0,leech:0};for(const id of Object.values(chips||{})){const chip=CHIPS[id];if(!chip)continue;for(const key of Object.keys(result))result[key]+=chip[key]||0;}return result;}
