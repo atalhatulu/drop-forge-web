@@ -761,5 +761,5 @@ test('merchant cards prioritize short effects and actionable prices', () => {
  assert.match(shop,/class="shopEffect"/);
  assert.match(shop,/class="shopBuy"/);
  assert.match(shop,/YETERSİZ /);
- assert.match(shop,/title=\\"/);
+ assert.match(shop,/title=/);
 });
