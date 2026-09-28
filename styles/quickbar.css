@@ -26,3 +26,14 @@ footer .stat.ammo{flex:0 1 auto!important;min-width:0!important}
 @media(max-width:580px){.inventory{width:100%;padding:6px!important;min-height:84px;overflow-x:auto;justify-content:flex-start}.inventory .invLabel{display:none}.inventorySlots{gap:4px;min-width:max-content}.inventory .invSlot{flex:0 0 65px;width:65px;height:72px}.inventory .invIcon{width:52px;height:29px}.inventory .itemIcon{width:27px;height:27px}.inventory .invName{font-size:8px}footer{gap:6px!important;font-size:10px}footer .stat.ammo{display:none}#game{width:min(100%,calc((100dvh - 203px)*16/9))}}
 @media(max-height:570px){.inventory{min-height:70px;padding:3px!important}.inventory .invSlot{height:62px}.inventory .invIconWrap{min-height:21px}.inventory .invIcon{height:24px}.inventory .itemIcon{height:23px;width:23px}#game{width:min(100%,calc((100dvh - 169px)*16/9))}}
 
+
+/* HUD is overlaid on the game canvas; the quick inventory stays beneath it. */
+#shell{position:relative}
+main>footer{position:absolute;z-index:5;top:10px;left:10px;right:auto;width:max-content;max-width:calc(100% - 24px);min-height:0!important;display:flex;flex-wrap:wrap!important;justify-content:flex-start;gap:7px!important;padding:7px 10px!important;background:rgba(10,19,35,.88);border:1px solid #526987;border-radius:5px;pointer-events:none}
+main>footer .stat{font-size:11px}
+main>footer .meter{width:90px}
+main>.statusStrip{position:absolute;z-index:5;top:10px;right:10px;left:auto;width:max-content;max-width:min(42%,340px);min-height:0;padding:7px 10px;background:rgba(10,19,35,.9);border:1px solid #526987;border-radius:5px;display:flex;flex-direction:column;align-items:flex-end;gap:4px;text-align:right;pointer-events:none;font-size:10px}
+main>.statusStrip span{max-width:100%;overflow-wrap:anywhere}
+#shell>.inventory{margin:7px 0 0!important;justify-content:flex-start;max-width:min(800px,100%);width:max-content;min-height:0}
+#shell>.inventory .inventorySlots{justify-content:flex-start}
+@media(max-width:760px){main>footer{top:5px;left:5px;padding:4px 6px!important;gap:4px!important;max-width:55%}main>footer .stat{font-size:9px}main>footer .meter{width:46px}main>.statusStrip{top:5px;right:5px;padding:4px 6px;max-width:40%;font-size:9px}#shell>.inventory{margin:5px 0 0!important;max-width:100%;overflow-x:auto}}
