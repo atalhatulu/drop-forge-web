@@ -29,7 +29,7 @@ test('normal chests offer unique gear without reading legacy mod inventories',()
 });
 test('elite and chip chests exclude collected or equipped chips',()=>{
  const choices=choose({type:'elite',chipBag:['gravity'],chips:{helmet:'kinetic'}});
- assert.deepEqual(choices.map(item=>item.id),['blood']);
+ assert.deepEqual(Array.from(choices,item=>item.id),['blood']);
  assert.equal(choices[0].type,'chip');
  const exhausted=choose({type:'elite',chipBag:['gravity','kinetic','blood']});
  assert.ok(exhausted.every(item=>item.type==='gear'));
