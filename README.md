@@ -156,3 +156,7 @@ Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve *
 ## Sandık ganimet çeşitliliği
 
 Özel sandıklar artık yalnızca eklenti değil, eksik ihtiyaca göre sağlık kiti, bomba veya mühimmat da verebilir. Uygun yeni eklenti kalmadığında ya da eklenti çantası dolduğunda kullanılamayacak kopya yerine ek altın ve iki kuşanılmış silaha ustalık XP'si verilir. Hazine sandığı sahip olunan aksesuarı tekrar seçmez; tüm aksesuarlar mevcutsa ilave altın verir. Temel +45 altın ödülü korunur.
+
+## Yakın dövüş animasyonu
+
+Üç vuruşlu bıçak kombosu artık vuruş boyunca ilerleyen kavis, hareket eden bıçak ve isabet anında parlayan uç efektiyle çizilir. İkinci vuruş ters yönde savrulur; üçüncü vuruşun daha geniş ve uzun animasyonu bitirici darbeyi belirginleştirir. Hasar, menzil ve kombo zamanlaması değişmez.

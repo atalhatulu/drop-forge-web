@@ -684,3 +684,14 @@ test('chests offer varied useful fallback when mods or accessories are exhausted
  assert.match(game,/p\.gold\+=bonus;for\(const slot of p\.slots\)if\(slot\)grantMastery\(slot\.weapon,25\)/);
  assert.match(game,/accessory\.length\)dropPickup\(room,'artifact'/);
 });
+
+
+test('melee blade and arc animate through combo swings with hit flash', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/duration:combo===3\?\.34:\.26,combo,range,hits:0/);
+ assert.match(game,/if\(game\.slash\)game\.slash\.hits=hits/);
+ assert.match(game,/head=-spread\+ease\*spread\*2/);
+ assert.match(game,/tail=Math\.max\(-spread,head-/);
+ assert.match(game,/if\(s\.hits\)\{ctx\.globalAlpha=fade\*\.7/);
+ assert.match(game,/swing=active\?\(-\.95\+progress\*1\.9\)/);
+});
