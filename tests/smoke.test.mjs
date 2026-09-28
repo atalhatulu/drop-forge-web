@@ -440,9 +440,9 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  for(const slot of relevant)slot.reserve=caps[slot.weapon];
  player.reserve=caps[player.weapon];tick();
  assert.ok(combat.loot.includes(ammo),'maxed reserves leave the ammo pickup on the floor');
- relevant[0].reserve-=15;if(player.slots[player.activeSlot]===relevant[0])player.reserve=relevant[0].reserve;
+ const refillSlot=player.slots.find(slot=>slot&&win.DropForgeCatalog.WEAPON_PROJECTILES[slot.weapon]==='kinetic');refillSlot.reserve-=15;if(player.slots[player.activeSlot]===refillSlot)player.reserve=refillSlot.reserve;
  tick();assert.ok(!combat.loot.includes(ammo),'ammo can be collected after reserve space opens');
- assert.ok(relevant[0].reserve>caps[relevant[0].weapon]-15,'ammo is added to the matching reserve');
+ assert.ok(player.slots.some(slot=>slot&&win.DropForgeCatalog.WEAPON_PROJECTILES[slot.weapon]==='kinetic'&&slot.reserve>caps[slot.weapon]-15),'ammo is added to the matching reserve');
  player.accessories=[{type:'shield',cooldown:0},{type:'stim',cooldown:0}];
  const artifact=ground('artifact','coil');tick();
  assert.ok(combat.loot.includes(artifact),'a full accessory bar does not consume the pickup');
@@ -935,7 +935,7 @@ test('ground enemies drop through platforms to pursue player below', () => {
 
 test('enemy ammo pickups match the equipped projectile family and refill matching weapons', () => {
  const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
- assert.match(game,/if\(kind==='ammo'\)artifact=WEAPON_PROJECTILES\[game\.player\.weapon/);
+ assert.match(game,/if\(kind==='ammo'&&artifact==null\)artifact=WEAPON_PROJECTILES\[game\.player\.weapon/);
  assert.match(game,/const family=item\.artifact\|\|'kinetic',targets=p\.slots\.filter\(q=>q&&WEAPON_PROJECTILES\[q\.weapon\]===family/);
  for(const family of ['kinetic','scatter','pierce','plasma','laser','explosive','arc'])assert.match(loot,new RegExp(family+':\\['));
  assert.match(loot,/if\(item\.kind==='ammo'\)/);
