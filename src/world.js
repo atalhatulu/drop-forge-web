@@ -8,10 +8,33 @@ function createMapGenerator({W,FLOOR,buildTerrain,buildBiome}){
 function makeMap(seed){const rand=rng(seed);const rooms=[],byPos=new Map();const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
 function add(x,y,type){let room={id:rooms.length,x,y,type,links:{},discovered:false,visited:false,cleared:type==='start',enemies:[],projectiles:[],portals:[],particles:[],chest:null,loot:[],rocks:[],props:[],platforms:[],breakables:[],cave:null,time:0,arenaStarted:false};rooms.push(room);byPos.set(x+','+y,room);return room;}
 function connect(a,b){const dx=b.x-a.x,dy=b.y-a.y;let d=dx===1?'right':dx===-1?'left':dy===1?'down':'up',reverse={right:'left',left:'right',up:'down',down:'up'}[d];a.links[d]=b.id;b.links[reverse]=a.id;}
-// One downward spine, four five-room regions; branches are dead ends and cannot bypass bosses.
+// Twenty central rooms preserve boss progression; lateral routes extend at most three rooms.
 const spine=[add(0,0,'start')];spine[0].spine=true;
 for(let depth=1;depth<=20;depth++){const boss=depth%5===0,type=boss?'boss':depth%5===3?'elite':'combat',room=add(0,depth,type);room.spine=true;room.bossStage=boss?depth/5:0;connect(spine[spine.length-1],room);spine.push(room);}
-for(let depth=1;depth<=19;depth++){if(depth%5===0)continue;const anchor=spine[depth],side=rand()<.5?-1:1,count=rand()<.68?2:1;for(let branch=0;branch<count;branch++){const dir=branch===0?side:-side,length=1+(rand()<.55?1:0)+(rand()<.15?1:0);let parent=anchor;for(let distance=1;distance<=length;distance++){const x=dir*distance,y=depth;if(byPos.has(x+','+y))break;const leaf=distance===length,room=add(x,y,leaf?'treasure':rand()<.16?'elite':'combat');room.branch=true;room.branchEnd=leaf;room.branchRoot=depth;connect(parent,room);parent=room;}}}
+// Alternate branch directions at adjacent depths to leave room for genuine side forks.
+// Three distinct first-biome terminals provide the required boss keys.
+const anchors=[1,3,4,6,8,9,11,13,14,16,18,19];
+for(const depth of anchors){
+ const anchor=spine[depth],side=(depth===1||depth===4||depth===8||depth===11||depth===14||depth===18)?1:-1;
+ const length=depth<=4?2+ri(rand,0,1):1+ri(rand,0,2);
+ let parent=anchor;
+ for(let distance=1;distance<=length;distance++){
+  const x=side*distance,y=depth,key=x+','+y;if(byPos.has(key))break;
+  const room=add(x,y,'combat');room.branch=true;room.branchRoot=depth;connect(parent,room);parent=room;
+ }
+ // A second route can peel off the side corridor, instead of every branch ending in loot.
+ if(depth<19&&rand()<.78){
+  const forkX=side*(length>=2?2:1),forkY=depth+1,from=byPos.get(forkX+','+depth);
+  if(from&&!byPos.has(forkX+','+forkY)){
+   const fork=add(forkX,forkY,'combat');fork.branch=true;fork.branchRoot=depth;connect(from,fork);
+   if(Math.abs(forkX)<3&&rand()<.62&&!byPos.has((forkX+side)+','+forkY)){
+    const tip=add(forkX+side,forkY,'combat');tip.branch=true;tip.branchRoot=depth;connect(fork,tip);
+   }
+  }
+ }
+}
+// A terminal is a navigation property, not automatically a treasure room.
+for(const room of rooms)if(room.branch){room.branchEnd=Object.keys(room.links).length===1;if(room.branchEnd&&rand()<.22)room.type='treasure';else if(rand()<.15)room.type='elite';}
 for(const room of rooms){const rr=rng((seed^Math.imul(room.id+1,0x9e3779b1))>>>0);room.rocks=[];// Room silhouettes are seeded and vary between terraces, shafts, bridges and split caverns.
 const layouts=[
  // 18 ayrı siluet: basamaklar, yüksek kuleler, köprüler, çatallı yollar ve iniş kuyuları.
