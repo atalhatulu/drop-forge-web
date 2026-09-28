@@ -645,3 +645,18 @@ test('each combat room starts with one healer without healer-to-healer loops', (
  assert.match(game,/portal\.type==='healer'&&room\.enemies\.some\(e=>e\.alive&&e\.type==='healer'\)/);
  assert.match(ai,/a\.alive&&a!==e&&a\.type!=='healer'&&a\.hp<a\.maxHp/);
 });
+
+
+test('forge supports per-weapon persistent builds and recommended loadouts', () => {
+ const game=readFileSync('src/game.js','utf8'),progress=readFileSync('src/progression.js','utf8'),html=readFileSync('index.html','utf8');
+ assert.match(progress,/dropForge\.weaponBuilds\.v1/);
+ assert.match(progress,/savedBuilds,saveBuilds/);
+ assert.match(game,/function setForgeBuild\(n,mods\)/);
+ assert.match(game,/function restoreForgeBuild\(n\)/);
+ assert.match(game,/function recommendedForgeBuild\(weapon\)/);
+ assert.match(game,/savedBuilds\[weapon\]=chosenForgeMods\(n\)/);
+ assert.match(game,/MODS\[mod\]\?\.slot===j&&MODS\[mod\]\.level<=masteryLevel\(weapon\)/);
+ assert.equal((html.match(/data-build-action="save"/g)||[]).length,2);
+ assert.equal((html.match(/data-build-action="load"/g)||[]).length,2);
+ assert.equal((html.match(/data-build-action="recommend"/g)||[]).length,2);
+});
