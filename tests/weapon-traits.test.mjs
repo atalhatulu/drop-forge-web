@@ -105,12 +105,18 @@ test('TAB displays every weapon trait, level and remaining open support slot',()
  assert.match(html,/DESTEK 2[^]*BOŞ · SANDIKTAN ÖZELLİK SEÇ/);
  assert.doesNotMatch(traits.loadoutHTML(gun()),/ELEKTRİK ZİNCİRİ · SEV/);
 });
-test('TAB shows run traits separately without hiding legacy attachment editor',()=>{
+test('TAB prioritizes run traits and shows old equipped attachments as read-only legacy items',()=>{
  const game=readFileSync('src/game.js','utf8');
  const css=readFileSync('styles/workbench.css','utf8');
- assert.match(game,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
- assert.match(game,/for\(let j=0;j<4;j\+\+\)\{const row=document\.createElement\('label'\)/);
- assert.match(css,/\.weaponTraitRow/);
+ const start=game.indexOf('function renderLoadout(){'),end=game.indexOf('function switchModFromBag(',start);
+ const tab=game.slice(start,end);
+ assert.match(tab,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
+ assert.match(tab,/SİLAHLAR & ÖZELLİKLER/);
+ assert.match(tab,/legacyWeaponMods/);
+ assert.match(tab,/legacyModArchive/);
+ assert.doesNotMatch(tab,/select\.dataset\.modSlot/);
+ assert.doesNotMatch(tab,/BOŞTA EKLENTİ YOK/);
+ assert.match(css,/\.legacyWeaponMods/);
 });
 
 test('a dropped weapon keeps an independent snapshot of all its run trait levels',()=>{
