@@ -18,14 +18,16 @@ test('trait cards are limited to three unique, currently compatible weapon offer
  assert.equal(new Set(cards.map(card=>card.weaponSlot+':'+card.id)).size,cards.length);
  assert.ok(cards.every(card=>traits.canGrant([gun(),gun(1)][card.weaponSlot],card.id,projectiles)));
 });
-test('a main transformation is applied immediately and a second one replaces it',()=>{
+test('a main transformation is applied without occupying a legacy socket and a second replaces it',()=>{
  const w=gun();
  assert.equal(traits.grant(w,'shockCore',projectiles),true);
- assert.equal(w.mods[2],'shockCore');
+ assert.equal(w.mods[2],null);
  assert.equal(w.traits.main,'shockCore');
+ assert.ok(traits.effectiveMods(w).includes('shockCore'));
  assert.equal(traits.grant(w,'burnCore',projectiles),true);
- assert.equal(w.mods[2],'burnCore');
+ assert.equal(w.mods[2],null);
  assert.equal(w.traits.main,'burnCore');
+ assert.ok(!traits.effectiveMods(w).includes('shockCore'));
  assert.equal(w.traits.levels.shockCore,undefined);
 });
 test('supports are capped at two and a duplicate increases trait level without taking a new slot',()=>{
@@ -39,11 +41,13 @@ test('supports are capped at two and a duplicate increases trait level without t
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.equal(traits.grant(w,'loader',projectiles),false);
 });
-test('a main and support cannot silently overwrite the same combat slot',()=>{
+test('main transformation and support work together even when their legacy sockets match',()=>{
  const w=gun();
  assert.equal(traits.grant(w,'overheat',projectiles),true);
- assert.equal(traits.grant(w,'loader',projectiles),false);
- assert.equal(w.mods[1],'overheat');
+ assert.equal(traits.grant(w,'loader',projectiles),true);
+ assert.equal(w.mods[1],null);
+ assert.ok(traits.effectiveMods(w).includes('overheat'));
+ assert.ok(traits.effectiveMods(w).includes('loader'));
  assert.equal(traits.grant(gun(2),'overheat',projectiles),false);
 });
 test('chest UI grants traits directly rather than routing them into the mod bag',()=>{
@@ -81,7 +85,7 @@ test('trait upgrades affect only their own weapon even when both guns share a tr
  assert.equal(second.traits.levels.loader,1);
  assert.ok(stats(first).fireRate>stats(second).fireRate);
  assert.ok(stats(first).reload<stats(second).reload);
- assert.equal(stats(second).reload,stats({...second,traits:{main:null,supports:[],levels:{loader:1}}}).reload);
+ assert.equal(stats(second).reload,.85*.78);
 });
 test('chest trait claims do not increase the legacy global mod level',()=>{
  const game=readFileSync('src/game.js','utf8');
