@@ -514,6 +514,16 @@ function openChestUpgradeModal(choices){
         '<p class="chestCardDesc">'+bonus+'<br><small style="color:#9ad7b6">'+spec.bonus+'</small></p>'+
         '<button type="button" class="chestCardBtn">KUŞAN / DOLABA EKLE</button>'+
         '</div>';
+    } else if(item.type === 'trait'){
+      const trait=window.DropForgeWeaponTraits.TRAITS[item.id],slot=game.player.slots[item.weaponSlot];
+      const status=item.upgrade?'SEVİYE '+item.level:item.replace?'MEVCUT ANA ÖZELLİĞİN YERİNE':'YENİ ÖZELLİK';
+      return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
+        '<span class="chestCardSlotTag">'+(trait.kind==='main'?'ANA DÖNÜŞÜM':'DESTEK')+' · '+status+'</span>'+
+        '<div class="chestCardIconWrap"><span class="chestCardIcon">'+(MOD_ICONS[item.id]||'✦')+'</span></div>'+
+        '<strong class="chestCardName">'+trait.name+'</strong>'+
+        '<p class="chestCardDesc"><b>'+(item.weaponSlot+1)+'. SİLAH · '+weaponName(slot.weapon)+'</b><br>'+trait.description+'</p>'+
+        '<button type="button" class="chestCardBtn">SİLAHA HEMEN UYGULA</button>'+ 
+        '</div>';
     } else {
       const id = item.id;
       const mod = modCatalog[id] || MODS[id];
@@ -576,6 +586,17 @@ $('chestUpgradeChoices').addEventListener("click", e => {
       announce("CHIP ÇANTASI DOLU", 2);
       return;
     }
+  } else if(item.type === 'trait'){
+    const w=game.player.slots[item.weaponSlot],trait=window.DropForgeWeaponTraits.TRAITS[item.id];
+    if(!w||!window.DropForgeWeaponTraits.grant(w,item.id,WEAPON_PROJECTILES)){
+      announce('ÖZELLİK ARTIK UYGUN DEĞİL',2);return;
+    }
+    game.modLevels[item.id]=Math.max(game.modLevels[item.id]||1,w.traits.levels[item.id]);
+    const cap=weaponStats(w).mag;
+    if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}
+    if(game.player.activeSlot===item.weaponSlot){game.player.ammo=w.ammo;game.player.reserve=w.reserve;}
+    announce(trait.name+' · '+weaponName(w.weapon)+' · SEVİYE '+w.traits.levels[item.id],2.5);
+    burst(currentRoom(),game.player.x+game.player.w/2,game.player.y+game.player.h/2,'#8be9f9',24,180);
   } else {
     const pick = item.id;
     const modCatalog = ALL_MODS || MODS;
@@ -609,6 +630,10 @@ function interact(){
  if(game.inHub){if(near?.nearHubGate){enterExpedition();return;}if(near?.nearForge){openHubForge();return;}if(near?.nearMerchant){openShop();return;}}if(near?.nearMerchant){openShop();return;}if(near?.nearSecret){const secret=room.secret;secret.opened=true;earnLegacy(1);burst(room,secret.x,FLOOR-62,'#ffe59a',22,145);if(secret.kind==='gold'){dropPickup(room,'gold',secret.x-35,FLOOR-115,true,100+room.stage*35);dropPickup(room,'gold',secret.x+35,FLOOR-115,true,100+room.stage*35);announce('GİZLİ BÖLME · ALTIN ZULASI');}else if(secret.kind==='module'){const ids=availableModules(),id=ids[hash2(room.x,room.y,game.seed+728)%ids.length];p.activeModule=id;p.moduleCooldown=0;announce('İLK MODÜL · '+ACTIVE_MODULES[id].name+' · SAĞ TIK',3);burst(room,secret.x,FLOOR-100,'#a8f5df',28,160);}else if(secret.kind==='rune'){const ids=Object.keys(WEAPON_RUNES),id=weightedLoot('runes',ids,hash2(room.x,room.y,game.seed+1907));rememberLoot('runes',id);game.pendingRune={id};announce('SİLAH RUNU · '+WEAPON_RUNES[id].name+' · TAB MENÜSÜNDE SİLAH SEÇ',3);burst(room,secret.x,FLOOR-100,'#d5b6ff',26,160);}else if(secret.kind==='wheel'){room.wheel={x:secret.x,y:FLOOR-20,used:false,spinTime:0};announce('GİZLİ BÖLME · ŞANS ÇARKI BULUNDU');}else{dropChest(room);announce('GİZLİ BÖLME · SANDIK BULUNDU');}sound(790,.16,'triangle');return;}if(near?.nearWheel){spinWheel(room);return;}if(near?.nearChest){room.chest.opened=true;p.gold+=45;
    const rand=rng((game.seed^room.id*70001)>>>0);
    const choices=selectChestChoices({room,player:p,stashedMods:game.stashedMods,modCatalog:ALL_MODS||MODS,chipCatalog:GEAR.CHIPS,masteryLevel,modSlotUnlocked,seed:game.seed,hash:hash2,randomGear:GEAR.randomGear,random:rand});
+   if(room.type!=='elite'&&room.reward!=='chip'){
+     const traitChoices=window.DropForgeWeaponTraits.choices({slots:p.slots,projectiles:WEAPON_PROJECTILES,seed:game.seed+room.id,hash:hash2});
+     if(traitChoices.length)choices.splice(0,choices.length,...traitChoices);
+   }
    if(choices.length){
      game.currentChestUpgradeChoices=choices;
      openChestUpgradeModal(choices);
