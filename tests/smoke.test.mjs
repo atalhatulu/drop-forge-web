@@ -615,10 +615,10 @@ test('enemy health scales by 75%, 75%, then 25% and level four adds shields', ()
 });
 
 
-test('portal shield triggers once at half health and overdrive speeds spawning after pause', () => {
+test('portal shields trigger at health thresholds and overdrive speeds spawning after pause', () => {
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/shield:0,shieldTriggered:false,overdrive:false/);
- assert.match(game,/q\.hp>0&&q\.hp<=q\.maxHp\*\.5&&!q\.shieldTriggered/);
+ assert.match(game,/shield:0,shieldCharges:room\.level>=3\?2:1,shieldTriggered:false,overdrive:false/);
+ assert.match(game,/q\.hp>0&&q\.shieldCharges>0&&q\.hp<=q\.maxHp\*/);
  assert.match(game,/q\.shield=2\.7;q\.overdrive=true;q\.time=Math\.max\(q\.time,q\.shield\)/);
  assert.match(game,/if\(portal\.shield>0\)continue;portal\.time=Math\.max\(0,portal\.time-dt\)/);
  assert.match(game,/portal\.spawnDuration=game\.settings\.spawnDelay\*\(portal\.overdrive\?\.6:1\)/);
@@ -859,4 +859,14 @@ test('gear can drop from enemies chests and wheel and be equipped in loadout', (
  assert.match(game,/function grantGear\(room,x,y\)/);assert.match(game,/if\(e\.type==='boss'\|\|Math\.random\(\)<\.07\)grantGear/);
  assert.match(game,/if\(room\.type==='treasure'&&rand\(\)<\.65\)grantGear/);assert.match(game,/ÇARK ÖDÜLÜ · GİYSİ PARÇASI/);
  assert.match(game,/data-gear/);assert.match(loot,/item\.kind==='gear'/);
+});
+
+
+test('portal health scales by level and level three has two defensive shields', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/hp:\[320,490,720,960\]/);
+ assert.match(game,/shieldCharges:room\.level>=3\?2:1/);
+ assert.match(game,/q\.shieldCharges>0&&q\.hp<=q\.maxHp\*/);
+ assert.match(game,/q\.shieldCharges--/);
+ assert.match(game,/q\.shield=2\.7/);
 });

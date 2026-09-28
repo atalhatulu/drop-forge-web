@@ -216,3 +216,7 @@ Bazı yan kollar, anahtar odalarını değiştirmeden **Altın Kasası** olur: s
 ## Giysi setleri ve karakter build'leri
 
 Kask, zırh, eldiven, kemer ve bot için dört seferlik set bulunur: **Kale** (parça başına +20 maksimum can; tam sette +80), **Rüzgâr** (parça başına %5,5 hız; tam sette +%15), **Cephanelik** (parça başına %5,5 mühimmat tasarrufu; tam sette +%20), **Kanbağı** (parça başına öldürmede +3 can; tam sette +12). Giysiler düşmanlardan, bosslardan, hazine sandıklarından ve çarktan düşebilir. TAB çantasında en fazla 20 yedek giysi tutulur; aynı yuvadaki eski parça çantaya geri döner. Giysiler seferliktir, silah ustalığı kalıcı kalır.
+
+## Portal dayanıklılığı
+
+Portalların maksimum canı LV1–4 için sırasıyla 320, 490, 720 ve 960'tır. LV1–2 portalları %50 can eşiğinde bir kez; LV3–4 portalları %70 ve %50 eşiklerinde iki kez 2,7 saniyelik kalkan açar. Kalkan sırasında düşman üretimi durur; sonrasında hızlanır.
