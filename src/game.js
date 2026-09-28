@@ -477,6 +477,14 @@ function resolveWheel(room){const w=room.wheel;if(!w||w.used)return;w.used=true;
 const {drawGenerator,drawTrainingHub,drawMerchant,drawWheel}=window.DropForgeSceneProps.createScenePropsRenderer({ctx,getGame:()=>game});
 
 let chestUpgradeOpen = false;
+function chestModDetailsHTML(id,mod){
+  const eligible=game.player.slots.map((slot,index)=>({slot,index})).filter(({slot})=>slot&&masteryLevel(slot.weapon)>=mod.level&&modSlotUnlocked(mod.slot,slot.weapon));
+  if(!eligible.length)return '<small>MEVCUT SİLAHLARDA UYGUN YUVA YOK · ÇANTAYA AL</small>';
+  return eligible.map(({slot,index})=>{
+    const occupied=slot.mods[mod.slot],ready=!occupied;
+    return '<div class="chestModWeapon"><b>'+(index+1)+'. SİLAH · '+weaponName(slot.weapon)+'</b><small>'+(ready?'BOŞ YUVA · TAB MENÜSÜNDEN TAK':'YUVADA '+modNameForWeapon(slot.weapon,occupied)+' VAR · TAB MENÜSÜNDEN DEĞİŞTİR')+'</small><p>'+modEffectForWeapon(slot.weapon,id)+'</p>'+(ready?'<div class="modChoiceDeltas">'+modDiffHTML(slot.weapon,slot.mods,id,mod.slot)+'</div>':'')+'<small>'+modTradeoff(slot.weapon,id)+'</small></div>';
+  }).join('');
+}
 function openChestUpgradeModal(choices){
   if(!game || chestUpgradeOpen || paused) return;
   chestUpgradeOpen = true;
@@ -511,13 +519,12 @@ function openChestUpgradeModal(choices){
       const mod = modCatalog[id] || MODS[id];
       const icon = window.DropForgeModPresentation.MOD_ICONS[id] || "✦";
       const slotName = FORGE_SLOT_LABELS[mod?.slot] || "EKLENTİ";
-      const desc = mod?.description || "";
       return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
         '<span class="chestCardSlotTag">⚔ '+slotName+'</span>'+
         '<div class="chestCardIconWrap"><span class="chestCardIcon">'+icon+'</span></div>'+
         '<strong class="chestCardName">'+(mod?.name||id)+'</strong>'+
-        '<p class="chestCardDesc">'+desc+'</p>'+
-        '<button type="button" class="chestCardBtn">SEÇ & TAK</button>'+
+        '<div class="chestCardDesc">'+chestModDetailsHTML(id,mod)+'</div>'+
+        '<button type="button" class="chestCardBtn">ÇANTAYA AL · TAB İLE TAK</button>'+
         '</div>';
     }
   }).join("");
@@ -575,7 +582,7 @@ $('chestUpgradeChoices').addEventListener("click", e => {
     if(game.stashedMods.length < 12&&!game.stashedMods.includes(pick)&&!game.player.slots.some(slot=>slot?.mods?.includes(pick))){
       game.stashedMods.push(pick);
       game.modLevels[pick] ??= 1;
-      announce("EKLENTİ KUŞANILDI · "+(modCatalog[pick]?.name || pick), 2.5);
+      announce("EKLENTİ ÇANTAYA ALINDI · TAB İLE TAK · "+(modCatalog[pick]?.name || pick), 2.5);
       burst(currentRoom(), game.player.x+game.player.w/2, game.player.y+game.player.h/2, "#ffdf89", 24, 180);
       sound(880, .2, "triangle");
     } else {
