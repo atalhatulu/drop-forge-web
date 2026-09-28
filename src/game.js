@@ -267,7 +267,7 @@ function melee(){
 }
 
 // Single weapon stat model shared by shot simulation, reload and both build screens.
-const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getModLevel:id=>game?.modLevels?.[id]||1});
+const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getModLevel:(id,slot)=>slot?.traits?.levels?.[id]??game?.modLevels?.[id]??1});
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
  const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y);if(status&&status.textContent!==message)status.textContent=message;
@@ -591,7 +591,6 @@ $('chestUpgradeChoices').addEventListener("click", e => {
     if(!w||!window.DropForgeWeaponTraits.grant(w,item.id,WEAPON_PROJECTILES)){
       announce('ÖZELLİK ARTIK UYGUN DEĞİL',2);return;
     }
-    game.modLevels[item.id]=Math.max(game.modLevels[item.id]||1,w.traits.levels[item.id]);
     const cap=weaponStats(w).mag;
     if(w.ammo>cap){w.reserve=Math.min(AMMO_MAX[w.weapon],w.reserve+w.ammo-cap);w.ammo=cap;}
     if(game.player.activeSlot===item.weaponSlot){game.player.ammo=w.ammo;game.player.reserve=w.reserve;}
