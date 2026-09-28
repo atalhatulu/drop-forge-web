@@ -56,11 +56,12 @@ test('attachment stats reflect actual game modifiers', () => {
   assert.equal(upgraded.spread,.7);
 });
 
-test('starter loadout exposes four attachment slots for both weapons', () => {
-  const source=readFileSync('src/game.js','utf8');
-  assert.match(source,/function ensureForgeModSlots\(\)/);
-  assert.match(source,/function forgeMods\(n\)/);
-  assert.match(source,/mods:chosenForgeMods\(i\+1\)/);
+test('starter forge equips two guns without legacy attachment presets', () => {
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/function refreshForge\(\)/);
+ assert.match(source,/mods:\[\],traits:null,rune:null/);
+ assert.match(source,/traits:window\.DropForgeWeaponTraits\.snapshot\(previous\)/);
+ assert.doesNotMatch(source.slice(source.indexOf('function applyHubForge(){'),source.indexOf('function enterExpedition(){')),/mods:chosenForgeMods/);
 });
 
 test('empty weapon warning is throttled while mouse is held', () => {
@@ -253,7 +254,7 @@ test('shot simulation, reload, and live panels reuse the same weaponStats functi
  assert.match(source,/p\.reloadDuration=st\.reload/);
  assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
  assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
- assert.match(source,/weaponStatHTML\(\{weapon:id,mods\}\)/);
+ assert.match(source,/weaponStatHTML\(slot\)/);
  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TAM İSABET'/);
  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('TEORİK DPS'/);
  assert.match(readFileSync('src/loadout-presentation.js','utf8'),/statRow\('ŞARJÖR',st\.baseMag,st\.mag\)/);
@@ -341,14 +342,13 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  api.mastery[player.weapon]=1440;player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearForge,true,'forge becomes interactive when approached');
  api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
- const firstSocket=workbenchNodes.get('.forgeAttachSlot')[0];firstSocket.onclick();
- assert.equal(nodes.get('forgeEditor1').classList!==undefined,true);
- assert.match(nodes.get('forgeEditorChoices1').innerHTML,/data-mod-choice="barrel"/,'three mod cards appear in the chosen socket');
- assert.match(nodes.get('forgeEditorChoices1').innerHTML,/HASAR/,'the choice card shows the real before/after stat');
- nodes.get('forgeEditorChoices1').onclick({target:{closest(){return {dataset:{modChoice:'barrel',modGun:'1'}}}}});
- assert.equal(api.chosenForgeMods(1)[0],'barrel','clicking a mod card equips its category mod');
+ assert.match(nodes.get('forgePreview').innerHTML,/SİLAH ÖZELLİKLERİ/,'forge preview shows run traits');
+ nodes.get('forgeGun2').onchange();
+ assert.match(nodes.get('forgePreview').innerHTML,/VIZIR-30/,'focus previews the second starter gun');
+ nodes.get('forgeGun1').onchange();
+ assert.match(nodes.get('forgePreview').innerHTML,/KIVILCIM-15/,'focus returns to the first starter gun');
  nodes.get('startBtn').onclick();assert.equal(api.hubForgeOpen,false,'save button returns to testing');
- assert.equal(player.slots[0].mods[0],'barrel','hub saves the selected attachment into the real weapon');
+ assert.ok(player.slots.every(slot=>slot.mods.length===0),'new starter guns have no legacy attachment presets');
  assert.equal(game.inHub,true);
  player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
