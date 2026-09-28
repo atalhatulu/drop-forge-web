@@ -25,6 +25,6 @@ test('room milestones no longer advertise cosmetic unlocks',()=>{
  assert.doesNotMatch(source,/unlockModSlot\(/);
  assert.doesNotMatch(source,/modUnlocks:/);
  assert.doesNotMatch(source,/SEFERDE AÇILIR/);
- assert.match(source,/USTALIK '\+\[2,4,6,8\]\[j\]\+' GEREKLİ/);
+ assert.match(source,/Silah özellikleri seferde sandık, çark ve oda ödüllerinden kazanılır/);
  assert.match(source,/if\(game\.inHub\)refreshForge\(\);else if\(game\.player\.slots\.some/);
 });
