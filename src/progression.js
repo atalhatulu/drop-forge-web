@@ -29,14 +29,15 @@
  const LOOT_LOCKER_KEY='dropForge.lootLocker.v1';
  const lootLocker={chips:[],runes:[]};
  try{const saved=JSON.parse(localStorage.getItem(LOOT_LOCKER_KEY)||'{}');for(const kind of ['chips','runes'])if(Array.isArray(saved?.[kind]))lootLocker[kind]=saved[kind].filter(id=>typeof id==='string').slice(0,100);}catch(e){}
- function rememberLoot(kind,id){if(!['chips','runes'].includes(kind)||typeof id!=='string'||lootLocker[kind].includes(id))return false;lootLocker[kind].push(id);localStorage.setItem(LOOT_LOCKER_KEY,JSON.stringify(lootLocker));return true;}
+ function rememberLoot(kind,id){if(!['chips','runes'].includes(kind)||typeof id!=='string'||lootLocker[kind].includes(id))return false;lootLocker[kind].push(id);try{localStorage.setItem(LOOT_LOCKER_KEY,JSON.stringify(lootLocker));}catch(e){}return true;}
  function weightedLoot(kind,ids,seed){const pool=ids.flatMap(id=>lootLocker[kind]?.includes(id)?[id,id,id]:[id]);return pool[Math.abs(seed)%pool.length];}
  const MATRIX_KEY='dropForge.matrixUnlocks.v1';
  const matrixCosts=Object.freeze({weapon:50,module:30,hard:80,chip:20});
  const matrixUnlocks={weapon:0,module:false,hard:false,chip:false};
  try{const saved=JSON.parse(localStorage.getItem(MATRIX_KEY)||'{}');if(saved&&typeof saved==='object'){matrixUnlocks.weapon=Math.max(0,Math.min(count-2,Math.floor(Number(saved.weapon)||0)));for(const id of ['module','hard','chip'])matrixUnlocks[id]=saved[id]===true;}}catch(e){}
- function saveMatrix(){localStorage.setItem(MATRIX_KEY,JSON.stringify(matrixUnlocks));}
- function purchaseMatrix(id){if(!(id in matrixCosts)||legacy.marks<matrixCosts[id]||(id!=='weapon'&&matrixUnlocks[id])||(id==='weapon'&&matrixUnlocks.weapon>=count-2))return false;legacy.marks-=matrixCosts[id];if(id==='weapon')matrixUnlocks.weapon++;else matrixUnlocks[id]=true;saveLegacy();saveMatrix();return true;}
+ function saveMatrix(){try{localStorage.setItem(MATRIX_KEY,JSON.stringify(matrixUnlocks));}catch(e){}}
+ function removeStored(key){try{localStorage.removeItem(key);}catch(e){}}
+ function purchaseMatrix(id){if(!Object.prototype.hasOwnProperty.call(matrixCosts,id)||legacy.marks<matrixCosts[id]||(id!=='weapon'&&matrixUnlocks[id])||(id==='weapon'&&matrixUnlocks.weapon>=count-2))return false;legacy.marks-=matrixCosts[id];if(id==='weapon')matrixUnlocks.weapon++;else matrixUnlocks[id]=true;saveLegacy();saveMatrix();return true;}
  const ALL_PROGRESS_KEYS=[
   LEGACY_KEY,
   MASTERY_KEY,
@@ -51,7 +52,7 @@
   'dropForge.bossBlueprints.v1'
  ];
  function resetAllProgress(){
-  try{for(const k of ALL_PROGRESS_KEYS)localStorage.removeItem(k);}catch(e){}
+  for(const k of ALL_PROGRESS_KEYS)removeStored(k);
   for(const k of Object.keys(legacy))legacy[k]=0;
   for(const k of Object.keys(mastery))delete mastery[k];
   for(let i=0;i<count;i++)mastery[i]=0;
