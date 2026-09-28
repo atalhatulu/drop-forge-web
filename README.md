@@ -120,3 +120,7 @@ Mavi uçan düşmanlar oyuncuyu daha hızlı takip eder (azami yatay hız 245), 
 ## Büyücülerin patlayan mermileri
 
 Mor büyücülerin mermileri oyuncuya, jeneratöre veya arena sınırına çarptığında ya da süreleri dolduğunda patlar. Patlama, merminin etrafında 76 birimlik alan hasarı uygular; görsel patlama halkası kısa süre görünür. Oyuncunun dash sırasında patlama hasarından kaçınması mümkündür. Diğer düşman mermilerinin davranışı değişmez.
+
+## Ganimet çeşitliliği
+
+Oda tamamlandığında temel rota ödülüne ek olarak seed'e bağlı bomba, altın veya yan dal sonlarında aksesuar ödülü çıkabilir. Normal düşmanlar türlerine göre farklı ihtimallerle bomba düşürebilir. Boss'lar aksesuar ve bomba bırakır; hazine sandıkları garanti aksesuar, ayrıca bomba ve sağlık kiti ihtimali taşır. Elit ve av odaları ilave altın verir. Oda temizleme sonundaki temel sağlık/mühimmat ödülü artık garanti olarak yere düşer; mevcut toplama ve çanta sınırları korunur.
