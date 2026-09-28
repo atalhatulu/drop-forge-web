@@ -6,7 +6,7 @@ const mapCanvas=document.getElementById('mapCanvas'),mctx=mapCanvas.getContext('
 const W=1120,H=630,FLOOR=548,GRAVITY=1450,AMMO_MAX=[240,420,140,360,100,120,400,170,110,360,180,48,220],MAG_SIZE=[15,30,6,30,5,7,30,8,5,25,24,4,18];
 // Seven projectile families are shared by the 13 weapons; each weapon selects one family.
 const {PROJECTILE_FAMILIES,MODS,ALL_MODS,MOD_SLOT_NAMES,WEAPON_PROJECTILES,WEAPON_TYPES,WEAPON_FIRE_RATES,WEAPON_DAMAGE}=window.DropForgeCatalog;
-const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,matrixCosts,matrixUnlocks,purchaseMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
+const {legacy,mastery,unlockedWeapons,saveLegacy,saveMastery,saveUnlockedWeapons,savedBuilds,saveBuilds,talents,saveTalents,masteryStyles,saveMasteryStyles,matrixCosts,matrixUnlocks,purchaseMatrix,lootLocker,rememberLoot,weightedLoot,resetAllProgress,exportSaveData,importSaveData}=window.DropForgeProgression;
 const GEAR=window.DropForgeGear;
 const {shotProfile,bounceBullet,resolveAttachmentHit,burstPlan,overchargeInterval}=window.DropForgeAttachmentEffects;
 const {selectChestChoices}=window.DropForgeChestRewards;
@@ -71,6 +71,33 @@ function earnLegacy(amount){if(game?.inHub||amount<=0)return;const earned=Math.m
 function masteryLevel(weapon){return Math.min(10,1+Math.floor(Math.sqrt((mastery[weapon]||0)/90)));}
 function masteryNeeded(weapon){const lv=masteryLevel(weapon);return lv>=10?0:90*lv*lv;}
 function grantMastery(weapon,amount,permanentShop=false){if(!game||(game.inHub&&!permanentShop)||weapon===null||weapon===undefined||weapon<0||amount<=0)return;const old=masteryLevel(weapon),learning=!permanentShop&&old<=3?1.5:1;mastery[weapon]=Math.min(999999,(mastery[weapon]||0)+Math.round(amount*learning));const level=masteryLevel(weapon);if(level>old){announce(weaponName(weapon)+' · USTALIK SEVİYESİ '+level,2.6);levelUpToast(weapon,level);burst(currentRoom(),game.player.x,game.player.y,'#f4e197',25,190);if(game.inHub)refreshForge();}saveMastery();updateHud();}
+const MASTERY_STYLES=window.DropForgeWeaponStats.MASTERY_STYLES;
+function masteryStyleHTML(id){
+ const level=masteryLevel(id),selected=level>=4?masteryStyles[id]:null,spec=MASTERY_STYLES[id]?.[selected];
+ return '<div class="masteryStyleBadge"><b>BAŞLANGIÇ TARZI · '+(spec?spec.name:level<4?'USTALIK 4 GEREKLİ':'STANDART')+'</b><small>'+(spec?spec.description:'Sefer başlangıcındaki silah tarzını hazırlık atölyesinde seç. Run özellik yuvalarını kullanmaz.')+'</small></div>';
+}
+function refreshForgeStyle(n){
+ const id=Number($('forgeGun'+n).value),selector=$('forgeStyle'+n),level=masteryLevel(id);
+ if(!selector||!Number.isInteger(id)||!MASTERY_STYLES[id])return;
+ const options=MASTERY_STYLES[id];
+ selector.disabled=level<4;
+ selector.innerHTML='<option value="">'+(level<4?'USTALIK 4 · KİLİTLİ':'STANDART TARZ')+'</option>'+[['focused',options.focused],['rapid',options.rapid]].map(([key,spec])=>'<option value="'+key+'">'+spec.name+' · '+spec.description+'</option>').join('');
+ selector.value=level>=4&&['focused','rapid'].includes(masteryStyles[id])?masteryStyles[id]:'';
+}
+function chooseForgeStyle(n,choice){
+ if(!game?.inHub||!hubForgeOpen)return false;
+ const id=Number($('forgeGun'+n).value);
+ if(!Number.isInteger(id)||!unlockedWeapons.has(id)||masteryLevel(id)<4||!['','focused','rapid'].includes(choice))return false;
+ if(choice)masteryStyles[id]=choice;else delete masteryStyles[id];
+ saveMasteryStyles();
+ for(const slot of game.player.slots)if(slot?.weapon===id){
+  const cap=weaponStats(slot).mag;
+  if(slot.ammo>cap){slot.reserve=Math.min(AMMO_MAX[id],slot.reserve+slot.ammo-cap);slot.ammo=cap;}
+  if(slot===game.player.slots[game.player.activeSlot]){game.player.ammo=slot.ammo;game.player.reserve=slot.reserve;}
+ }
+ syncForgeWorkbench();renderForgePreview();updateHud();
+ return true;
+}
 let forgeFocusGun=1;
 // Legacy attachments on previously acquired guns still use the original combat effects.
 const {MOD_ICONS,modNameForWeapon}=window.DropForgeModPresentation;
@@ -91,6 +118,7 @@ function refreshForge(){
   const gun=$('forgeGun'+n),prev=gun.value||String(n-1);
   gun.innerHTML=WEAPON_NAMES.map((name,i)=>unlockedWeapons.has(i)?'<option value="'+i+'">'+WEAPON_TYPES[i]+' · '+name+' · UST '+masteryLevel(i)+'</option>':'<option value="locked-'+i+'" disabled>??? · KİLİTLİ SİLAH</option>').join('');
   gun.value=unlockedWeapons.has(Number(prev))?prev:String(n-1);
+  refreshForgeStyle(n);
  }
  syncForgeWorkbench();renderForgePreview();
 }
@@ -225,7 +253,7 @@ function melee(){
 }
 
 // Single weapon stat model shared by shot simulation, reload and both build screens.
-const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getModLevel:(id,slot)=>slot?.traits?.levels?.[id]??game?.modLevels?.[id]??1});
+const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getMasteryStyle:id=>masteryStyles[id],getModLevel:(id,slot)=>slot?.traits?.levels?.[id]??game?.modLevels?.[id]??1});
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
  const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y);if(status&&status.textContent!==message)status.textContent=message;
@@ -382,7 +410,7 @@ function makeForgeSprite(i){
 }
 for(let i=0;i<FORGE_GUNS.length;i++)WEAPON_SPRITES[i]=makeForgeSprite(i);
 const WEAPON_NAMES=FORGE_GUNS.map(q=>q[0]);
-for(let n=1;n<=2;n++)$('forgeGun'+n).onchange=()=>{forgeFocusGun=n;syncForgeWorkbench();renderForgePreview();};
+for(let n=1;n<=2;n++){$('forgeGun'+n).onchange=()=>{forgeFocusGun=n;refreshForgeStyle(n);syncForgeWorkbench();renderForgePreview();};$('forgeStyle'+n).onchange=e=>{if(!chooseForgeStyle(n,e.target.value))refreshForgeStyle(n);};}
 document.querySelectorAll('[data-focus-gun]').forEach(node=>node.onclick=()=>{forgeFocusGun=Number(node.dataset.focusGun);syncForgeWorkbench();renderForgePreview();});
 const {statRow,weaponStatHTML,enemyCodexHTML}=window.DropForgeLoadoutPresentation.createLoadoutPresentation({weaponStats,BIOMES,VARIANTS});
 refreshForge();
@@ -419,7 +447,7 @@ function renderForgePreview(){
  const n=forgeFocusGun,id=Number($('forgeGun'+n).value)||0,previous=game?.player?.slots?.find(slot=>slot?.weapon===id);
  const slot=previous||{weapon:id,mods:[],traits:null},st=weaponStats(slot),sprite=WEAPON_SPRITES[id].toDataURL('image/png');
  const legacy=(slot.mods||[]).filter(Boolean).map(mod=>'<span class="forgeChip">'+modNameForWeapon(id,mod)+'</span>').join('');
- el.innerHTML='<div class="forgePreviewVisual"><span class="forgeBadge">SİLAH '+n+' · '+weaponType(id)+'</span><img alt="'+weaponName(id)+' görseli" src="'+sprite+'"><span class="forgeBadge">'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[id]].name+' · UST '+masteryLevel(id)+'</span></div><div class="forgePreviewInfo"><b>'+weaponName(id)+'</b><small>Başlangıç silahını seç. Silahın ana dönüşümü ve iki desteği seferde açılır.</small><div class="weaponAbilityBadge"><b>SAĞ TIK · AKTİF MODÜL</b><small>İlk aktif modül birinci bölgedeki gizli bölmeden bulunur; silah değişimi sağ tık yeteneğini değiştirmez.</small></div>'+xpBarHTML(id)+window.DropForgeWeaponTraits.loadoutHTML(slot)+(legacy?'<div class="forgeLegacyNote"><b>ÖNCEKİ EKLENTİLER</b><div class="forgeModList">'+legacy+'</div></div>':'')+'<div class="forgeStats"><div class="forgeStat"><label>HASAR / MERMİ</label><strong>'+st.damage+'</strong></div><div class="forgeStat"><label>ATIŞ / SN</label><strong>'+st.fireRate.toFixed(2)+'</strong></div><div class="forgeStat"><label>ŞARJÖR</label><strong>'+st.mag+'</strong></div><div class="forgeStat"><label>TEORİK DPS</label><strong>'+st.dps.toFixed(1)+'</strong></div></div><details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(slot)+'</details></div>';
+ el.innerHTML='<div class="forgePreviewVisual"><span class="forgeBadge">SİLAH '+n+' · '+weaponType(id)+'</span><img alt="'+weaponName(id)+' görseli" src="'+sprite+'"><span class="forgeBadge">'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[id]].name+' · UST '+masteryLevel(id)+'</span></div><div class="forgePreviewInfo"><b>'+weaponName(id)+'</b><small>Başlangıç silahını seç. Silahın ana dönüşümü ve iki desteği seferde açılır.</small><div class="weaponAbilityBadge"><b>SAĞ TIK · AKTİF MODÜL</b><small>İlk aktif modül birinci bölgedeki gizli bölmeden bulunur; silah değişimi sağ tık yeteneğini değiştirmez.</small></div>'+xpBarHTML(id)+masteryStyleHTML(id)+window.DropForgeWeaponTraits.loadoutHTML(slot)+(legacy?'<div class="forgeLegacyNote"><b>ÖNCEKİ EKLENTİLER</b><div class="forgeModList">'+legacy+'</div></div>':'')+'<div class="forgeStats"><div class="forgeStat"><label>HASAR / MERMİ</label><strong>'+st.damage+'</strong></div><div class="forgeStat"><label>ATIŞ / SN</label><strong>'+st.fireRate.toFixed(2)+'</strong></div><div class="forgeStat"><label>ŞARJÖR</label><strong>'+st.mag+'</strong></div><div class="forgeStat"><label>TEORİK DPS</label><strong>'+st.dps.toFixed(1)+'</strong></div></div><details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(slot)+'</details></div>';
 }
 
 function dropWeapon(room,weapon,x,y,vx=0,ammo=MAG_SIZE[weapon],reserve=AMMO_MAX[weapon],mods=[],traits=null){if(weapon===null)return;room.loot.push({weapon,ammo,reserve,mods:[...mods],traits:traits?window.DropForgeWeaponTraits.snapshot({traits}):null,x,y,vy:-365,vx,grounded:false});}
@@ -776,7 +804,7 @@ if(!nav){
 }
 nav.innerHTML = '<button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="weapons"?"active":"")+'" data-tab="weapons">⚔ SİLAHLAR & ÖZELLİKLER</button><button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="gear"?"active":"")+'" data-tab="gear">🛡 ZIRH & CHIPLER</button><button type="button" class="loadoutTabBtn '+(activeLoadoutTab==="bag"?"active":"")+'" data-tab="bag">🎒 ÇANTA & TÜM ENVANTER</button>';
 if(game.pendingBossReward){const offer=document.createElement('section');offer.className='bagCard';const traitOffer=window.DropForgeWeaponTraits.choices({slots:p.slots,projectiles:WEAPON_PROJECTILES,seed:game.seed+game.pendingBossReward.stage*997,hash:hash2})[0],trait=traitOffer&&window.DropForgeWeaponTraits.TRAITS[traitOffer.id];offer.innerHTML='<h3>BOSS '+game.pendingBossReward.stage+' · 3 BÜYÜK ÖDÜL</h3><p>Yalnızca birini seç.</p><button type="button" data-boss-reward="trait" '+(trait?'':'disabled')+'>SİLAH ÖZELLİĞİ · '+(trait?trait.name+' · '+weaponName(p.slots[traitOffer.weaponSlot].weapon):'UYGUN ÖZELLİK YOK')+'</button> <button type="button" data-boss-reward="set" '+(activeSet()&&p.setLevel<3?'':'disabled')+'>SET GÜÇLENDİRİCİ · '+(activeSet()?GEAR.SETS[activeSet()].name+' SEV '+Math.min(3,p.setLevel+1):'TAM SET GEREKLİ')+'</button> <button type="button" data-boss-reward="blueprint">ATÖLYE TASLAĞI · KALICI AÇILIM</button>';root.append(offer);}if(game.pendingRune){const rune=game.pendingRune,offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>YENİ SİLAH RUNU · '+WEAPON_RUNES[rune.id].name+'</h3><p>'+WEAPON_RUNES[rune.id].description+'</p>'+p.slots.map((w,i)=>w?'<button type="button" data-rune-slot="'+i+'">'+weaponName(w.weapon)+(w.rune?' · '+WEAPON_RUNES[w.rune].name+' DEĞİŞECEK':' · BOŞ RUN YUVASI')+'</button> ':'').join('')+'<button type="button" data-rune-slot="reject">REDDET</button>';root.append(offer);}if(activeLoadoutTab==="weapons"){
-for(let i=0;i<2;i++){const w=p.slots[i],card=document.createElement('section');card.className='gunCard';if(!w){card.innerHTML='<h3>SİLAH '+(i+1)+' · BOŞ</h3><p>Bu slotta silah bulunmuyor.</p>';root.append(card);continue;}const picture=WEAPON_SPRITES[w.weapon].toDataURL('image/png');card.innerHTML='<h3>SİLAH '+(i+1)+' · '+weaponType(w.weapon)+'</h3><div class="gunVisual"><img alt="'+weaponName(w.weapon)+' piksel silah görseli" src="'+picture+'"><div><strong>'+weaponName(w.weapon)+'</strong><small>'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[w.weapon]].name+' · '+w.ammo+'/'+w.reserve+' MERMİ</small>'+xpBarHTML(w.weapon)+'</div></div><div class="weaponAbilityBadge"><b>RUN · '+(WEAPON_RUNES[w.rune]?.name||'BOŞ')+'</b><small>'+(WEAPON_RUNES[w.rune]?.description||'Gizli bölmeden silah runu bulunur.')+'</small></div><div class="weaponAbilityBadge"><b>AKTİF MODÜL · '+(ACTIVE_MODULES[p.activeModule]?.name||'BOŞ')+'</b><small>'+(ACTIVE_MODULES[p.activeModule]?.description||'İlk modül gizli bölmeden gelir.')+'</small></div>'+window.DropForgeWeaponTraits.loadoutHTML(w)+'<details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(w)+'</details>'+talentHTML(w.weapon);const legacyEquipped=(w.mods||[]).filter(Boolean);if(legacyEquipped.length){const legacy=document.createElement('div');legacy.className='legacyWeaponMods';legacy.innerHTML='<strong>ÖNCEKİ ATÖLYE EKLENTİLERİ</strong><small>Önceden kuşandığın parçalar savaşta çalışmaya devam eder; yeni run özelliklerinden ayrıdır.</small>'+legacyEquipped.map(id=>'<span>'+modNameForWeapon(w.weapon,id)+'</span>').join('');card.append(legacy);}root.append(card);}} // end weapons tab
+for(let i=0;i<2;i++){const w=p.slots[i],card=document.createElement('section');card.className='gunCard';if(!w){card.innerHTML='<h3>SİLAH '+(i+1)+' · BOŞ</h3><p>Bu slotta silah bulunmuyor.</p>';root.append(card);continue;}const picture=WEAPON_SPRITES[w.weapon].toDataURL('image/png');card.innerHTML='<h3>SİLAH '+(i+1)+' · '+weaponType(w.weapon)+'</h3><div class="gunVisual"><img alt="'+weaponName(w.weapon)+' piksel silah görseli" src="'+picture+'"><div><strong>'+weaponName(w.weapon)+'</strong><small>'+PROJECTILE_FAMILIES[WEAPON_PROJECTILES[w.weapon]].name+' · '+w.ammo+'/'+w.reserve+' MERMİ</small>'+xpBarHTML(w.weapon)+masteryStyleHTML(w.weapon)+'</div></div><div class="weaponAbilityBadge"><b>RUN · '+(WEAPON_RUNES[w.rune]?.name||'BOŞ')+'</b><small>'+(WEAPON_RUNES[w.rune]?.description||'Gizli bölmeden silah runu bulunur.')+'</small></div><div class="weaponAbilityBadge"><b>AKTİF MODÜL · '+(ACTIVE_MODULES[p.activeModule]?.name||'BOŞ')+'</b><small>'+(ACTIVE_MODULES[p.activeModule]?.description||'İlk modül gizli bölmeden gelir.')+'</small></div>'+window.DropForgeWeaponTraits.loadoutHTML(w)+'<details class="advancedStats"><summary>AYRINTILI İSTATİSTİKLER</summary>'+weaponStatHTML(w)+'</details>'+talentHTML(w.weapon);const legacyEquipped=(w.mods||[]).filter(Boolean);if(legacyEquipped.length){const legacy=document.createElement('div');legacy.className='legacyWeaponMods';legacy.innerHTML='<strong>ÖNCEKİ ATÖLYE EKLENTİLERİ</strong><small>Önceden kuşandığın parçalar savaşta çalışmaya devam eder; yeni run özelliklerinden ayrıdır.</small>'+legacyEquipped.map(id=>'<span>'+modNameForWeapon(w.weapon,id)+'</span>').join('');card.append(legacy);}root.append(card);}} // end weapons tab
 if(activeLoadoutTab==="bag"){
 const bag=document.createElement('section');bag.className='bagCard';bag.innerHTML='<h3>SAHA ÇANTASI</h3><div class="bagItems"></div>';const bagItems=bag.querySelector('.bagItems');const pieces=['SAĞLIK KİTİ ×'+p.kits,'BOMBA ×'+p.grenades,'MERMİ KUTUSU ×'+p.ammoBoxes,...p.accessories.filter(Boolean).map(a=>ACCESSORIES[a.type].name)];for(const name of pieces){const chip=document.createElement('span');chip.className='bagChip';chip.textContent=name;bagItems.append(chip);}if(game.stashedMods.length){const archive=document.createElement('div');archive.className='legacyModArchive';archive.innerHTML='<strong>ÖNCEKİ SİSTEMDEN KALAN EKLENTİLER</strong><small>Bu parçalar korunur; yeni silah özellikleri artık çantada yer kaplamaz.</small>'+game.stashedMods.map(id=>'<span>'+((modCatalog[id]||MODS[id])?.name||id)+'</span>').join('');bag.append(archive);}root.append(bag);root.insertAdjacentHTML('beforeend',enemyCodexHTML());if(p.moduleOffer){const offer=document.createElement('section');offer.className='bagCard';offer.innerHTML='<h3>ELİT MODÜL TEKLİFİ</h3><p>Mevcut: '+ACTIVE_MODULES[p.activeModule].name+' · Teklif: '+ACTIVE_MODULES[p.moduleOffer].name+'</p><p>'+ACTIVE_MODULES[p.moduleOffer].description+'</p><button type="button" data-module-choice="accept">MODÜLÜ DEĞİŞTİR</button> <button type="button" data-module-choice="reject">MEVCUT MODÜLÜ KORU</button>';root.append(offer);}} // end bag tab
 if(activeLoadoutTab==="gear"){
@@ -821,6 +849,7 @@ function triggerManualSave(){
   saveUnlockedWeapons();
   saveBuilds();
   saveTalents();
+  saveMasteryStyles();
   saveMatrix();
   saveGearBuild();
   announce('KALICI İLERLEME KAYDEDİLDİ · SEFER KONUMU KAYDEDİLMEZ',2.5);
