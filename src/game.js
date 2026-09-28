@@ -354,7 +354,27 @@ function update(dt){
 }
 
 const FORGE_GUNS=[['KIVILCIM-15','#f5bf65','#5788b2',0],['VIZIR-30','#78e7c5','#4a6baf',1],['KOR PARÇALAYICI','#fd9a68','#9a5a82',2],['DEMIR DISI','#d6a3ff','#5d68c6',1],['YILDIZ DELEN','#9ce2ff','#655eb0',3],['KISA VOLT','#ffd28d','#577ab7',0],['AY IŞIĞI','#81d5ff','#b47fd4',1],['NOVA POMPASI','#ffc4a8','#b15b97',2],['UZAK YANKI','#c9f0b1','#648a96',3],['NEON ARI','#caa7ff','#5779c9',1],['IŞIN KESİCİ','#62ffe4','#286f90',4],['METEOR-4','#ffb46f','#844b57',5],['ARK DOKUYUCU','#a5d9ff','#6250bd',6]];
-function makeForgeSprite(i){const spec=FORGE_GUNS[i],c=document.createElement('canvas');c.width=64;c.height=32;const x=c.getContext('2d');x.imageSmoothingEnabled=false;function block(a,b,w,h,color){x.fillStyle=color;x.fillRect(a,b,w,h);}block(5,12,45,9,'#182335');block(9,9,31,11,spec[2]);block(14,10,19,3,spec[1]);block(44,11,spec[3]===3?17:12,5,'#a8bfc9');block(46,12,10,2,spec[1]);block(8,20,13,3,'#111929');block(16,21,6,9,'#222d42');block(17,22,4,6,spec[1]);block(35,19,6,spec[3]===2?8:4,'#243247');block(10,6,4,4,'#e3faff');block(27,6,3,4,spec[1]);if(spec[3]===3){block(5,5,29,3,spec[1]);block(3,8,5,8,'#a8bfc9');}if(spec[3]===2){block(37,10,10,12,'#2f3e55');block(40,7,4,6,spec[1]);}if(spec[3]===1){block(9,22,7,4,spec[1]);block(26,7,9,2,'#e2f6f5');}if(spec[3]===4){block(4,10,56,13,'#143d53');block(10,8,40,3,spec[1]);block(40,12,17,4,'#7affdf');block(8,23,19,3,'#36b9b5');block(29,20,8,8,'#135a67');block(52,8,8,3,'#d5fff1');}if(spec[3]===5){block(3,9,57,15,'#573e49');block(6,12,42,9,'#d87756');block(12,8,31,3,'#ffd38e');block(46,10,14,13,'#333748');block(48,14,12,6,'#ffbf62');block(9,23,16,4,'#ad6160');}if(spec[3]===6){block(5,7,50,18,'#273566');block(7,11,46,9,spec[2]);block(15,7,25,3,'#b5e7ff');block(37,10,8,12,spec[1]);block(53,8,8,16,'#91f5ff');block(24,3,4,5,'#ffffff');block(11,23,20,3,'#8ba8ff');}return c;}
+function makeForgeSprite(i){
+ const spec=FORGE_GUNS[i],c=document.createElement('canvas');c.width=64;c.height=32;const x=c.getContext('2d');x.imageSmoothingEnabled=false;
+ const [name,glow,armor,kind]=spec,heavy=kind===2||kind===5,precision=kind===3,energy=kind>=4;
+ function block(a,b,w,h,color){x.fillStyle=color;x.fillRect(a,b,w,h);}
+ function line(a,b,w,h,color){block(a,b,w,h,color);}
+ // Dark silhouette, layered receiver and distinct weapon-family geometry.
+ block(3,12,heavy?54:48,11,'#101b2b');block(7,10,heavy?44:39,12,armor);block(11,11,heavy?35:30,3,glow);
+ block(5,18,13,5,'#25354a');block(15,20,8,10,'#182638');block(17,23,4,5,glow);
+ block(28,19,heavy?13:8,heavy?9:5,'#26374b');block(31,20,4,3,'#a7b8cb');
+ if(kind===0){block(45,13,15,5,'#a4bacb');block(58,12,4,7,glow);block(7,8,8,4,'#d4e5e8');block(25,7,5,4,glow);}
+ if(kind===1){block(43,12,16,7,'#a8c5d2');block(56,11,6,9,glow);block(10,6,23,4,'#263f59');block(18,5,7,3,glow);block(9,22,7,4,glow);}
+ if(kind===2){block(36,8,16,17,'#293c53');block(40,5,7,6,glow);block(49,12,13,11,'#a6b4c4');block(55,14,7,7,glow);block(4,8,9,6,'#6c8296');}
+ if(kind===3){block(4,6,38,3,glow);block(2,8,6,8,'#a3b8c8');block(42,12,20,4,'#b7c9d5');block(59,10,4,8,glow);block(15,4,4,5,'#e7f4f2');block(31,5,4,4,glow);}
+ if(kind===4){block(4,9,55,14,'#173f52');block(9,7,42,4,glow);block(40,12,18,6,'#9bf5e5');block(56,9,7,12,'#d4fff4');block(9,23,17,4,'#37b6b4');}
+ if(kind===5){block(3,9,55,16,'#5b3942');block(8,12,40,9,'#d27755');block(13,7,30,3,'#ffd38e');block(47,10,15,14,'#2a3447');block(51,14,11,6,glow);block(7,24,15,4,'#b65e5a');}
+ if(kind===6){block(5,7,50,18,'#283663');block(8,11,46,9,armor);block(14,6,27,3,'#b9e7ff');block(37,9,9,14,glow);block(53,7,9,18,'#9ff5ff');block(24,3,5,5,'#fff');block(12,23,21,4,'#8ca9ff');}
+ // Per-weapon signature marks distinguish models that share a chassis.
+ const marks=[9,15,21,27,33,39,13,19,25,31,37,43,49],mx=marks[i];line(mx,15,5,3,glow);line(mx+2,14,2,1,'#fff4d7');
+ if(i%3===0)block(23,7,8,2,'#d8e7f2');else if(i%3===1)block(8,14,3,6,'#e3f5fc');else block(34,22,8,2,glow);
+ return c;
+}
 for(let i=0;i<FORGE_GUNS.length;i++)WEAPON_SPRITES[i]=makeForgeSprite(i);
 const WEAPON_NAMES=FORGE_GUNS.map(q=>q[0]);
 for(let n=1;n<=2;n++){
