@@ -196,3 +196,7 @@ Silah ustalığı artık yalnızca eklenti yuvası açmaz. Seviye 1'den 10'a kad
 ## Başlangıç alanı savaş test ekranı
 
 Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman türünü (çağırıcılar ve boss dâhil), LV1–LV4 seviyesini ve 1–4 düşman sayısını seçebilirsin. Test sırasında XP, altın, ganimet veya çekirdek kazanılmaz; can sıfırlanmak yerine yenilenir. Aynı düğmeden testi bitirince önceki silahların ve konumun geri gelir. Test, gerçek sefere başlamadan farklı silah ve düşman kombinasyonlarını denemek içindir.
+
+## Daha seyrek şans çarkı ve boss anahtarları
+
+Şans çarkı artık yalnızca hazine odalarının yaklaşık dörtte birinde bulunur; normal savaş odalarında çıkmaz. Her dönüş farklı bir rastgelelik tohumu kullanır. Dolu sağlık kiti/bomba veya kullanılamayan eklenti yerine altın verilir; doğrudan altın ödülü de eklendi. İlk boss kapısına üç anahtarla girildiğinde anahtarlar parıltı efektiyle tüketilir ve takip eden anahtarlar kaybolur.
