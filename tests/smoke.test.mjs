@@ -342,6 +342,9 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  api.mastery[player.weapon]=1440;player.x=room.forge.x-20;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearForge,true,'forge becomes interactive when approached');
  api.interact();assert.equal(api.hubForgeOpen,true,'E opens physical forge');
+ assert.equal(win.DropForgeWeaponTraits.grant(player.slots[0],'stabilizer',win.DropForgeCatalog.WEAPON_PROJECTILES),true,'existing run trait is available for migration coverage');
+ nodes.get('forgeGun1').onchange();
+ assert.match(nodes.get('forgePreview').innerHTML,/DENGELİ ATIŞ/,'hub preview includes existing traits for a held gun');
  assert.match(nodes.get('forgePreview').innerHTML,/SİLAH ÖZELLİKLERİ/,'forge preview shows run traits');
  nodes.get('forgeGun2').onchange();
  assert.match(nodes.get('forgePreview').innerHTML,/VIZIR-30/,'focus previews the second starter gun');
@@ -349,6 +352,7 @@ test('physical hub boots, target dummy handles practice and E portal starts the 
  assert.match(nodes.get('forgePreview').innerHTML,/KIVILCIM-15/,'focus returns to the first starter gun');
  nodes.get('startBtn').onclick();assert.equal(api.hubForgeOpen,false,'save button returns to testing');
  assert.ok(player.slots.every(slot=>slot.mods.length===0),'new starter guns have no legacy attachment presets');
+ assert.equal(player.slots[0].traits.supports[0],'stabilizer','saving the two-gun loadout preserves an existing run trait');
  assert.equal(game.inHub,true);
  player.x=room.hubGate.x-40;player.y=548-player.h;api.update(.016);
  assert.equal(room.interact.nearHubGate,true,'portal becomes interactive when approached');
