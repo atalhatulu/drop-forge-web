@@ -12,11 +12,11 @@ const PROJECTILE_FAMILIES={
 };
 // Kıvılcım/Vizir/Kısa Volt: standart; Kor/Nova: saçmalı; Yıldız/Uzak Yankı: delici; diğerleri: plazma.
 const MODS={
- barrel:{name:'GÜÇ NAMLU',level:2,slot:0,description:'+%18 hasar'},
- rapidBarrel:{name:'SERİ NAMLU',level:2,slot:0,description:'+%12 atış hızı'},
+ barrel:{name:'GÜÇ NAMLU',level:2,slot:0,description:'+%20 hasar · %8 yavaş atış'},
+ rapidBarrel:{name:'SERİ NAMLU',level:2,slot:0,description:'+%18 atış hızı · %6 düşük mermi hasarı'},
  pierceBarrel:{name:'DELİCİ NAMLU',level:2,slot:0,description:'Kinetikte +1 delme · pompalıda %25 sıkı saçılma · patlayıcıda +%20 alan'},
- loader:{name:'HIZLI MEKANİZMA',level:4,slot:1,description:'%20 hızlı atış ve doldurma'},
- extendedMag:{name:'GENİŞ ŞARJÖR',level:4,slot:1,description:'+%35 şarjör kapasitesi'},
+ loader:{name:'HIZLI MEKANİZMA',level:4,slot:1,description:'%10 hızlı atış · %22 hızlı doldurma'},
+ extendedMag:{name:'GENİŞ ŞARJÖR',level:4,slot:1,description:'+%35 şarjör · %18 uzun doldurma'},
  efficientMechanism:{name:'VERİMLİ MEKANİZMA',level:4,slot:1,description:'%15 mühimmat tasarrufu'},
  core:{name:'FAZ ÇEKİRDEĞİ',level:6,slot:2,description:'+%25 hız · kinetikte +1 delme · enerjide +%25 alan'},
  shockCore:{name:'ŞOK ÇEKİRDEĞİ',level:6,slot:2,description:'+%12 isabet hasarı; yakın düşmana zincir'},
