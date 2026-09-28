@@ -128,3 +128,7 @@ Oda tamamlandığında temel rota ödülüne ek olarak seed'e bağlı bomba, alt
 ## İlk kez edinilen eşyaların vurgusu
 
 Seferde ilk kez alınan bir silah, eklenti veya aksesuar oyuncunun çevresinde altın renkli parlama ve kısa bir keşif bildirimi oluşturur. Aynı eşya türü aynı seferde yeniden alındığında bildirim tekrarlanmaz. Eşya gerçekten envantere girdikten sonra tetiklenir; dolu çanta nedeniyle alınamayan eşyalar keşfedilmiş sayılmaz.
+
+## Düşman seviyesi ve kalkan
+
+Düşman canı LV 1'e göre LV 2'de ×1,75; LV 3'te ×3,0625; LV 4'te ×3,828125 olarak ölçeklenir (zorluk çarpanı ayrıca uygulanır). LV 4 düşmanları, boss ve işaretli av hedefi dâhil, nihai canlarının %50'si kadar ayrı bir kalkanla doğar. Hasar önce kalkanı tüketir; boss aşaması ve av hedefi can artışları kalkana da yansır.
