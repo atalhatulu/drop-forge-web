@@ -34,12 +34,14 @@ test('elite chest excludes previously collected chips',()=>{
  const opts=choose({type:'elite',chipBag:['gravity']});
  assert.ok(opts.every(item=>item.type==='chip'&&item.id!=='gravity'));
 });
-test('chest opening and legacy bag claims retain rewards until actually received',()=>{
+test('chest rewards grant eligible traits, gear or chips without a legacy attachment claim',()=>{
  const game=readFileSync('src/game.js','utf8');
  assert.match(game,/const choices=selectChestChoices\(/);
+ assert.match(game,/choices\.splice\(0,choices\.length,\.\.\.choices\.filter\(item=>item\.type==='gear'\|\|item\.type==='chip'\)\)/);
+ assert.match(game,/const traitChoices=window\.DropForgeWeaponTraits\.choices/);
  assert.match(game,/p\.gold\+=20;\s*announce\('SANDIK · UYGUN EŞYA YOK/);
- assert.match(game,/if\(game\.stashedMods\.length>=12\|\|game\.stashedMods\.includes\(pick\)/);
- assert.match(game,/EKLENTİ ALINAMIYOR · ÇANTANI DÜZENLE',2/);
+ assert.match(game,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
+ assert.doesNotMatch(game,/data-chest-choice/);
  assert.match(game,/closeChestUpgradeModal\(\);\s*updateHud\(\)/);
 });
 
@@ -104,13 +106,12 @@ test('three-choice chest returns fewer options rather than repeating an unavaila
  assert.equal(result[0].id,'bastion-helmet');
 });
 
-test('chest attachment cards show each eligible weapon, its actual effect and the bag claim action',()=>{
+test('chest cards show run trait details and apply directly to the owning weapon',()=>{
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/function chestModDetailsHTML\(id,mod\)/);
+ assert.match(game,/trait\.description/);
  assert.match(game,/weaponName\(slot\.weapon\)/);
- assert.match(game,/modEffectForWeapon\(slot\.weapon,id\)/);
- assert.match(game,/modDiffHTML\(slot\.weapon,slot\.mods,id,mod\.slot\)/);
- assert.match(game,/modTradeoff\(slot\.weapon,id\)/);
- assert.match(game,/ÇANTAYA AL · TAB İLE TAK/);
- assert.match(game,/EKLENTİ ÇANTAYA ALINDI · TAB İLE TAK/);
+ assert.match(game,/SİLAHA HEMEN UYGULA/);
+ assert.match(game,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
+ assert.doesNotMatch(game,/ÇANTAYA AL · TAB İLE TAK/);
 });
+
