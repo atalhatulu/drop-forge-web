@@ -117,3 +117,9 @@
 .gearSummary>b,.gearSummary>small{grid-column:1/-1}.gearSummary>span{color:#a7e9c8;font:10px/1.45 monospace}.gearSummary>small{color:#d4c69c;font:10px/1.5 monospace}
 @media(max-width:650px){.gearEquipmentLayout{grid-template-columns:minmax(100px,135px) minmax(0,1fr);gap:8px}.gearCharacterPanel{padding:8px 4px}.gearEquipmentRight .gearVisualSlot{padding:6px;gap:6px}.gearEquipmentRight .gearVisualSlot .gearIcon{width:40px;height:40px}.gearEquipmentRight .gearVisualSlot .gearIcon img{width:38px;height:38px}.gearEmptySquare{width:25px;height:25px}.gearSummary{grid-template-columns:1fr}.gearVisualSlot button{padding:4px;font-size:8px}}
 @media(max-width:410px){.gearEquipmentLayout{grid-template-columns:1fr}.gearCharacterPanel{min-height:185px}.gearCharacterCanvas{width:105px}}
+
+/* Progressive disclosure keeps the weapon cards scannable. */
+.advancedStats{margin-top:10px;border:1px solid #476785;background:#0e2036;padding:8px 10px}
+.advancedStats>summary{color:#a9d8ed;font:900 10px monospace;letter-spacing:.05em;cursor:pointer;list-style-position:inside}
+.advancedStats[open]>summary{margin-bottom:10px;color:#f4e4b7}
+.advancedStats:focus-within{outline:1px solid #9ed6eb}
