@@ -204,3 +204,7 @@ Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman 
 ## Güçlendirilmiş av hedefi ve platform inişi
 
 Av odasının işaretli hedefi artık 2,5 kat temel cana, %35 daha hızlı harekete, %30 daha sık saldırıya ve %45 daha yüksek hasar çarpanına sahip. Yerde yürüyen düşmanlar oyuncu aşağıdayken üst platformdan aşağı inebilir; iniş sırasında kısa süre platformun içinden geçerek oyuncuyu takip eder.
+
+## Yedi farklı mühimmat ganimeti
+
+Düşmanlardan ve oda ödüllerinden çıkan mühimmat, düşüş anında eldeki silahın yedi mermi ailesinden biriyle eşleşir: standart, saçmalı, delici, plazma, lazer, patlayıcı ve elektrik. Her aile ayrı renk ve simgeli yer ganimetine sahiptir. Toplanan paket yalnızca aynı aileyi kullanan silahların yedek mühimmatını doldurur; uyumsuz paketler yerde kalır.

@@ -370,7 +370,7 @@ test('forced boss ammunition and health never reroll into grenades',()=>{
  const source=readFileSync('src/game.js','utf8');
  const a=source.indexOf('function dropPickup(room,kind,x,y,force=false,artifact=null)'),b=source.indexOf('function saveSlot()',a);
  assert.ok(a>=0&&b>a);
- const drop=new Function('Math','burst',source.slice(a,b)+'return dropPickup;')({random:()=>.01},()=>{});
+ const drop=new Function('Math','burst','WEAPON_PROJECTILES','game',source.slice(a,b)+'return dropPickup;')({random:()=>.01},()=>{},['kinetic'],{player:{weapon:0,slots:[]}});
  const room={loot:[]};
  drop(room,'ammo',100,100,true);
  drop(room,'health',110,100,true);
@@ -826,4 +826,13 @@ test('ground enemies drop through platforms to pursue player below', () => {
  assert.match(ai,/p\.y>e\.y\+e\.h\+85/);
  assert.match(ai,/e\.dropThrough=\.48/);
  assert.match(ai,/e\.dropThrough=Math\.max\(0/);
+});
+
+
+test('enemy ammo pickups match the equipped projectile family and refill matching weapons', () => {
+ const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
+ assert.match(game,/if\(kind==='ammo'\)artifact=WEAPON_PROJECTILES\[game\.player\.weapon/);
+ assert.match(game,/const family=item\.artifact\|\|'kinetic',targets=p\.slots\.filter\(q=>q&&WEAPON_PROJECTILES\[q\.weapon\]===family/);
+ for(const family of ['kinetic','scatter','pierce','plasma','laser','explosive','arc'])assert.match(loot,new RegExp(family+':\\['));
+ assert.match(loot,/if\(item\.kind==='ammo'\)/);
 });
