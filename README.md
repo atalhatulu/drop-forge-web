@@ -180,3 +180,7 @@ Toplanan boss anahtarları savaş dışında oyuncunun arkasında küçük 2D an
 ## Yeni çağırıcı düşmanlar
 
 LV2 ve üstü normal savaş odalarında başlangıç diziliminin ikinci düşmanı %30 olasılıkla iki özel türden biri olur: **Mühür Ustası** ağır, yüksek canlı ve yavaş muhafızlar çağırır (aynı anda en fazla iki); **Geçitçi** en fazla iki küçük düşman portalı açar. Bu geçitler üçer düşman ürettikten sonra kapanır ve oyuncu tarafından daha erken yok edilebilir. Her iki çağırıcı da oyuncudan mesafe korumaya çalışır. Düşmanlar biyoma özgü ad ve renklerle çizilir; dağılım oranları daha sonra dengelenebilir.
+
+## Sade tüccar kartları
+
+Tüccar kartları artık simge, ürün adı, tek satırlık ana etki, fiyat ve satın alınabilirlik durumunu öne çıkarır. Uzun teknik açıklamalar kartın üzerine gelindiğinde görünür; kalıcı/seferlik ayrımı başlık altında kısa bir etiketle belirtilir.
