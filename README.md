@@ -124,3 +124,7 @@ Mor büyücülerin mermileri oyuncuya, jeneratöre veya arena sınırına çarpt
 ## Ganimet çeşitliliği
 
 Oda tamamlandığında temel rota ödülüne ek olarak seed'e bağlı bomba, altın veya yan dal sonlarında aksesuar ödülü çıkabilir. Normal düşmanlar türlerine göre farklı ihtimallerle bomba düşürebilir. Boss'lar aksesuar ve bomba bırakır; hazine sandıkları garanti aksesuar, ayrıca bomba ve sağlık kiti ihtimali taşır. Elit ve av odaları ilave altın verir. Oda temizleme sonundaki temel sağlık/mühimmat ödülü artık garanti olarak yere düşer; mevcut toplama ve çanta sınırları korunur.
+
+## İlk kez edinilen eşyaların vurgusu
+
+Seferde ilk kez alınan bir silah, eklenti veya aksesuar oyuncunun çevresinde altın renkli parlama ve kısa bir keşif bildirimi oluşturur. Aynı eşya türü aynı seferde yeniden alındığında bildirim tekrarlanmaz. Eşya gerçekten envantere girdikten sonra tetiklenir; dolu çanta nedeniyle alınamayan eşyalar keşfedilmiş sayılmaz.
