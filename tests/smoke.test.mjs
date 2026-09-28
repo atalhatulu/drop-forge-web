@@ -529,3 +529,15 @@ test('fourth region uses level four enemies with a separate shield pool', () => 
  assert.match(game,/if\(e\.maxShield>0\)/);
  assert.match(ai,/e\.shield=\(e\.shield\|\|0\)-absorbed/);
 });
+
+
+test('first boss requires three reachable, guaranteed region-one keys', () => {
+ const world=readFileSync('src/world.js','utf8'),game=readFileSync('src/game.js','utf8');
+ assert.match(world,/filter\(room=>room\.branchEnd&&room\.stage===1\)/);
+ assert.match(world,/slice\(0,3\)/);
+ assert.match(world,/room\.bossKey=true/);
+ assert.match(game,/function collectBossKey\(room\)/);
+ assert.match(game,/room\.bossKeyCollected=true;game\.bossKeys\+\+/);
+ assert.match(game,/room\.cleared=true;collectBossKey\(room\)/);
+ assert.match(game,/game\.rooms\[id\]\.bossStage===1&&game\.bossKeys<3/);
+});
