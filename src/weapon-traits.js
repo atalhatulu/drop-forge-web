@@ -60,6 +60,16 @@ function snapshot(slot){
  const s=slot?.traits;
  return s?{main:s.main||null,supports:[...s.supports],levels:{...s.levels}}:null;
 }
+function sameBuild(a,b){
+ if(!a||!b||a.weapon!==b.weapon)return false;
+ if((a.rune||null)!==(b.rune||null))return false;
+ for(let j=0;j<4;j++)if((a.mods?.[j]||null)!==(b.mods?.[j]||null))return false;
+ const first=state(a),second=state(b);
+ if((first.main||null)!==(second.main||null))return false;
+ if(first.supports.length!==second.supports.length||first.supports.some((id,i)=>id!==second.supports[i]))return false;
+ const ids=new Set([...Object.keys(first.levels),...Object.keys(second.levels)]);
+ return [...ids].every(id=>(first.levels[id]||0)===(second.levels[id]||0));
+}
 function hasInvestment(slot){
  const s=slot?.traits;
  return !!s&&(!!s.main||s.supports.length>0);
@@ -74,5 +84,5 @@ function loadoutHTML(slot){
  return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
   row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
 }
-root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,hasInvestment,loadoutHTML});
+root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,sameBuild,hasInvestment,loadoutHTML});
 })(window);
