@@ -870,3 +870,12 @@ test('portal health scales by level and level three has two defensive shields', 
  assert.match(game,/q\.shieldCharges--/);
  assert.match(game,/q\.shield=2\.7/);
 });
+
+
+test('seven seeded bosses cover four stages and have phase two combat profiles', () => {
+ const src=readFileSync('src/bosses.js','utf8'),context={window:{}};vm.runInNewContext(src,context);const bosses=context.window.DropForgeBosses;
+ assert.equal(bosses.BOSSES.length,7);assert.deepEqual(Array.from([1,2,3,4].map(stage=>bosses.BOSSES.filter(b=>b.stage===stage).length)),[2,2,2,1]);
+ for(let stage=1;stage<=4;stage++){const first=bosses.selectBoss(123,stage,stage),again=bosses.selectBoss(123,stage,stage);assert.equal(first.id,again.id);assert.equal(first.stage,stage);}
+ assert.equal(bosses.phaseFor(49,100),2);assert.equal(bosses.phaseFor(51,100),1);
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');assert.match(game,/boss\.bossPhase=1/);assert.match(game,/e\.bossPhase=2/);assert.match(ai,/e\.bossStyle==='summon'/);assert.match(ai,/e\.bossStyle==='blink'/);
+});

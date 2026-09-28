@@ -220,3 +220,7 @@ Kask, zırh, eldiven, kemer ve bot için dört seferlik set bulunur: **Kale** (p
 ## Portal dayanıklılığı
 
 Portalların maksimum canı LV1–4 için sırasıyla 320, 490, 720 ve 960'tır. LV1–2 portalları %50 can eşiğinde bir kez; LV3–4 portalları %70 ve %50 eşiklerinde iki kez 2,7 saniyelik kalkan açar. Kalkan sırasında düşman üretimi durur; sonrasında hızlanır.
+
+## Yedi boss ve iki faz
+
+Her seferin dört boss kademesi bulunur; ilk üç kademenin ikişer, son kademenin bir boss alternatifi vardır. Aynı seed ve oda için seçim sabittir. Maden Muhafızı (yaylı atış), Tünel Yarıcı (hücum), Spor Ana (minyon), Kök Avcısı (uzak atış), Prizma Hükümdarı (mermi yelpazesi), Ayna Hayaleti (ışınlanma) ve Kül İmparatoru (ateş yağmuru) farklı saldırı profillerine sahiptir. Bosslar güçlendirilmiş canla başlar; %50 can eşiğinde ikinci faza geçip saldırı temposunu artırır.
