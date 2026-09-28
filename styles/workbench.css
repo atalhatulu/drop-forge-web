@@ -241,3 +241,9 @@ button.danger-btn:hover{background:#7d2228!important;border-color:#ff7d83!import
 .weaponTraitRow strong{display:block;font:900 11px/1.4 'Courier New',monospace;color:#eff8ff}
 .weaponTraitRow small{display:block;margin-top:3px;font:10px/1.45 'Courier New',monospace;color:#b1cad7}
 @media(max-width:540px){.weaponTraitRow{grid-template-columns:1fr;gap:3px}}
+
+/* Legacy parts are displayed only as a read-only migration record; run traits own the weapon build UI. */
+.legacyWeaponMods,.legacyModArchive{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:10px 0 0;padding:9px;border:1px solid #536b83;background:#152437}
+.legacyWeaponMods strong,.legacyModArchive strong{display:block;width:100%;color:#d9c79d;font:900 10px/1.4 'Courier New',monospace}
+.legacyWeaponMods small,.legacyModArchive small{display:block;width:100%;color:#afbdcb;font:10px/1.45 'Courier New',monospace}
+.legacyWeaponMods span,.legacyModArchive span{padding:5px 7px;border:1px solid #647389;background:#25354c;color:#e9e7dc;font:10px/1.4 'Courier New',monospace}
