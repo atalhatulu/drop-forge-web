@@ -249,7 +249,7 @@ test('shared weapon stat calculations include shotgun damage, magazine, ammo sav
 test('shot simulation, reload, and live panels reuse the same weaponStats function', () => {
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/stForAmmo=weaponStats\(p\.slots\[p\.activeSlot\]\)/);
- assert.match(source,/shootTimer=stForAmmo\.interval/);
+ assert.match(source,/shootTimer=overchargeInterval\(p,slot,stForAmmo\.interval\)/);
  assert.match(source,/p\.reloadDuration=st\.reload/);
  assert.match(source,/weaponStats\(p\.slots\[p\.activeSlot\]\)\.mag-p\.ammo/);
  assert.match(source,/slot\.ammo=weaponStats\(slot\)\.mag/);
