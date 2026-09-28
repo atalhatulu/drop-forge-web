@@ -97,3 +97,14 @@ test('three-choice chest returns fewer options rather than repeating an unavaila
  assert.equal(result.length,1);
  assert.equal(result[0].id,'bastion-helmet');
 });
+
+test('chest attachment cards show each eligible weapon, its actual effect and the bag claim action',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/function chestModDetailsHTML\(id,mod\)/);
+ assert.match(game,/weaponName\(slot\.weapon\)/);
+ assert.match(game,/modEffectForWeapon\(slot\.weapon,id\)/);
+ assert.match(game,/modDiffHTML\(slot\.weapon,slot\.mods,id,mod\.slot\)/);
+ assert.match(game,/modTradeoff\(slot\.weapon,id\)/);
+ assert.match(game,/ÇANTAYA AL · TAB İLE TAK/);
+ assert.match(game,/EKLENTİ ÇANTAYA ALINDI · TAB İLE TAK/);
+});
