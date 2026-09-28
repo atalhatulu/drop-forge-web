@@ -200,3 +200,7 @@ Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman 
 ## Daha seyrek şans çarkı ve boss anahtarları
 
 Şans çarkı artık yalnızca hazine odalarının yaklaşık dörtte birinde bulunur; normal savaş odalarında çıkmaz. Her dönüş farklı bir rastgelelik tohumu kullanır. Dolu sağlık kiti/bomba veya kullanılamayan eklenti yerine altın verilir; doğrudan altın ödülü de eklendi. İlk boss kapısına üç anahtarla girildiğinde anahtarlar parıltı efektiyle tüketilir ve takip eden anahtarlar kaybolur.
+
+## Güçlendirilmiş av hedefi ve platform inişi
+
+Av odasının işaretli hedefi artık 2,5 kat temel cana, %35 daha hızlı harekete, %30 daha sık saldırıya ve %45 daha yüksek hasar çarpanına sahip. Yerde yürüyen düşmanlar oyuncu aşağıdayken üst platformdan aşağı inebilir; iniş sırasında kısa süre platformun içinden geçerek oyuncuyu takip eder.
