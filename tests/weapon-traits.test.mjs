@@ -142,3 +142,20 @@ test('live swap retains old weapon traits on the ground and equips any traits on
  assert.match(game,/hasInvestment\(old\)/);
  assert.match(game,/openChestUpgradeModal\(offers\)/);
 });
+
+test('wheel offers three immediate traits after its result animation, never a legacy mod bag reward',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ const start=game.indexOf('function resolveWheel(room){'),end=game.indexOf('const {drawGenerator',start);
+ assert.ok(start>=0&&end>start);
+ const wheel=game.slice(start,end);
+ assert.match(wheel,/DropForgeWeaponTraits\.choices/);
+ assert.match(wheel,/w\.traitOffers=offers/);
+ assert.doesNotMatch(wheel,/game\.stashedMods\.push\(mod\)/);
+ assert.match(game,/if\(w\.resultTime===0&&w\.traitOffers\?\.length\)/);
+ assert.match(game,/openChestUpgradeModal\(offers\)/);
+ assert.match(game,/labels=\['SİLAH','ÖZELLİK'/);
+});
+test('manual weapon drop preserves run traits just like a weapon swap',()=>{
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/dropWeapon\(currentRoom\(\),p\.weapon,[^;]*p\.slots\[p\.activeSlot\]\?\.traits\)/);
+});
