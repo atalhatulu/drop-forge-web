@@ -3,10 +3,10 @@
 (function(root){
 function createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel=()=>1}){
 function weaponStats(slot){const id=slot.weapon,mods=slot.mods||[],family=WEAPON_PROJECTILES[id],baseDamage=WEAPON_DAMAGE[id],baseInterval=WEAPON_FIRE_RATES[id],baseSpeed=family==='laser'?1750:family==='explosive'?670:family==='arc'?990:family==='scatter'?850:family==='pierce'?1220:family==='plasma'?760:930,baseMag=MAG_SIZE[id],pellets=family==='scatter'?5:1;
- const level=Math.max(1,Math.min(10,getMasteryLevel(id))),masteryDamage=1+(level-1)*.035,masteryFire=1+(level-1)*.012,masteryReload=1-(level-1)*.012;
- const damage=Math.round(baseDamage*masteryDamage*(mods.includes('barrel')?1.18:1)*(mods.includes('shockCore')?1.12:1));
- const interval=baseInterval*(mods.includes('loader')?.8:1)/(mods.includes('rapidBarrel')?1.12:1)/masteryFire;
- const reload=.85*masteryReload*(mods.includes('loader')?.8:1);
+ const level=Math.max(1,Math.min(10,getMasteryLevel(id))),masteryDamage=1+(level-1)*.008,masteryFire=1+(level-1)*.003,masteryReload=1-(level-1)*.003;
+ const damage=Math.round(baseDamage*masteryDamage*(mods.includes('barrel')?1.20:1)*(mods.includes('rapidBarrel')?.94:1)*(mods.includes('shockCore')?1.12:1));
+ const interval=baseInterval*(mods.includes('loader')?.9:1)/(mods.includes('rapidBarrel')?1.18:1)*(mods.includes('barrel')?1.08:1)/masteryFire;
+ const reload=.85*masteryReload*(mods.includes('loader')?.78:1)*(mods.includes('extendedMag')?1.18:1);
  const mag=mods.includes('extendedMag')?Math.ceil(baseMag*1.35):baseMag;
  const speed=Math.round(baseSpeed*(mods.includes('core')?1.25:1));
  const areaFamily=['explosive','plasma','arc'].includes(family),pierce=(family==='pierce'?1:0)+(mods.includes('core')&&!areaFamily?1:0)+(mods.includes('pierceBarrel')&&!['scatter','explosive'].includes(family)?1:0);
