@@ -61,7 +61,7 @@ Bu ilk entegrasyon sürümüdür. Hasar, Forge Flow kazanımı ve yeni görev s�
 - **Bölge I, derinlik 0–5:** Terk Edilmiş Maden; LV 1 düşmanlar; derinlik 5'te boss.
 - **Bölge II, derinlik 6–10:** Zehirli Orman; LV 2 düşmanlar; derinlik 10'da boss.
 - **Bölge III, derinlik 11–15:** Mor Kristal; LV 3 düşmanlar; derinlik 15'te boss.
-- **Bölge IV, derinlik 16–20:** Lav Çekirdeği; LV 3 düşmanlar; derinlik 20'de son boss.
+- **Bölge IV, derinlik 16–20:** Lav Çekirdeği; LV 4 düşmanlar; derinlik 20'de son boss.
 
 Biyom ve düşman seviyesi odanın derinliğine bağlıdır; yan dallarda da aynı bölgede kalır. Dallar yalnızca ana rotanın normal odalarına bağlanır ve ödül/hazine odalarında sonlanır. Boss kapılarını yan dallardan atlamak mümkün değildir. Düşman canı, saldırı hasarı ve ateş sıklığı LV 2–3'te artar. Harita dört bölgeyi ve henüz keşfedilmemiş odaları gösterir.
 
@@ -104,3 +104,7 @@ Her silahın kendine ait **sağ tık yeteneği** ve bağımsız bekleme süresi 
 **Eklenti sahipliği:** Sefer içinde tüccardan satın alınan eklenti önce ortak çantaya gider; aynı anda yalnızca takıldığı silahı güçlendirir. TAB çantasında söküp uyumlu yuvaya sahip diğer silaha aktarılabilir. Eklentinin adı ve sınıfa özgü etkisi silaha göre değişebilir. Sefer bitince satın alınan ve takılan bu parçalar sıfırlanır; ustalıkla açılan yuvalar kalıcıdır.
 
 **Kalıcı usta:** Hazırlıkta kukla ile portalın arasında bulunur. Başlangıç canı +10 (3 seviye), başlangıç kiti +1 (2 seviye), başlangıç yedek mühimmatı +1 şarjör (3 seviye), seçili silaha +90 kalıcı ustalık XP veya sıradaki kilitli silahı açma sağlar. Kalıcı Çekirdek hesabı `localStorage` içinde tutulur. Alt bilgi şeridi artık oyun alanının altında; coin'ler mıknatıslı değil, temasla toplanır.
+
+## İlk boss kapısının üç anahtarı
+
+İlk bölgedeki (LV 1) üç yan dalın son odası, seed'den bağımsız olarak birer boss anahtarı taşır. Anahtar, ilgili oda temizlendiğinde veya hazine odasına girildiğinde otomatik toplanır; böylece düşman ganimetine veya şansa bağlı kalmaz. İlk boss odasına geçiş için üçünün de toplanması gerekir. Oyun içi gösterge anahtar sayısını, rota haritası da anahtar odalarını ve toplanma durumlarını gösterir. Diğer boss kapıları mevcut ilerleme kurallarını korur.
