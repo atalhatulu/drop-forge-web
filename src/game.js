@@ -509,7 +509,7 @@ function openChestUpgradeModal(choices){
     } else {
       const id = item.id;
       const mod = modCatalog[id] || MODS[id];
-      const icon = DropForgeModPresentation.MOD_ICONS[id] || "✦";
+      const icon = window.DropForgeModPresentation.MOD_ICONS[id] || "✦";
       const slotName = FORGE_SLOT_LABELS[mod?.slot] || "EKLENTİ";
       const desc = mod?.description || "";
       return '<div class="chestCard" data-upgrade-index="'+idx+'">'+
