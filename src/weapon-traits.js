@@ -59,5 +59,15 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c}){
  }
  return result;
 }
-root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,choices});
+function loadoutHTML(slot){
+ const s=state(slot);
+ const row=(id,label)=>{
+  const trait=TRAITS[id];
+  return '<div class="weaponTraitRow"><span class="weaponTraitKind">'+label+'</span>'+
+   (trait?'<div><strong>'+trait.name+' · SEV '+(s.levels[id]||1)+'/3</strong><small>'+trait.description+'</small></div>':'<div><small>BOŞ · SANDIKTAN ÖZELLİK SEÇ</small></div>')+'</div>';
+ };
+ return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
+  row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
+}
+root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,choices,loadoutHTML});
 })(window);
