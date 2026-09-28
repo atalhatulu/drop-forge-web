@@ -101,3 +101,19 @@
 .gearItemGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:8px;margin:10px 0}.gearItemGrid>p{color:#a9c5d8;font:11px/1.5 monospace}
 .gearItem{display:flex;align-items:center;gap:8px;text-align:left;padding:6px;background:#1a3349;border:1px solid #63849d;color:#e5eaf0;cursor:pointer}.gearItem:hover,.gearVisualSlot button:hover{border-color:#b7eac9;background:#264a59}.gearItem span{display:grid;gap:5px}
 @media(max-width:600px){.forgeGearPanel{padding:8px}.gearVisualGrid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.gearVisualSlot{padding:5px;gap:5px}.gearVisualSlot .gearIcon{width:43px;height:43px}.gearVisualSlot .gearIcon img{width:42px;height:42px}}
+
+/* Character preview on the left; five armor slots and live bonuses on the right. */
+.gearEquipmentLayout{display:grid;grid-template-columns:minmax(145px,210px) minmax(0,1fr);gap:14px;align-items:stretch;margin:12px 0}
+.gearCharacterPanel{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;min-width:0;padding:14px 8px;border:2px solid #4e7295;background:repeating-linear-gradient(0deg,#0b1b30 0 12px,#10253c 12px 24px)}
+.gearCharacterPanel>b,.gearEquipmentRight>b,.gearSummary>b{color:#f4e4b7;font:900 12px monospace;letter-spacing:.05em}
+.gearCharacterCanvas{display:block;width:min(100%,144px);height:auto;image-rendering:pixelated;filter:drop-shadow(0 7px 0 #091422)}
+.gearCharacterPanel>small{color:#a9c5d8;font:10px monospace;text-align:center}
+.gearEquipmentRight{min-width:0}.gearEquipmentRight .gearVisualGrid{display:flex;flex-direction:column;gap:8px;margin:10px 0}
+.gearEquipmentRight .gearVisualSlot{min-height:70px}.gearEquipmentRight .gearVisualSlot.empty{border-color:#49647d;background:#102037}
+.gearEquipmentRight .gearVisualSlot .gearIcon{width:52px;height:52px}.gearEmptySquare{display:block;width:32px;height:32px;border:2px dashed #55718b;background:#14273e;box-shadow:inset 0 0 0 3px #0a1a2c}
+.gearSlotDetails{display:flex!important;flex-direction:column;align-items:flex-start;justify-content:center;gap:4px;min-width:0;flex:1}
+.gearPieceBonus{color:#a7e9c8;font:10px/1.45 monospace}.gearVisualSlot.empty .gearPieceBonus{color:#738da5}
+.gearSummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:11px;border:1px solid #557b91;background:#102c39}
+.gearSummary>b,.gearSummary>small{grid-column:1/-1}.gearSummary>span{color:#a7e9c8;font:10px/1.45 monospace}.gearSummary>small{color:#d4c69c;font:10px/1.5 monospace}
+@media(max-width:650px){.gearEquipmentLayout{grid-template-columns:minmax(100px,135px) minmax(0,1fr);gap:8px}.gearCharacterPanel{padding:8px 4px}.gearEquipmentRight .gearVisualSlot{padding:6px;gap:6px}.gearEquipmentRight .gearVisualSlot .gearIcon{width:40px;height:40px}.gearEquipmentRight .gearVisualSlot .gearIcon img{width:38px;height:38px}.gearEmptySquare{width:25px;height:25px}.gearSummary{grid-template-columns:1fr}.gearVisualSlot button{padding:4px;font-size:8px}}
+@media(max-width:410px){.gearEquipmentLayout{grid-template-columns:1fr}.gearCharacterPanel{min-height:185px}.gearCharacterCanvas{width:105px}}
