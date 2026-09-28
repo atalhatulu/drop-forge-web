@@ -18,27 +18,24 @@ const TRAITS=Object.freeze({
 });
 function state(slot){return slot.traits||{main:null,supports:[],levels:{}};}
 function eligible(slot,id,projectiles){const trait=TRAITS[id];if(!slot||!trait)return false;return !(trait.exclude||[]).includes(projectiles[slot.weapon]);}
+function effectiveMods(slot){
+ const s=state(slot);
+ return [...new Set([...(slot?.mods||[]),s.main,...s.supports].filter(Boolean))];
+}
 function canGrant(slot,id,projectiles){
  if(!eligible(slot,id,projectiles))return false;
- const trait=TRAITS[id],s=state(slot),existing=trait.kind==='main'?s.main:null;
+ const trait=TRAITS[id],s=state(slot);
  if((s.levels[id]||0)>=3)return false;
  if(trait.kind==='support'&&!s.supports.includes(id)&&s.supports.length>=2)return false;
- const occupied=slot.mods?.[root.DropForgeCatalog.ALL_MODS[id].slot];
- if(occupied&&occupied!==existing&&occupied!==id&&!(trait.kind==='support'&&s.supports.includes(occupied)))return false;
  return true;
 }
 function grant(slot,id,projectiles){
  if(!canGrant(slot,id,projectiles))return false;
  const trait=TRAITS[id],s=state(slot),next={main:s.main,supports:[...s.supports],levels:{...s.levels}};
- if(trait.kind==='main'&&next.main&&next.main!==id){
-  const old=next.main,oldSlot=root.DropForgeCatalog.ALL_MODS[old].slot;
-  if(slot.mods[oldSlot]===old)slot.mods[oldSlot]=undefined;
-  delete next.levels[old];
- }
+ if(trait.kind==='main'&&next.main&&next.main!==id)delete next.levels[next.main];
  if(trait.kind==='main')next.main=id;
  else if(!next.supports.includes(id))next.supports.push(id);
  next.levels[id]=Math.min(3,(next.levels[id]||0)+1);
- slot.mods[root.DropForgeCatalog.ALL_MODS[id].slot]=id;
  slot.traits=next;
  return true;
 }
@@ -77,5 +74,5 @@ function loadoutHTML(slot){
  return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
   row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
 }
-root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,choices,snapshot,hasInvestment,loadoutHTML});
+root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,hasInvestment,loadoutHTML});
 })(window);
