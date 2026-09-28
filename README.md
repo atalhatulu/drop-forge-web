@@ -116,3 +116,7 @@ Kırmızı tank düşmanları oyuncu yatay menzildeyken kısa süre hücumu zemi
 ## Uçan düşmanların hızı
 
 Mavi uçan düşmanlar oyuncuyu daha hızlı takip eder (azami yatay hız 245), dikey konumlarını daha çevik düzeltir ve mermilerden daha hızlı sıyrılır. Atış aralıkları kısaltılmıştır; saldırı öncesi nişan alma uyarısı korunur.
+
+## Büyücülerin patlayan mermileri
+
+Mor büyücülerin mermileri oyuncuya, jeneratöre veya arena sınırına çarptığında ya da süreleri dolduğunda patlar. Patlama, merminin etrafında 76 birimlik alan hasarı uygular; görsel patlama halkası kısa süre görünür. Oyuncunun dash sırasında patlama hasarından kaçınması mümkündür. Diğer düşman mermilerinin davranışı değişmez.
