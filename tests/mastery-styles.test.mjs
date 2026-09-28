@@ -80,3 +80,25 @@ test('hub style selection is permanent but never occupies an expedition trait sl
  assert.match(html,/id="forgeStyle1"/);
  assert.match(html,/id="forgeStyle2"/);
 });
+
+test('manual backups round-trip mastery styles and reset clears them without losing legacy save compatibility',()=>{
+ const stylesKey='dropForge.masteryStyles.v1',buildsKey='dropForge.weaponBuilds.v1';
+ const {progress,saved}=loadProgress({
+  'dropForge.weaponMastery.v1':JSON.stringify({0:2200}),
+  'dropForge.unlockedWeapons.v1':JSON.stringify([0,1,4]),
+  [stylesKey]:JSON.stringify({0:'focused',4:'rapid'}),
+  [buildsKey]:JSON.stringify({0:['barrel',null,null,null]})
+ });
+ const backup=progress.exportSaveData();
+ const parsed=JSON.parse(backup);
+ assert.equal(JSON.parse(parsed[stylesKey])[4],'rapid');
+ assert.equal(JSON.parse(parsed[buildsKey])[0][0],'barrel','older backups keep their compatibility key');
+ const restored=loadProgress();
+ assert.equal(restored.progress.importSaveData(backup),true);
+ assert.equal(JSON.parse(restored.saved.get(stylesKey))[0],'focused');
+ assert.equal(JSON.parse(restored.saved.get('dropForge.weaponMastery.v1'))[0],2200);
+ progress.resetAllProgress();
+ assert.equal(Object.keys(progress.masteryStyles).length,0);
+ assert.deepEqual(Object.keys(JSON.parse(saved.get(stylesKey))),[]);
+ assert.ok(progress.unlockedWeapons.has(0)&&progress.unlockedWeapons.has(1));
+});
