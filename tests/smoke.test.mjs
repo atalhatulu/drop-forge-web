@@ -634,3 +634,14 @@ test('room threat escalates every 30 seconds with capped movement and attack buf
  assert.match(ai,/e\.fire=.*\/attackBoost/);
  assert.match(ai,/1\+threat\*\.08/);
 });
+
+
+test('each combat room starts with one healer without healer-to-healer loops', () => {
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(game,/if\(room\.type==='treasure'\)\{room\.cleared=true/);
+ assert.match(game,/if\(!room\.enemies\.some\(e=>e\.type==='healer'\)\)spawnEnemy\(room,'healer'/);
+ assert.match(game,/room\.enemyCap=Math\.max\(room\.enemyCap,room\.enemies\.length\)/);
+ assert.match(game,/if\(room\.type==='hunt'\)\{const target=room\.enemies\[0\]/);
+ assert.match(game,/portal\.type==='healer'&&room\.enemies\.some\(e=>e\.alive&&e\.type==='healer'\)/);
+ assert.match(ai,/a\.alive&&a!==e&&a\.type!=='healer'&&a\.hp<a\.maxHp/);
+});
