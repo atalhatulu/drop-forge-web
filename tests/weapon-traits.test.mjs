@@ -105,11 +105,11 @@ test('TAB displays every weapon trait, level and remaining open support slot',()
  assert.match(html,/DESTEK 2[^]*BOŞ · SANDIKTAN ÖZELLİK SEÇ/);
  assert.doesNotMatch(traits.loadoutHTML(gun()),/ELEKTRİK ZİNCİRİ · SEV/);
 });
-test('TAB shows run traits separately and prevents legacy editor overwriting their combat slot',()=>{
+test('TAB shows run traits separately without hiding legacy attachment editor',()=>{
  const game=readFileSync('src/game.js','utf8');
  const css=readFileSync('styles/workbench.css','utf8');
  assert.match(game,/DropForgeWeaponTraits\.loadoutHTML\(w\)/);
- assert.match(game,/if\(w\.traits\?\.levels&&Object\.keys\(w\.traits\.levels\)\.some\(id=>modCatalog\[id\]\?\.slot===j\)\)continue/);
+ assert.match(game,/for\(let j=0;j<4;j\+\+\)\{const row=document\.createElement\('label'\)/);
  assert.match(css,/\.weaponTraitRow/);
 });
 
