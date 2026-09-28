@@ -164,3 +164,7 @@ Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve *
 ## Kalıcı usta ve sefer tüccarı
 
 Hazırlık alanındaki **Kalıcı Usta** yalnızca kalıcı çekirdek kabul eder; alınan gelişimler sonraki seferlere aktarılır. Odalardaki **Sefer Tüccarı** yalnızca o seferin altınını kabul eder; satın alınan sarf malzemeleri sefer sonunda sıfırlanır. Tüccar türü artık odadaki tüccarın kalıcı niteliğinden belirlenir. Kalıcı çekirdek her 5 düşmanda +1, boss başına +3, elit veya av odası temizlenince +1 ve hazine odasına girince +1 kazanılır. Kalıcı ustada bu sefer kazanılan çekirdekler de görünür; sefer tüccarında kalıcı çekirdek bakiyesi ayrıca gösterilir.
+
+## Şans çarkı ekranı etkileşimi
+
+Odada duran çark ayrı ekranı kendiliğinden açmaz. Çarkın yanına gidip **E** tuşuna basınca animasyon başlar; ödül gösterimi tamamlanınca oyun ekranı otomatik geri gelir.

@@ -707,3 +707,12 @@ test('merchant currency follows merchant type and permanent cores reward room mi
  assert.match(shop,/BU SEFER \+'/);
  assert.match(shop,/ÇEKİRDEKLER KALICI:/);
 });
+
+
+test('wheel screen stays hidden until E starts the wheel and closes after result', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/if\(!w\|\|!\(w\.spinTime>0\|\|w\.resultTime>0\)\)return/);
+ assert.match(game,/if\(near\?\.nearWheel\)\{spinWheel\(room\);return;\}/);
+ assert.match(game,/w\.spinTime=2\.4;w\.spinDuration=2\.4/);
+ assert.match(game,/room\.wheel\.resultTime=Math\.max\(0,room\.wheel\.resultTime-dt\)/);
+});
