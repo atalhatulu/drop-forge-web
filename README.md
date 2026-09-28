@@ -148,3 +148,7 @@ Her savaş odası (boss odaları dâhil) başlangıçta en az bir şifacıyla a�
 ## Silah build kayıtları
 
 Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve **ÖNERİLEN BUILD** düğmeleri bulunur. Build tercihleri silah kimliğine göre tarayıcıda saklanır ve sonraki seferlerde yeniden uygulanabilir. Önerilen dizilim silahın mermi ailesine göre bir başlangıç seçeneğidir; yalnızca ustalık seviyesiyle açılmış yuvalara uygun eklentiler takılır. Kayıtlar eklenti veya ustalık kilidini açmaz ve mevcut seferin ganimetini kalıcılaştırmaz.
+
+## Animasyonlu şans çarkı
+
+Çarkla etkileşim, oyun kanvası üzerinde ayrı bir tam ekran 2D çark sahnesi açar. Altı renkli dilim, sabit gösterge ve yavaşlayarak dönen animasyon 2,4 saniye sürer. Ödül belirlendikten sonra sonuç 1,8 saniye gösterilir; mevcut ödül olasılıkları ve kazanım mantığı korunur.

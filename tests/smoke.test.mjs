@@ -660,3 +660,14 @@ test('forge supports per-weapon persistent builds and recommended loadouts', () 
  assert.equal((html.match(/data-build-action="load"/g)||[]).length,2);
  assert.equal((html.match(/data-build-action="recommend"/g)||[]).length,2);
 });
+
+
+test('wheel displays a timed animated 2D reward screen', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/w\.spinTime=2\.4;w\.spinDuration=2\.4;w\.spinAngle=0/);
+ assert.match(game,/w\.spinAngle\+=\(15\*\(1-progress\)\*\*2\+1\.2\)\*dt/);
+ assert.match(game,/function drawWheelScreen\(w\)/);
+ assert.match(game,/ctx\.arc\(0,0,r,a,b\)/);
+ assert.match(game,/drawGameHud\(\);drawWheelScreen\(room\.wheel\)/);
+ assert.match(game,/w\.resultLabel=announcementText;w\.resultTime=1\.8/);
+});
