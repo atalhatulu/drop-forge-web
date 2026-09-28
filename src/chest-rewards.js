@@ -26,5 +26,16 @@ function selectChestChoices({room,player,stashedMods,modCatalog,chipCatalog,mast
  }
  return choices;
 }
-root.DropForgeChestRewards=Object.freeze({selectChestChoices});
+function availableRewardMods({player,stashedMods,catalog,masteryLevel,modSlotUnlocked}){
+ if(stashedMods.length>=12)return [];
+ return Object.keys(catalog).filter(id=>{
+  const mod=catalog[id];
+  return !stashedMods.includes(id)&&player.slots.some(slot=>slot&&masteryLevel(slot.weapon)>=mod.level&&modSlotUnlocked(mod.slot,slot.weapon)&&!slot.mods[mod.slot]&&!slot.mods.includes(id));
+ });
+}
+function selectBossAttachment(args,seed,stage,hash){
+ const available=availableRewardMods(args);
+ return available.length?available[hash(seed,stage,918)%available.length]:null;
+}
+root.DropForgeChestRewards=Object.freeze({selectChestChoices,availableRewardMods,selectBossAttachment});
 })(window);

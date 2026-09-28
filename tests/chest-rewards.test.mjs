@@ -5,7 +5,7 @@ import vm from 'node:vm';
 
 const context={window:{}};
 vm.runInNewContext(readFileSync('src/chest-rewards.js','utf8'),context);
-const {selectChestChoices}=context.window.DropForgeChestRewards;
+const {selectChestChoices,availableRewardMods,selectBossAttachment}=context.window.DropForgeChestRewards;
 const mods={barrel:{slot:0,level:2},rapidBarrel:{slot:0,level:2},loader:{slot:1,level:4},extendedMag:{slot:1,level:4},core:{slot:2,level:6}};
 function choose(config={}){
  const slot=config.slot||{weapon:0,mods:[null,null,null,null]};
@@ -41,4 +41,31 @@ test('chest opening and legacy bag claims retain rewards until actually received
  assert.match(game,/if\(game\.stashedMods\.length>=12\|\|game\.stashedMods\.includes\(pick\)/);
  assert.match(game,/EKLENTİ ALINAMIYOR · ÇANTANI DÜZENLE',2/);
  assert.match(game,/closeChestUpgradeModal\(\);\s*updateHud\(\)/);
+});
+
+function rewardArgs({level=4,bag=[],slotMods=[null,null,null,null]}={}){
+ return {player:{slots:[{weapon:0,mods:slotMods}]},stashedMods:bag,catalog:mods,masteryLevel:()=>level,modSlotUnlocked:j=>level>=[2,4,6,8][j]};
+}
+test('boss and wheel share ownership, capacity and slot validation',()=>{
+ const options=availableRewardMods(rewardArgs());
+ assert.ok(options.includes('barrel')&&options.includes('loader'));
+ assert.equal(availableRewardMods(rewardArgs({bag:Array(12).fill('owned')})).length,0);
+ assert.equal(availableRewardMods(rewardArgs({level:1})).length,0);
+ assert.deepEqual(availableRewardMods(rewardArgs({level:2,slotMods:['barrel']})),[]);
+ const choice=selectBossAttachment(rewardArgs(),123,2,()=>1);
+ assert.equal(choice,options[1]);
+ assert.equal(selectBossAttachment(rewardArgs({bag:Array(12).fill('owned')}),123,2,()=>1),null);
+});
+test('wheel fallback pays gold instead of discarding a full gear bag or reserve',()=>{
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/if\(p\.gearBag\.length<20\)\{grantGear/);
+ assert.match(source,/ZIRH ÇANTASI DOLU · \+85 ALTIN/);
+ assert.match(source,/MÜHİMMAT DOLU · \+75 ALTIN/);
+ assert.match(source,/game\.modLevels\[mod\]\?\?=1/);
+});
+test('boss claim recomputes the offer and only consumes a valid rewarded attachment',()=>{
+ const source=readFileSync('src/game.js','utf8');
+ assert.match(source,/const id=selectBossAttachment\(/);
+ assert.match(source,/id!==valid\)return;game\.stashedMods\.push\(id\)/);
+ assert.match(source,/game\.pendingBossReward=null;renderLoadout\(\)/);
 });
