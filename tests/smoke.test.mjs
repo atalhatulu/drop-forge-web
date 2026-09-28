@@ -178,23 +178,13 @@ test('enemy level scales HP, attack damage and fire rate', () => {
  assert.match(source,/LV '\+\(e\.level\|\|1\)/);
 });
 
-test('each stat attachment occupies its own dedicated weapon slot', () => {
- const source=readFileSync('src/game.js','utf8'),catalog=readFileSync('src/catalog.js','utf8');
+test('legacy equipped attachments retain combat effects without requiring old installation code',()=>{
+ const game=readFileSync('src/game.js','utf8'),catalog=readFileSync('src/catalog.js','utf8');
  assert.match(catalog,/barrel:\{name:'GÜÇ NAMLU',level:2,slot:0/);
- assert.match(catalog,/loader:\{name:'HIZLI MEKANİZMA',level:4,slot:1/);
- assert.match(catalog,/core:\{name:'FAZ ÇEKİRDEĞİ',level:6,slot:2/);
- assert.match(catalog,/stabilizer:\{name:'DENGELEYİCİ',level:8,slot:3/);
- const start=source.indexOf('function installMod(slot,mod)'),end=source.indexOf('function applyStashedMods(',start);
- assert.ok(start>=0&&end>start);
- const install=new Function('MODS','ALL_MODS','masteryLevel','modSlotUnlocked',source.slice(start,end)+'return installMod;')(
- {barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},{barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},()=>9,()=>true);
- const weapon={weapon:0,mods:[]};
- assert.equal(install(weapon,'loader'),true);
- assert.equal(weapon.mods[0],undefined);
- assert.equal(weapon.mods[1],'loader');
- assert.equal(install(weapon,'loader'),false);
- assert.equal(install(weapon,'barrel'),true);
- assert.equal(weapon.mods[0],'barrel');
+ assert.doesNotMatch(game,/function installMod\(|function applyStashedMods\(/);
+ assert.match(game,/mods:\[\.\.\.\(item\.mods\|\|\[\]\)\]/);
+ assert.match(readFileSync('src/weapon-stats.js','utf8'),/slot\.mods\|\|\[\]/);
+ assert.match(readFileSync('src/attachment-effects.js','utf8'),/slot\?\.mods\|\|\[\]/);
 });
 test('gold and ammo enemy drops feed a real purchase panel', () => {
  const source=readFileSync('src/game.js','utf8'),html=readFileSync('index.html','utf8');
@@ -572,7 +562,7 @@ test('legacy attachment descriptions stay available while the hub uses run trait
  assert.doesNotMatch(html,/forgeEditorChoices/);
  assert.doesNotMatch(html,/forgeAttachSlot/);
  assert.match(html,/forgeStarterNote/);
- assert.match(source,/function modDiffHTML\(id,currentMods,mod,slot\)/);
+ assert.doesNotMatch(source,/function modDiffHTML\(/);
  assert.match(source,/DropForgeWeaponTraits\.loadoutHTML\(slot\)/);
  const presentation=readFileSync('src/mod-presentation.js','utf8');
  const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},ALL_MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
