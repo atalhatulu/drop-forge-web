@@ -136,3 +136,7 @@ Düşman canı LV 1'e göre LV 2'de ×1,75; LV 3'te ×3,0625; LV 4'te ×3,828125
 ## Portal savunması ve hızlandırılmış üretim
 
 Portalın kalkanı artık mermi sayısına bağlı değildir. Canı ilk kez %50 veya altına düştüğünde 2,7 saniyelik kalkan açar ve bu sırada düşman üretimini durdurur. Kalkan sona erdiğinde üretim aralığı normalin %60'ına iner; portal aynı seferde ikinci kez kalkan açmaz. Portalın aynı anda üretebileceği düşman sınırı değişmez.
+
+## Odada kalma baskısı
+
+Savaş odasında geçen süre 30, 60 ve 90. saniyelerde tehdit seviyesini artırır (en fazla 3). Her kademe düşmanların hareketini %12 hızlandırır, saldırı bekleme aralığını %10 oranında kısaltan bir çarpan uygular ve saldırı hasarını %8 artırır. Tehdit seviyesi ve odada geçen süre oyun ekranında gösterilir; yeni odanın sayacı sıfırdan başlar. Hazırlık ve temizlenmiş odalarda tehdit artmaz.

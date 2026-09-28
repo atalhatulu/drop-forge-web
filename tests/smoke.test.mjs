@@ -622,3 +622,15 @@ test('portal shield triggers once at half health and overdrive speeds spawning a
  assert.match(game,/portal\.spawnDuration=game\.settings\.spawnDelay\*\(portal\.overdrive\?\.6:1\)/);
  assert.doesNotMatch(game,/q\.burstHits>=4/);
 });
+
+
+test('room threat escalates every 30 seconds with capped movement and attack buffs', () => {
+ const game=readFileSync('src/game.js','utf8'),ai=readFileSync('src/enemy-ai.js','utf8');
+ assert.match(game,/room\.threatTime=0;room\.threatLevel=0/);
+ assert.match(game,/Math\.min\(3,Math\.floor\(room\.threatTime\/30\)\)/);
+ assert.match(game,/TEHDİT SEVİYESİ/);
+ assert.match(game,/TEHDİT '\+\(room\.threatLevel\|\|0\)\+'\/3/);
+ assert.match(ai,/moveBoost=1\+threat\*\.12,attackBoost=1\+threat\*\.10/);
+ assert.match(ai,/e\.fire=.*\/attackBoost/);
+ assert.match(ai,/1\+threat\*\.08/);
+});
