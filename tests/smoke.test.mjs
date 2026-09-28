@@ -720,13 +720,13 @@ test('enemy, chest and room rewards include diverse guaranteed and bonus loot', 
 });
 
 
-test('first acquisition highlights new weapons mods and accessories once per run', () => {
+test('first acquisition highlights new weapons and accessories while old mods become salvage', () => {
  const game=readFileSync('src/game.js','utf8');
  assert.match(game,/seenLoot:new Set\(\),newLootGlow:0/);
  assert.match(game,/function highlightFirstLoot\(kind,id,name\)/);
  assert.match(game,/if\(game\.seenLoot\.has\(key\)\)return/);
  assert.match(game,/game\.seenLoot\.add\(key\);game\.newLootGlow=1\.8/);
- assert.match(game,/highlightFirstLoot\('mod',id,/);
+ assert.match(game,/ESKİ EKLENTİ DÖNÜŞTÜRÜLDÜ · \+15 ALTIN/);
  assert.match(game,/highlightFirstLoot\('artifact',item\.artifact/);
  assert.match(game,/highlightFirstLoot\('weapon',p\.weapon/);
  assert.match(game,/if\(game\.newLootGlow>0\)\{/);
