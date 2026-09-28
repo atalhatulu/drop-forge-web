@@ -136,3 +136,16 @@
 .gearSlotDetails{display:flex!important;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;flex:1}.gearSlotDetails small,.gearPieceBonus{white-space:normal}
 .gearSlotChoices{margin-top:12px;padding:12px;border:1px solid #79a4ad;background:#10283b}.gearSlotChoicesHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.gearSlotChoicesHead>b{font:900 12px monospace;color:#f4e4b7}.gearSlotChoicesHead>button{background:#203a51;border:1px solid #67899e;color:#e6edf0;padding:5px 10px;cursor:pointer}
 .gearSlotChoices .gearItemGrid{grid-template-columns:repeat(auto-fit,minmax(175px,1fr));max-height:250px;overflow:auto;padding-right:4px}.gearSlotChoices .gearItem.chosen{border-color:#a7f2cd;background:#21483f}
+
+/* Wearable equipment: compare the entire build before equipping a piece. */
+.gearChoiceCard{min-width:0;display:flex;flex-direction:column;gap:8px;padding:8px;border:1px solid rgba(160,188,208,.22);border-radius:10px;background:rgba(10,19,32,.45)}
+.gearChoiceCard .gearItem{width:100%}
+.gearComparison{display:flex;flex-direction:column;gap:7px;padding:8px;border-radius:7px;background:rgba(8,16,28,.58)}
+.gearComparison>b{font-size:10px;letter-spacing:.07em;color:#cbd9e7}
+.gearCompareGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.gearCompareStat{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:3px;padding:6px;border:1px solid rgba(149,177,195,.16);border-radius:5px}
+.gearCompareStat b{width:100%;font-size:10px;color:#cbd9e7}
+.gearCompareStat small{font-size:10px;color:#9db3c7}
+.gearCompareStat strong{font-size:11px}
+.gearCompareStat .gain{color:#8bf1b5}.gearCompareStat .loss{color:#ff9b9b}.gearCompareStat .neutral{color:#9db3c7}
+.gearComparison>small{color:#f0d58b;font-size:10px}
