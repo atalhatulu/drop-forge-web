@@ -269,14 +269,24 @@ test('shock chain and burning effects are applied to enemy hits', () => {
  assert.match(readFileSync('src/enemy-ai.js','utf8'),/if\(e\.burnTime>0\)/);
 });
 
-test('merchant can sell an alternative for an occupied mod slot', () => {
+test('run merchant sells only consumables and never reintroduces legacy attachments',()=>{
  const root={};new Function('window',readFileSync('src/shop-view.js','utf8'))(root);
- const player={gold:1000,kits:1,grenades:0,slots:[{weapon:0,mods:[undefined,undefined,'shockCore']}],weapon:0};
- const {shopCanBuy:canBuy}=root.DropForgeShopView.createShopView({getGame:()=>({player,stashedMods:[]}),getLegacy:()=>({marks:0}),getUnlockedWeapons:()=>new Set(),WEAPON_NAMES:[],PERMANENT_ITEMS:{},SHOP_ITEMS:{shockCore:{price:175},burnCore:{price:205}},MODS:{shockCore:{slot:2,level:6},burnCore:{slot:2,level:6}},AMMO_MAX:[240],masteryLevel:()=>9,$:()=>({})});
- assert.equal(canBuy('burnCore'),true);
+ const player={gold:200,kits:1,grenades:0,hp:80,maxHp:100,slots:[{weapon:0,mods:[],reserve:0}],weapon:0};
+ const {shopCanBuy:canBuy}=root.DropForgeShopView.createShopView({
+  getGame:()=>({player,stashedMods:[],rooms:[{merchant:{permanent:false}}],roomId:0}),
+  getLegacy:()=>({marks:0}),getUnlockedWeapons:()=>new Set(),WEAPON_NAMES:[],
+  PERMANENT_ITEMS:{},SHOP_ITEMS:{kit:{price:55},patch:{price:65},ammo:{price:45},grenade:{price:40}},
+  AMMO_MAX:[240],masteryLevel:()=>9,$:()=>({})
+ });
+ assert.equal(canBuy('kit'),true);
+ assert.equal(canBuy('patch'),true);
+ assert.equal(canBuy('ammo'),true);
+ assert.equal(canBuy('grenade'),true);
+ assert.equal(canBuy('shockCore'),false,'removed attachment stock is not purchasable');
+ player.gold=30;
+ assert.equal(canBuy('kit'),false);
  assert.equal(canBuy('shockCore'),false);
- player.gold=100;
- assert.equal(canBuy('burnCore'),false);
+ assert.doesNotMatch(readFileSync('src/game.js','utf8'),/else if\(MODS\[id\]\)\{game\.stashedMods\.push\(id\)/);
 });
 test('shock chains once and burn core applies a timed effect', () => {
  const source=readFileSync('src/game.js','utf8');
