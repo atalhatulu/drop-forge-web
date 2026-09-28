@@ -811,3 +811,14 @@ test('first boss door consumes and animates three follower keys', () => {
  assert.match(game,/game\.bossKeys=0;for\(const key of game\.keyFollowers\)/);
  assert.match(game,/game\.keyFollowers\.length=0/);
 });
+
+
+test('ammo drops use active weapon projectile family and refill compatible weapons only', () => {
+ const game=readFileSync('src/game.js','utf8'),loot=readFileSync('src/loot-view.js','utf8');
+ assert.match(game,/if\(kind==='ammo'&&!artifact\)/);
+ assert.match(game,/artifact=WEAPON_PROJECTILES\[weapon\]/);
+ assert.match(game,/WEAPON_PROJECTILES\[q\.weapon\]===family&&q\.reserve<AMMO_MAX\[q\.weapon\]/);
+ assert.match(game,/PROJECTILE_FAMILIES\[family\]\.name\+' MÜHİMMAT'/);
+ assert.match(loot,/if\(item\.kind==='ammo'\)\{const family=PROJECTILE_FAMILIES\[item\.artifact\]/);
+ assert.match(loot,/kinetic:'K',scatter:'S',pierce:'D',plasma:'P',laser:'L',explosive:'X',arc:'E'/);
+});
