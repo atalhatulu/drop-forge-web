@@ -176,3 +176,7 @@ Seferde savaş dışında sağ üst köşede yalnızca bulunduğun oda ve doğru
 ## Takip eden boss anahtarları
 
 Toplanan boss anahtarları savaş dışında oyuncunun arkasında küçük 2D anahtarlar ve aralarındaki ışıklı bağ ile takip eder. Savaşta gizlenirler; oda değiştirince oyuncunun yanından tekrar takip etmeye başlarlar. İlk boss odasına açılan kapı üzerinde anahtar simgesiyle mevcut/gerekli anahtar sayısı (ör. 0/3) görünür ve yeterli anahtar yoksa kapı kilitli kalır.
+
+## Yeni çağırıcı düşmanlar
+
+LV2 ve üstü normal savaş odalarında başlangıç diziliminin ikinci düşmanı %30 olasılıkla iki özel türden biri olur: **Mühür Ustası** ağır, yüksek canlı ve yavaş muhafızlar çağırır (aynı anda en fazla iki); **Geçitçi** en fazla iki küçük düşman portalı açar. Bu geçitler üçer düşman ürettikten sonra kapanır ve oyuncu tarafından daha erken yok edilebilir. Her iki çağırıcı da oyuncudan mesafe korumaya çalışır. Düşmanlar biyoma özgü ad ve renklerle çizilir; dağılım oranları daha sonra dengelenebilir.
