@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 
 const readProjectCss=()=>['styles/game.css','styles/quickbar.css','styles/workbench.css'].map(path=>readFileSync(path,'utf8')).join('\n');
-const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
+const readBootScripts=()=>['src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(path=>readFileSync(path,'utf8')).join('\n');
 
 test('HTML loads split CSS and JS entrypoints', () => {
   const html = readFileSync('index.html', 'utf8');
@@ -185,8 +185,8 @@ test('each stat attachment occupies its own dedicated weapon slot', () => {
  assert.match(catalog,/stabilizer:\{name:'DENGELEYİCİ',level:8,slot:3/);
  const start=source.indexOf('function installMod(slot,mod)'),end=source.indexOf('function applyStashedMods(',start);
  assert.ok(start>=0&&end>start);
- const install=new Function('MODS','masteryLevel','getModSlots',source.slice(start,end)+'return installMod;')(
- {barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},()=>9,()=>4);
+ const install=new Function('MODS','ALL_MODS','masteryLevel','modSlotUnlocked',source.slice(start,end)+'return installMod;')(
+ {barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},{barrel:{level:2,slot:0},loader:{level:4,slot:1},core:{level:6,slot:2},stabilizer:{level:8,slot:3}},()=>9,()=>true);
  const weapon={weapon:0,mods:[]};
  assert.equal(install(weapon,'loader'),true);
  assert.equal(weapon.mods[0],undefined);
@@ -444,7 +444,7 @@ test('attachment cards display class-specific names, precise deltas and are avai
  assert.match(source,/data-mod-choice=/);
  assert.match(source,/modEffectForWeapon\(w\.weapon,current\)/);
  const presentation=readFileSync('src/mod-presentation.js','utf8');
- const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
+ const root={DropForgeCatalog:{WEAPON_PROJECTILES:['kinetic','scatter','explosive','arc'],MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},ALL_MODS:{pierceBarrel:{name:'DELİCİ NAMLU'},core:{name:'FAZ ÇEKİRDEĞİ'}},WEAPON_TYPES:['TABANCA','POMPALI','PATLAYICI','ARK']}};
  new Function('window',presentation)(root);
  const naming=root.DropForgeModPresentation;
  assert.equal(naming.modNameForWeapon(0,'pierceBarrel'),'DELİCİ NAMLU');
@@ -495,7 +495,7 @@ test('legacy merchant and run merchant spend different wallets and persist upgra
 
 test('refactor loads catalog before runtime and keeps the same weapon/mod inventory',()=>{
  const html=readFileSync('index.html','utf8'),catalog=readFileSync('src/catalog.js','utf8'),runtime=readFileSync('src/game.js','utf8');
- const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
+ const order=['styles/game.css','styles/quickbar.css','styles/workbench.css','src/catalog.js','src/progression.js','src/abilities-data.js','src/shop-data.js','src/mod-presentation.js','src/world.js','src/weapon-stats.js','src/enemy-ai.js','src/shop-view.js','src/map-view.js','src/biome-view.js','src/loadout-presentation.js','src/scene-props.js','src/loot-view.js','src/gear.js','src/bosses.js','src/game.js'].map(asset=>html.indexOf('./'+asset));
  assert.ok(order.every(position=>position>=0));
  assert.ok(order.every((position,i)=>i===0||position>order[i-1]),'styles and scripts must load in dependency/cascade order');
  assert.match(runtime,/\}=window\.DropForgeCatalog/);
