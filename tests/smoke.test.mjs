@@ -776,3 +776,12 @@ test('weapon mastery levels 1 through 10 improve damage fire rate and reload', (
  assert.ok(first.reload>middle.reload&&middle.reload>last.reload);
  assert.equal(first.masteryLevel,1);assert.equal(last.masteryLevel,10);
 });
+
+
+test('weapon sprites use distinct family silhouettes and individual signature marks', () => {
+ const game=readFileSync('src/game.js','utf8');
+ assert.match(game,/function makeForgeSprite\(i\)/);
+ assert.match(game,/heavy=kind===2\|\|kind===5,precision=kind===3,energy=kind>=4/);
+ assert.match(game,/if\(kind===0\)/);assert.match(game,/if\(kind===3\)/);assert.match(game,/if\(kind===6\)/);
+ assert.match(game,/const marks=\[9,15,21,27,33,39,13,19,25,31,37,43,49\]/);
+});
