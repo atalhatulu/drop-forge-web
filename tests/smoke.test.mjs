@@ -763,3 +763,15 @@ test('merchant cards prioritize short effects and actionable prices', () => {
  assert.match(shop,/YETERSİZ /);
  assert.match(shop,/title=/);
 });
+
+
+test('weapon mastery levels 1 through 10 improve damage fire rate and reload', () => {
+ const source=readFileSync('src/weapon-stats.js','utf8');
+ const context={window:{}};vm.runInNewContext(source,context);
+ let level=1;const stats=context.window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE:[40],WEAPON_FIRE_RATES:[.3],WEAPON_PROJECTILES:['kinetic'],MAG_SIZE:[20],getMasteryLevel:()=>level});
+ const first=stats({weapon:0,mods:[]});level=5;const middle=stats({weapon:0,mods:[]});level=10;const last=stats({weapon:0,mods:[]});
+ assert.ok(first.damage<middle.damage&&middle.damage<last.damage);
+ assert.ok(first.fireRate<middle.fireRate&&middle.fireRate<last.fireRate);
+ assert.ok(first.reload>middle.reload&&middle.reload>last.reload);
+ assert.equal(first.masteryLevel,1);assert.equal(last.masteryLevel,10);
+});
