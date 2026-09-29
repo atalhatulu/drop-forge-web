@@ -1,7 +1,7 @@
 'use strict';
 /* Deterministic combat attachment effects, separately testable from the canvas runtime. */
 (function(root){
-function effectiveMods(slot){return [...new Set([...(slot?.mods||[]),slot?.traits?.main,...(slot?.traits?.supports||[])].filter(Boolean))];}
+function effectiveMods(slot){return [...new Set([...(slot?.mods||[]),...(slot?.traits?.slots||[slot?.traits?.main,...(slot?.traits?.supports||[])]).filter(Boolean)].filter(Boolean))];}
 function shotProfile(slot,remainingAmmo,stats,spentAmmo=true){
  const mods=effectiveMods(slot),overheat=spentAmmo&&mods.includes('overheat')&&remainingAmmo===0&&stats.family!=='explosive',laserSweep=mods.includes('laserSweep');
  return {family:overheat?'explosive':laserSweep?'laser':stats.family,pellets:overheat||laserSweep?1:stats.pellets,...(laserSweep?{damageMultiplier:stats.family==='scatter'?3:1}:{})};

@@ -1,6 +1,5 @@
 'use strict';
-/* First-stage run trait system. Existing combat mods remain the execution backend
-   until all loot/workbench sources have migrated. */
+/* Run weapon traits use three equal sockets; trait kind now describes the effect, not the socket. */
 (function(root){
 const WEAPON_GROUPS=['pistol','lmg','shotgun','energy','sniper','pistol','energy','shotgun','sniper','lmg','laser','explosive','arc'];
 const TRAITS=Object.freeze({
@@ -27,7 +26,15 @@ const TRAITS=Object.freeze({
  rapidBarrel:{name:'HIZLI NAMLU',kind:'main',groups:['pistol','lmg','shotgun'],mod:'rapidBarrel',description:'Atış hızını artırır; mermi başına hasar biraz azalır.'},
  barrel:{name:'AĞIR NAMLU',kind:'main',groups:['pistol','shotgun','energy','sniper','explosive'],mod:'barrel',description:'Hasarı artırır, ancak atış hızını bir miktar düşürür.'},
  core:{name:'FAZ ÇEKİRDEĞİ',kind:'support',groups:['pistol','lmg','energy','sniper','laser','explosive','arc'],mod:'core',description:'Mermi hızını artırır; silah ailesine göre delme veya alan etkisi kazandırır.'},
- heavyGrip:{name:'AĞIR KABZA',kind:'support',groups:['shotgun','lmg','explosive','arc'],mod:'heavyGrip',description:'Geri tepme azalır; isabetler düşmanı daha fazla sarsar.'}
+ heavyGrip:{name:'AĞIR KABZA',kind:'support',groups:['shotgun','lmg','explosive','arc'],mod:'heavyGrip',description:'Geri tepme azalır; isabetler düşmanı daha fazla sarsar.'},
+ seekerRound:{name:'AVCI MERMİ',kind:'attack',groups:['pistol','lmg','sniper','laser','arc'],mod:'seekerRound',description:'Mermiler yakın hedefe doğru hafifçe yön değiştirir.'},
+ executionRound:{name:'İNFaz ÇEKİRDEĞİ',kind:'attack',groups:['pistol','lmg','shotgun','sniper','explosive'],mod:'executionRound',description:'Canı azalmış düşmanlara daha fazla hasar verir.'},
+ shatterCore:{name:'PARÇALAYICI ÇEKİRDEK',kind:'attack',groups:['shotgun','energy','arc','sniper'],mod:'shatterCore',description:'Donmuş hedefe güçlü isabet vurur ve dondurmayı parçalar.'},
+ siphonRound:{name:'SÖMÜRÜ MERMİSİ',kind:'attack',groups:['pistol','lmg','energy','arc'],mod:'siphonRound',description:'İsabetler zaman zaman az miktarda can yeniler.'},
+ gravityRound:{name:'YERÇEKİMİ MERMİSİ',kind:'attack',groups:['explosive','energy','arc'],mod:'gravityRound',description:'İsabet çevresindeki düşmanları hedefe doğru çeker.'},
+ echoRound:{name:'YANKI MERMİSİ',kind:'attack',groups:['sniper','laser','energy','arc'],mod:'echoRound',description:'Aynı hedefe arka arkaya vuruşlar giderek güçlenir.'},
+ volatileRound:{name:'KIRILGAN YÜK',kind:'attack',groups:['shotgun','explosive','energy'],mod:'volatileRound',description:'İsabet, hedef çevresine küçük bir patlama yayar.'},
+ capacitorRound:{name:'KAPASİTÖR ATIŞI',kind:'attack',groups:['lmg','energy','laser','arc'],mod:'capacitorRound',description:'İsabetler kısa süreli atış hızı biriktirir.'}
 });
 const SYNERGIES=Object.freeze([
  {ids:['shockCore','tripleBurst'],name:'AŞIRI YÜK',description:'Elektrik zinciri her tetik serisinde iki hedefe sıçrayabilir.'},
@@ -36,26 +43,23 @@ const SYNERGIES=Object.freeze([
  {ids:['hunterMark','heavyStabilizer'],name:'NOKTA ATIŞI',description:'İşaretli hedefe sabit durarak vurduğunda kritik hasar artar.'},
  {ids:['laserSweep','pierceBarrel'],name:'FAZ KESİCİ',description:'Lazer hattı ek bir hedeften daha geçer.'}
 ]);
-function state(slot){return slot.traits||{main:null,supports:[],levels:{}};}
+function state(slot){const t=slot?.traits;if(!t)return {slots:[null,null,null],main:null,supports:[],levels:{}};const slots=Array.isArray(t.slots)?[...t.slots.slice(0,3),null,null,null].slice(0,3):[t.main||null,...(t.supports||[]).slice(0,2)];while(slots.length<3)slots.push(null);return {slots,main:slots[0],supports:slots.slice(1),levels:{...(t.levels||{})}};}
 function eligible(slot,id,projectiles){const trait=TRAITS[id],group=WEAPON_GROUPS[slot?.weapon];if(!slot||!trait)return false;return !trait.groups||trait.groups.includes(group);}
 function effectiveMods(slot){
  const s=state(slot);
- return [...new Set([...(slot?.mods||[]),s.main,...s.supports].filter(Boolean))];
+ return [...new Set([...(slot?.mods||[]),...s.slots].filter(Boolean))];
 }
 function canGrant(slot,id,projectiles){
  if(!eligible(slot,id,projectiles))return false;
  const trait=TRAITS[id],s=state(slot);
- if((slot.mods||[]).includes(id)&&s.main!==id&&!s.supports.includes(id))return false;
- if((s.levels[id]||0)>=3)return false;
- if(trait.kind==='main'&&s.main&&s.main!==id)return false;
- if(trait.kind==='support'&&!s.supports.includes(id)&&s.supports.length>=2)return false;
- return true;
+ if((slot.mods||[]).includes(id)&&!s.slots.includes(id))return false;
+ if(s.slots.includes(id))return (s.levels[id]||0)<3;
+ return s.slots.some(value=>!value);
 }
 function grant(slot,id,projectiles){
  if(!canGrant(slot,id,projectiles))return false;
- const trait=TRAITS[id],s=state(slot),next={main:s.main,supports:[...s.supports],levels:{...s.levels}};
- if(trait.kind==='main')next.main=id;
- else if(!next.supports.includes(id))next.supports.push(id);
+ const s=state(slot),next={slots:[...s.slots],levels:{...s.levels}},existing=next.slots.indexOf(id);
+ if(existing<0){const open=next.slots.indexOf(null);if(open<0)return false;next.slots[open]=id;}
  next.levels[id]=Math.min(3,(next.levels[id]||0)+1);
  slot.traits=next;
  return true;
@@ -64,24 +68,17 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c,kind=null}){
  const pool=[];
  for(let i=0;i<slots.length;i++)for(const id of Object.keys(TRAITS)){
   const slot=slots[i],t=TRAITS[id];if(!canGrant(slot,id,projectiles)||kind&&t.kind!==kind)continue;
-  const s=state(slot),installed=t.kind==='main'?s.main===id:s.supports.includes(id),socketOpen=t.kind==='main'?!s.main:s.supports.length<2;
-  // Open sockets receive new mechanics; occupied sockets only receive upgrades.
-  if(socketOpen?installed:!installed)continue;
-  pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:installed,socket:t.kind==='main'?'ANA DÖNÜŞÜM':installed?'DESTEK '+(s.supports.indexOf(id)+1):'DESTEK '+(s.supports.length+1)});
+  const s=state(slot),socketIndex=s.slots.indexOf(id),installed=socketIndex>=0,open=s.slots.indexOf(null);
+  if(installed?open>=0:open<0)continue;
+  pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:installed,socket:'YUVA '+(installed?socketIndex+1:open+1)});
  }
  const result=[],used=new Set();
- for(const phase of (kind?[kind,null,null]:['main','support',null])){
-  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.weaponSlot+':'+item.id));
-  if(!candidates.length)continue;
-  const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length;
-  const item=candidates[index];
-  used.add(item.weaponSlot+':'+item.id);result.push(item);
- }
+ for(let n=0;n<3;n++){let candidates=pool.filter(item=>!used.has(item.weaponSlot+':'+item.id));if(!candidates.length)break;const weapons=new Set(result.map(item=>item.weaponSlot));const fresh=candidates.filter(item=>!item.upgrade);if(result.length===0&&fresh.length)candidates=fresh;else if(weapons.size===1&&candidates.some(item=>!weapons.has(item.weaponSlot)))candidates=candidates.filter(item=>!weapons.has(item.weaponSlot));const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length,item=candidates[index];used.add(item.weaponSlot+':'+item.id);result.push(item);}
  return result;
 }
 function snapshot(slot){
  const s=slot?.traits;
- return s?{main:s.main||null,supports:[...s.supports],levels:{...s.levels}}:null;
+ return s?{slots:[...s.slots],main:s.slots[0]||null,supports:s.slots.slice(1),levels:{...s.levels}}:null;
 }
 function sameBuild(a,b){
  if(!a||!b||a.weapon!==b.weapon)return false;
@@ -90,13 +87,13 @@ function sameBuild(a,b){
  for(let j=0;j<4;j++)if((a.mods?.[j]||null)!==(b.mods?.[j]||null))return false;
  const first=state(a),second=state(b);
  if((first.main||null)!==(second.main||null))return false;
- if(first.supports.length!==second.supports.length||first.supports.some((id,i)=>id!==second.supports[i]))return false;
+ if(first.slots.some((id,i)=>id!==second.slots[i]))return false;
  const ids=new Set([...Object.keys(first.levels),...Object.keys(second.levels)]);
  return [...ids].every(id=>(first.levels[id]||0)===(second.levels[id]||0));
 }
 function hasInvestment(slot){
  const s=slot?.traits;
- return !!s&&(!!s.main||s.supports.length>0);
+ return !!s&&s.slots.some(Boolean);
 }
 function loadoutHTML(slot){
  const s=state(slot);
@@ -106,7 +103,7 @@ function loadoutHTML(slot){
    (trait?'<div><strong>'+trait.name+' · SEV '+(s.levels[id]||1)+'/3</strong><small>'+trait.description+'</small></div>':'<div><small>BOŞ · SANDIKTAN ÖZELLİK SEÇ</small></div>')+'</div>';
  };
  return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
-  row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
+  s.slots.map((id,index)=>row(id,'YUVA '+(index+1))).join('')+'</section>';
 }
 root.DropForgeWeaponTraits=Object.freeze({TRAITS,SYNERGIES,WEAPON_GROUPS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,sameBuild,hasInvestment,loadoutHTML});
 })(window);

@@ -38,7 +38,15 @@ const ALL_MODS={
  hunterMark:{name:'AVCI İŞARETİ',level:6,slot:2,description:'Hedefe işaret koyar; 5 sn kritik garantisi.'},
  heavyStabilizer:{name:'AĞIR STABİLİZATÖR',level:8,slot:3,description:'Sabit dururken kritik +%25.'},
  overchargeGrip:{name:'HIZ AŞIMI',level:8,slot:3,description:'İlk atışla 2 sn boyunca 2 kat atış hızı; 10 sn bekleme.'},
- steadyGrip:{name:'DENGELİ KABZA',level:8,slot:3,description:'Saçılma azalır, uzun mesafe isabeti artar.'}
+ steadyGrip:{name:'DENGELİ KABZA',level:8,slot:3,description:'Saçılma azalır, uzun mesafe isabeti artar.'},
+ seekerRound:{name:'AVCI MERMİ',level:4,slot:1,description:'Mermiler yakındaki düşmanlara doğru yön değiştirir.'},
+ executionRound:{name:'İNFAZ ÇEKİRDEĞİ',level:6,slot:2,description:'Canı azalmış düşmanlara %35 fazla hasar.'},
+ shatterCore:{name:'PARÇALAYICI ÇEKİRDEK',level:6,slot:2,description:'Donmuş hedefe güçlü isabet vurur ve dondurmayı parçalar.'},
+ siphonRound:{name:'SÖMÜRÜ MERMİSİ',level:4,slot:1,description:'İsabetler 0,55 sn arayla 1 can yeniler.'},
+ gravityRound:{name:'YERÇEKİMİ MERMİSİ',level:6,slot:2,description:'İsabet çevresindeki düşmanları hedefe çeker.'},
+ echoRound:{name:'YANKI MERMİSİ',level:4,slot:1,description:'Aynı hedefe art arda vurdukça hasar artar.'},
+ volatileRound:{name:'KIRILGAN YÜK',level:6,slot:2,description:'Atış başına ilk isabet çevreye küçük patlama yayar.'},
+ capacitorRound:{name:'KAPASİTÖR ATIŞI',level:8,slot:3,description:'İsabetler kısa süreli atış hızı biriktirir.'}
 };
 const MOD_SLOT_NAMES=['NAMLU · HASAR / ATIŞ / DELME','MEKANİZMA · HIZ / ŞARJÖR / TASARRUF','ÇEKİRDEK · FAZ / ŞOK / YANMA','KABZA · DENGE / HAREKET / TEPKİ'];
 const WEAPON_PROJECTILES=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
