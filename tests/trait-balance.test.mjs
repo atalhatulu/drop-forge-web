@@ -54,20 +54,21 @@ test('every allowed transformation combines safely with every support across all
 test('fully upgraded weapon falls back to gold instead of endless main replacement offers',()=>{
  const w=gun(0);
  for(const id of ['shockCore','loader','stabilizer'])for(let level=0;level<3;level++)assert.equal(traits.grant(w,id,catalog.WEAPON_PROJECTILES),true);
- assert.equal(traits.canGrant(w,'burnCore',catalog.WEAPON_PROJECTILES),true,'direct main replacement stays available');
+ assert.equal(traits.canGrant(w,'burnCore',catalog.WEAPON_PROJECTILES),false,'an occupied main socket only upgrades its current mechanic');
  const options=traits.choices({slots:[w],projectiles:catalog.WEAPON_PROJECTILES,seed:44,hash});
  assert.equal(options.length,0,'ordinary rewards should fall back to gold on a fully developed gun');
  const newGun=gun(1),withSecond=traits.choices({slots:[w,newGun],projectiles:catalog.WEAPON_PROJECTILES,seed:44,hash});
  assert.ok(withSecond.length>0&&withSecond.every(card=>card.weaponSlot===1),'second gun remains eligible');
 });
 
-test('upgrade cards prioritize development rather than repeatedly replacing a strong main',()=>{
+test('upgrade cards level occupied mechanics and never replace them',()=>{
  const w=gun(0);
- for(let i=0;i<3;i++)assert.equal(traits.grant(w,'shockCore',catalog.WEAPON_PROJECTILES),true);
+ for(let i=0;i<2;i++)assert.equal(traits.grant(w,'shockCore',catalog.WEAPON_PROJECTILES),true);
  const cards=traits.choices({slots:[w],projectiles:catalog.WEAPON_PROJECTILES,seed:10,hash});
  assert.ok(cards.length>0);
- assert.equal(cards[0].kind,'support','main alternatives must not occupy the first progression card');
- assert.ok(cards.filter(card=>card.replace).length<=1);
+ assert.equal(cards[0].kind,'main','the occupied main socket is offered as an upgrade');
+ assert.equal(cards[0].upgrade,true);
+ assert.ok(cards.every(card=>!card.replace));
 });
 
 test('five pellets in one shotgun shot count as a single cryo hit per target',()=>{

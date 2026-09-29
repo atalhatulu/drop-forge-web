@@ -31,9 +31,9 @@ function resolveAttachmentHit(enemy,bullet,now,stationary,roll){
   enemy.cryoHits=within?(enemy.cryoHits||0)+1:1;
   enemy.cryoLastHit=now;
   enemy.cryoSlowTime=2;
-  if(enemy.cryoHits>=3){enemy.cryoHits=0;enemy.freezeTime=Math.max(enemy.freezeTime||0,1.5);}
+  const freezeHits=mods.includes('lightGrip')?2:3;if(enemy.cryoHits>=freezeHits){enemy.cryoHits=0;enemy.freezeTime=Math.max(enemy.freezeTime||0,mods.includes('lightGrip')?2:1.5);}
  }
- return {critical,multiplier:critical?1.5:1};
+ return {critical,multiplier:critical?(enemy.hunterMarkTime>0&&mods.includes('heavyStabilizer')&&stationary?1.8:1.5):1};
 }
 function burstPlan(slot){
  return effectiveMods(slot).includes('tripleBurst')?{remaining:2,delay:.085}:null;

@@ -18,17 +18,18 @@ test('trait cards are limited to three unique, currently compatible weapon offer
  assert.equal(new Set(cards.map(card=>card.weaponSlot+':'+card.id)).size,cards.length);
  assert.ok(cards.every(card=>traits.canGrant([gun(),gun(1)][card.weaponSlot],card.id,projectiles)));
 });
-test('a main transformation is applied without occupying a legacy socket and a second replaces it',()=>{
+test('a main transformation is applied without occupying a legacy socket and upgrades in place',()=>{
  const w=gun();
  assert.equal(traits.grant(w,'shockCore',projectiles),true);
  assert.equal(w.mods[2],null);
  assert.equal(w.traits.main,'shockCore');
  assert.ok(traits.effectiveMods(w).includes('shockCore'));
- assert.equal(traits.grant(w,'burnCore',projectiles),true);
+ assert.equal(traits.grant(w,'burnCore',projectiles),false,'a filled main socket cannot be replaced');
+ assert.equal(traits.grant(w,'shockCore',projectiles),true);
  assert.equal(w.mods[2],null);
- assert.equal(w.traits.main,'burnCore');
- assert.ok(!traits.effectiveMods(w).includes('shockCore'));
- assert.equal(w.traits.levels.shockCore,undefined);
+ assert.equal(w.traits.main,'shockCore');
+ assert.ok(traits.effectiveMods(w).includes('shockCore'));
+ assert.equal(w.traits.levels.shockCore,2);
 });
 test('supports are capped at two and a duplicate increases trait level without taking a new slot',()=>{
  const w=gun();

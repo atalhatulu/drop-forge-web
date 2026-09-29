@@ -2,22 +2,42 @@
 /* First-stage run trait system. Existing combat mods remain the execution backend
    until all loot/workbench sources have migrated. */
 (function(root){
+const WEAPON_GROUPS=['pistol','lmg','shotgun','energy','sniper','pistol','energy','shotgun','sniper','lmg','laser','explosive','arc'];
 const TRAITS=Object.freeze({
- shockCore:{name:'ELEKTRİK ZİNCİRİ',kind:'main',mod:'shockCore',description:'İsabet ettiğin düşmandan yakındaki başka bir düşmana elektrik sıçrar.'},
- burnCore:{name:'YANICI ATIŞ',kind:'main',mod:'burnCore',description:'İsabetlerin düşmanı 3 saniye yakar.'},
- cryoCore:{name:'KRİYO İSABETİ',kind:'main',mod:'cryoCore',description:'İsabetler yavaşlatır; art arda 3 isabet düşmanı dondurur.'},
- hunterMark:{name:'AVCI İŞARETİ',kind:'main',mod:'hunterMark',description:'İsabet hedefi işaretler; işaretli hedefe sonraki isabetler kritik vurur.'},
- laserSweep:{name:'LAZER HATTI',kind:'main',mod:'laserSweep',description:'Atışların delici bir lazer hattına dönüşür.'},
- overheat:{name:'SON MERMİ PATLAMASI',kind:'main',mod:'overheat',description:'Şarjörün son mermisi patlayıcı olur.',exclude:['explosive']},
- loader:{name:'HIZLI BESLEME',kind:'support',mod:'loader',description:'Daha hızlı ateş eder ve doldurursun.'},
- extendedMag:{name:'GENİŞ ŞARJÖR',kind:'support',mod:'extendedMag',description:'Şarjör büyür; doldurma biraz uzar.'},
- efficientMechanism:{name:'MÜHİMMAT TASARRUFU',kind:'support',mod:'efficientMechanism',description:'Atışlarda mermi harcamama şansı kazanırsın.'},
- stabilizer:{name:'DENGELİ ATIŞ',kind:'support',mod:'stabilizer',description:'Mermilerin daha az dağılır.'},
- lightGrip:{name:'HAREKETLİ ATIŞ',kind:'support',mod:'lightGrip',description:'Hareket ederken ateş etmek daha verimli olur.'},
- overchargeGrip:{name:'HIZ AŞIMI',kind:'support',mod:'overchargeGrip',description:'İlk atıştan sonra kısa süre çok hızlı ateş edersin.'}
+ shockCore:{name:'ELEKTRİK ZİNCİRİ',kind:'main',groups:['lmg','arc'],mod:'shockCore',description:'İsabet ettiğin düşmandan yakındaki başka bir düşmana elektrik sıçrar.'},
+ burnCore:{name:'YANICI ATIŞ',kind:'main',groups:['pistol','energy','explosive'],mod:'burnCore',description:'İsabetlerin düşmanı 3 saniye yakar.'},
+ cryoCore:{name:'KRİYO İSABETİ',kind:'main',groups:['shotgun','energy'],mod:'cryoCore',description:'İsabetler yavaşlatır; art arda 3 isabet düşmanı dondurur.'},
+ hunterMark:{name:'AVCI İŞARETİ',kind:'main',groups:['sniper','laser'],mod:'hunterMark',description:'İsabet hedefi işaretler; işaretli hedefe sonraki isabetler kritik vurur.'},
+ laserSweep:{name:'LAZER HATTI',kind:'main',groups:['lmg','sniper','laser','energy'],mod:'laserSweep',description:'Atışların delici bir lazer hattına dönüşür.'},
+ overheat:{name:'SON MERMİ PATLAMASI',kind:'main',groups:['pistol','lmg','shotgun','energy','arc'],mod:'overheat',description:'Şarjörün son mermisi patlayıcı olur.'},
+ loader:{name:'HIZLI BESLEME',kind:'support',groups:['pistol','lmg','shotgun','energy','explosive','arc'],mod:'loader',description:'Daha hızlı ateş eder ve doldurursun.'},
+ extendedMag:{name:'GENİŞ ŞARJÖR',kind:'support',groups:['pistol','lmg','energy','explosive','laser','arc'],mod:'extendedMag',description:'Şarjör büyür; doldurma biraz uzar.'},
+ efficientMechanism:{name:'MÜHİMMAT TASARRUFU',kind:'support',groups:['pistol','sniper','energy','explosive','laser'],mod:'efficientMechanism',description:'Atışlarda mermi harcamama şansı kazanırsın.'},
+ stabilizer:{name:'DENGELİ ATIŞ',kind:'support',groups:['pistol','sniper','laser'],mod:'stabilizer',description:'Mermilerin daha az dağılır.'},
+ lightGrip:{name:'HAREKETLİ ATIŞ',kind:'support',groups:['pistol','lmg','shotgun','energy','explosive','arc'],mod:'lightGrip',description:'Hareket ederken ateş etmek daha verimli olur.'},
+ overchargeGrip:{name:'HIZ AŞIMI',kind:'support',groups:['pistol','lmg','energy','laser','arc'],mod:'overchargeGrip',description:'İlk atıştan sonra kısa süre çok hızlı ateş edersin.'},
+ mirrorBarrel:{name:'SEKEN MERMİ',kind:'main',groups:['pistol','lmg','sniper','laser'],mod:'mirrorBarrel',description:'Mermiler ilk duvardan bir kez sekerek yoluna devam eder.'},
+ shockMuzzle:{name:'ŞOK AĞZI',kind:'main',groups:['shotgun','energy','explosive','arc'],mod:'shockMuzzle',description:'Hasar ve sersemletme artar; patlama alanı genişler.'},
+ tripleBurst:{name:'ÜÇLÜ ATIŞ',kind:'support',groups:['pistol','lmg','energy'],mod:'tripleBurst',description:'Her tetik çekişinde kısa aralıklarla üç atış yapar.'},
+ refundPiston:{name:'GERİ KAZANIM',kind:'support',groups:['pistol','sniper','laser'],mod:'refundPiston',description:'Kritik vuruşta şarjöre bir mermi geri kazandırır.'},
+ resonanceCore:{name:'REZONANS ÇEKİRDEĞİ',kind:'support',groups:['energy','arc','laser'],mod:'resonanceCore',description:'Aynı enerji ailesindeki ikinci silahınla birlikte hasarı artırır.'},
+ heavyStabilizer:{name:'AĞIR SABİTLEYİCİ',kind:'support',groups:['sniper','laser'],mod:'heavyStabilizer',description:'Hareketsiz nişan alırken kritik vuruş şansı verir.'},
+ steadyGrip:{name:'UZUN MENZİL KABZASI',kind:'support',groups:['pistol','sniper','laser'],mod:'steadyGrip',description:'Saçılmayı düşürür ve uzaktaki hedefleri vurmayı kolaylaştırır.'},
+ pierceBarrel:{name:'FAZ DELİCİ NAMLU',kind:'main',groups:['lmg','energy','sniper','laser','explosive'],mod:'pierceBarrel',description:'Mermiler ek hedefleri deler; saçmalı silahta dağılımı sıkılaştırır.'},
+ rapidBarrel:{name:'HIZLI NAMLU',kind:'main',groups:['pistol','lmg','shotgun'],mod:'rapidBarrel',description:'Atış hızını artırır; mermi başına hasar biraz azalır.'},
+ barrel:{name:'AĞIR NAMLU',kind:'main',groups:['pistol','shotgun','energy','sniper','explosive'],mod:'barrel',description:'Hasarı artırır, ancak atış hızını bir miktar düşürür.'},
+ core:{name:'FAZ ÇEKİRDEĞİ',kind:'support',groups:['pistol','lmg','energy','sniper','laser','explosive','arc'],mod:'core',description:'Mermi hızını artırır; silah ailesine göre delme veya alan etkisi kazandırır.'},
+ heavyGrip:{name:'AĞIR KABZA',kind:'support',groups:['shotgun','lmg','explosive','arc'],mod:'heavyGrip',description:'Geri tepme azalır; isabetler düşmanı daha fazla sarsar.'}
 });
+const SYNERGIES=Object.freeze([
+ {ids:['shockCore','tripleBurst'],name:'AŞIRI YÜK',description:'Elektrik zinciri her tetik serisinde iki hedefe sıçrayabilir.'},
+ {ids:['burnCore','efficientMechanism'],name:'KALICI YANMA',description:'Yanma 4 saniye sürer ve daha fazla hasar verir.'},
+ {ids:['cryoCore','lightGrip'],name:'HAREKETLİ DONDURUCU',description:'Hareket halindeyken iki isabette dondurur.'},
+ {ids:['hunterMark','heavyStabilizer'],name:'NOKTA ATIŞI',description:'İşaretli hedefe sabit durarak vurduğunda kritik hasar artar.'},
+ {ids:['laserSweep','pierceBarrel'],name:'FAZ KESİCİ',description:'Lazer hattı ek bir hedeften daha geçer.'}
+]);
 function state(slot){return slot.traits||{main:null,supports:[],levels:{}};}
-function eligible(slot,id,projectiles){const trait=TRAITS[id];if(!slot||!trait)return false;return !(trait.exclude||[]).includes(projectiles[slot.weapon]);}
+function eligible(slot,id,projectiles){const trait=TRAITS[id],group=WEAPON_GROUPS[slot?.weapon];if(!slot||!trait)return false;return !trait.groups||trait.groups.includes(group);}
 function effectiveMods(slot){
  const s=state(slot);
  return [...new Set([...(slot?.mods||[]),s.main,...s.supports].filter(Boolean))];
@@ -25,14 +45,15 @@ function effectiveMods(slot){
 function canGrant(slot,id,projectiles){
  if(!eligible(slot,id,projectiles))return false;
  const trait=TRAITS[id],s=state(slot);
+ if((slot.mods||[]).includes(id)&&s.main!==id&&!s.supports.includes(id))return false;
  if((s.levels[id]||0)>=3)return false;
+ if(trait.kind==='main'&&s.main&&s.main!==id)return false;
  if(trait.kind==='support'&&!s.supports.includes(id)&&s.supports.length>=2)return false;
  return true;
 }
 function grant(slot,id,projectiles){
  if(!canGrant(slot,id,projectiles))return false;
  const trait=TRAITS[id],s=state(slot),next={main:s.main,supports:[...s.supports],levels:{...s.levels}};
- if(trait.kind==='main'&&next.main&&next.main!==id)delete next.levels[next.main];
  if(trait.kind==='main')next.main=id;
  else if(!next.supports.includes(id))next.supports.push(id);
  next.levels[id]=Math.min(3,(next.levels[id]||0)+1);
@@ -42,19 +63,19 @@ function grant(slot,id,projectiles){
 function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c,kind=null}){
  const pool=[];
  for(let i=0;i<slots.length;i++)for(const id of Object.keys(TRAITS)){
-  const slot=slots[i];if(!canGrant(slot,id,projectiles))continue;
-  const t=TRAITS[id],s=state(slot);if(kind&&t.kind!==kind)continue;
-  pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:!!s.levels[id],replace:t.kind==='main'&&!!s.main&&s.main!==id});
+  const slot=slots[i],t=TRAITS[id];if(!canGrant(slot,id,projectiles)||kind&&t.kind!==kind)continue;
+  const s=state(slot),installed=t.kind==='main'?s.main===id:s.supports.includes(id),socketOpen=t.kind==='main'?!s.main:s.supports.length<2;
+  // Open sockets receive new mechanics; occupied sockets only receive upgrades.
+  if(socketOpen?installed:!installed)continue;
+  pool.push({type:'trait',id,weaponSlot:i,kind:t.kind,level:(s.levels[id]||0)+1,upgrade:installed,socket:t.kind==='main'?'ANA DÖNÜŞÜM':installed?'DESTEK '+(s.supports.indexOf(id)+1):'DESTEK '+(s.supports.length+1)});
  }
- // A completed build should receive the calling reward's gold fallback, not an endless replacement-only offer.
- if(!pool.some(item=>!item.replace))return [];
  const result=[],used=new Set();
  for(const phase of (kind?[kind,null,null]:['main','support',null])){
-  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.id)&&(phase!=='main'||!item.replace));
+  const candidates=pool.filter(item=>(!phase||item.kind===phase)&&!used.has(item.weaponSlot+':'+item.id));
   if(!candidates.length)continue;
   const index=Math.abs(hash(seed,result.length,seed+result.length*773))%candidates.length;
   const item=candidates[index];
-  used.add(item.id);result.push(item);
+  used.add(item.weaponSlot+':'+item.id);result.push(item);
  }
  return result;
 }
@@ -64,6 +85,7 @@ function snapshot(slot){
 }
 function sameBuild(a,b){
  if(!a||!b||a.weapon!==b.weapon)return false;
+ if((a.rightClickAbility??null)!==(b.rightClickAbility??null)||(a.rightClickLevel||1)!==(b.rightClickLevel||1))return false;
  if((a.rune||null)!==(b.rune||null))return false;
  for(let j=0;j<4;j++)if((a.mods?.[j]||null)!==(b.mods?.[j]||null))return false;
  const first=state(a),second=state(b);
@@ -86,5 +108,5 @@ function loadoutHTML(slot){
  return '<section class="weaponTraits" aria-label="Bu run silah özellikleri"><h4>BU RUN · SİLAH ÖZELLİKLERİ</h4>'+
   row(s.main,'ANA DÖNÜŞÜM')+row(s.supports[0],'DESTEK 1')+row(s.supports[1],'DESTEK 2')+'</section>';
 }
-root.DropForgeWeaponTraits=Object.freeze({TRAITS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,sameBuild,hasInvestment,loadoutHTML});
+root.DropForgeWeaponTraits=Object.freeze({TRAITS,SYNERGIES,WEAPON_GROUPS,state,eligible,canGrant,grant,effectiveMods,choices,snapshot,sameBuild,hasInvestment,loadoutHTML});
 })(window);

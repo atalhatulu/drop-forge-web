@@ -79,6 +79,10 @@ const runeCandidates=rooms.filter(room=>room.branch&&!room.secret&&!room.bossKey
 const eventPool=['defense','hunt','assault','treasure','elite'],eventCandidates=rooms.filter(room=>room.branch&&!room.bossKey&&(room.type==='combat'||room.type==='elite')&&!room.miniEvent).sort((a,b)=>hash2(a.x,a.y,seed+1821)-hash2(b.x,b.y,seed+1821));
 const eventCount=Math.min(eventCandidates.length,2+hash2(seed,17,903)%3),usedEvents=new Set();
 for(const room of eventCandidates.slice(0,eventCount)){const available=eventPool.filter(kind=>!usedEvents.has(kind));const pool=available.length?available:eventPool,kind=pool[hash2(room.x,room.y,seed+1822)%pool.length];usedEvents.add(kind);room.type=kind;room.miniEvent=true;room.eventKind=kind;room.eventTitle=({defense:'ACİL JENERATÖR',hunt:'KAÇAK HEDEF',assault:'PUSU',treasure:'KAYIP İKMALAT',elite:'ELİT NÖBETİ'})[kind];if(kind==='treasure'){room.reward='gold';room.merchant=null;room.wheel=null;}else if(kind==='defense')room.eventDuration=14+hash2(room.x,room.y,seed+1823)%7;}
+// One optional side route per expedition is reserved for a blueprint-only clear reward.
+const blueprintRooms=rooms.filter(room=>room.branch&&!room.bossKey&&!room.miniEvent&&!room.secret&&!['boss','miniboss','treasure','gold','start'].includes(room.type)).sort((a,b)=>hash2(a.x,a.y,seed+1881)-hash2(b.x,b.y,seed+1881));
+const blueprintRoom=blueprintRooms[0]||rooms.filter(room=>room.branch&&!room.bossKey&&!room.secret&&!['boss','miniboss','treasure','gold','start'].includes(room.type)).sort((a,b)=>hash2(a.x,a.y,seed+1882)-hash2(b.x,b.y,seed+1882))[0];
+if(blueprintRoom){blueprintRoom.blueprintRoom=true;blueprintRoom.reward='blueprint';blueprintRoom.miniEvent=false;blueprintRoom.eventKind=null;blueprintRoom.eventTitle=null;}
 return rooms;}
 return makeMap;
 }

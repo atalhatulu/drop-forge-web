@@ -15,11 +15,11 @@ function drawMap(){
  }
  for(const room of rooms)for(const id of Object.values(room.links)){const next=rooms[id];if(id<=room.id)continue;c.strokeStyle=room.visited&&next.visited?'#6dcfae':'#354355';c.lineWidth=room.visited&&next.visited?4:2;c.setLineDash(room.visited&&next.visited?[]:[4,4]);c.beginPath();c.moveTo(ox+(room.x-minX)*step,oy+(room.y-minY)*step);c.lineTo(ox+(next.x-minX)*step,oy+(next.y-minY)*step);c.stroke();}c.setLineDash([]);
  for(const room of rooms){const x=ox+(room.x-minX)*step,y=oy+(room.y-minY)*step,sz=Math.max(12,step*(room.type==='boss'?1.18:.67)),known=room.discovered||room.visited,active=room.id===game.roomId;
- c.fillStyle=active?'#fff0a4':room.cleared?'#66c89e':room.visited?'#75a8d9':known?(room.type==='boss'?'#a77ebc':'#647c99'):'#263244';
+ c.fillStyle=active?'#fff0a4':room.cleared?'#66c89e':room.visited?'#75a8d9':known?(room.blueprintRoom?'#d6a850':room.type==='boss'?'#a77ebc':'#647c99'):'#263244';
  c.fillRect(x-sz/2,y-sz/2,sz,sz);c.strokeStyle=active?'#ffffff':known?'#afc0d2':'#47546a';c.lineWidth=active?3:1;c.strokeRect(x-sz/2,y-sz/2,sz,sz);
  c.textAlign='center';c.fillStyle=active?'#182235':known?'#f6f0de':'#79899b';c.font='bold '+Math.max(8,Math.min(12,step*.25))+'px monospace';
- c.fillText(active?'●':known?room.type==='boss'?'B'+room.bossStage:({defense:'K',hunt:'H',elite:'E',treasure:'T',gold:'$',assault:'!'})[room.type]||'·':'?',x,y+4);
- if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C',gold:'$'})[room.reward]||'',x,y+sz/2+10);}
+ c.fillText(active?'●':known?room.blueprintRoom?'BP':room.type==='boss'?'B'+room.bossStage:({defense:'K',hunt:'H',elite:'E',treasure:'T',gold:'$',assault:'!'})[room.type]||'·':'?',x,y+4);
+ if(known&&room.type!=='boss'&&room.type!=='start'){c.fillStyle='#b9f4ca';c.font='bold 9px monospace';c.fillText(({ammo:'M',mod:'E',xp:'XP',health:'C',gold:'$',blueprint:'BP'})[room.reward]||'',x,y+sz/2+10);}
  }
  c.textAlign='left';c.fillStyle='#aac4d7';c.font='bold 12px monospace';c.fillText('YÜZEY ↑  ·  '+rooms.length+' ODA  ·  4 BOSS  ·  4 BÖLGE  ·  DERİNLİK ↓',18,24);
 }
