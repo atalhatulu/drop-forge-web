@@ -33,7 +33,8 @@ function drawRoomObjective(){
  else if(room.type==='elite')label='ELİT ARENA · TEHDİTİ TEMİZLE';
  else if(room.miniEvent)label=room.eventTitle||'MİNİ ETKİNLİK';
  else if((room.type==='treasure'||room.type==='gold')&&room.chest&&!room.chest.opened)label='SANDIK · YAKLAŞ VE E İLE AÇ';
- if(!label)return;ctx.save();ctx.font='bold 11px monospace';const width=Math.min(W-36,Math.max(220,ctx.measureText(label).width+26)),x=(W-width)/2,y=H-38;ctx.fillStyle='rgba(9,15,22,.88)';ctx.strokeStyle=room.blueprintRoom?'#d4ad63':'#648093';ctx.lineWidth=1;ctx.fillRect(x,y,width,25);ctx.strokeRect(x,y,width,25);ctx.fillStyle=room.blueprintRoom?'#f4d891':'#d9e8ef';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(label,W/2,y+13,width-14);ctx.restore();
+ const alive=room.enemies.filter(enemy=>enemy.alive).length,total=room.enemies.length;let count=room.cleared?'ODA TEMİZLENDİ':'DÜŞMAN '+alive+' / '+total;if(!label)label=room.cleared?'ÇIKIŞI BUL':count;
+ ctx.save();ctx.font='bold 10px monospace';const x=W-236,y=153,width=220,height=label===count?30:43;ctx.fillStyle='rgba(8,15,21,.92)';ctx.strokeStyle=room.blueprintRoom?'#c69e5c':'#36566a';ctx.lineWidth=1.5;ctx.fillRect(x,y,width,height);ctx.strokeRect(x,y,width,height);ctx.fillStyle=room.blueprintRoom?'#f4d891':'#dce7eb';ctx.textAlign='left';ctx.textBaseline='middle';ctx.fillText(label,x+10,y+(height===30?15:13),width-20);if(label!==count){ctx.fillStyle='#9eb4bf';ctx.font='bold 9px monospace';ctx.fillText(count,x+10,y+31,width-20);}ctx.restore();
 }
 return Object.freeze({drawWheelScreen,drawGameHud,drawNearbyMinimap,drawRoomObjective});
 }

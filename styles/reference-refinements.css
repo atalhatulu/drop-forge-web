@@ -1,0 +1,68 @@
+/* Final pass aligning combat, build prep, and inventory with the supplied compact HUD references. */
+main{position:relative!important;overflow:hidden!important}
+main>footer{grid-template-columns:1fr 1fr!important;grid-template-rows:auto auto auto!important;width:258px!important;padding:9px 11px!important;gap:6px 10px!important}
+main>footer .shieldStat{grid-column:1/-1!important}
+main>footer .stat:nth-child(4){display:none!important}
+main>footer .stat:nth-child(5),main>footer .stat:nth-child(6){display:flex!important;justify-content:space-between!important;min-width:0!important;padding:5px 7px!important;border:1px solid #554939!important;border-radius:4px!important;background:#171c1f!important}
+main>footer .stat:nth-child(5) .label,main>footer .stat:nth-child(6) .label{color:#acb9bf!important;font:800 8px ui-monospace,monospace!important;letter-spacing:.7px!important}
+main>footer #goldLabel,main>footer #killLabel{color:#f0d394!important;font:800 11px ui-monospace,monospace!important}
+main>footer .stat.hint{display:none!important}
+#weaponProgressHud{position:absolute;z-index:7;right:16px;bottom:15px;width:210px;padding:8px 10px;border:1px solid #315674;border-radius:7px;background:rgba(8,17,26,.91);box-shadow:0 5px 18px #0008;color:#e5eef0;pointer-events:none;font:700 9px ui-monospace,monospace}
+#weaponProgressHud>div:first-child{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:6px}
+#weaponProgressHud b{color:#d7e4e9;letter-spacing:.7px}#weaponProgressHud span{color:#9eb3be}
+#weaponProgressHud .masteryTrack{height:7px;overflow:hidden;border:1px solid #365268;border-radius:2px;background:#122633}
+#weaponProgressHud .masteryTrack i{display:block;width:0;height:100%;background:linear-gradient(90deg,#48c7d4,#a2ead0,#f2d079)}
+main>.statusStrip{top:auto!important;left:50%!important;right:auto!important;bottom:82px!important;transform:translateX(-50%)!important;width:max-content!important;max-width:min(38%,430px)!important;flex-direction:row!important;align-items:center!important;justify-content:center!important;padding:6px 9px!important;border-color:#2c4a5f!important;border-radius:6px!important;background:rgba(9,18,27,.85)!important;text-align:center!important;font-size:8px!important}
+main>.statusStrip #abilityStatus{color:#a6d7dc!important}
+#shell>.inventory{bottom:13px!important;padding:5px!important;border-color:#315674!important;border-radius:7px!important;background:rgba(8,17,26,.94)!important}
+.inventory .invSlot{flex-basis:72px!important;width:72px!important;height:65px!important;border-color:#294b63!important;border-radius:5px!important;background:#101e2a!important}
+.inventory .invSlot.selected{border-color:#5be0dc!important;background:linear-gradient(180deg,#1c434a,#122733)!important;box-shadow:0 0 0 1px #53d9d780,0 0 13px #35dbe866!important}
+.inventory .invKey{background:#1d3647!important;color:#b8d4df!important}
+.inventory .invName{font-size:8px!important;letter-spacing:.2px!important}
+#pause>.panel{padding:18px!important}
+#pause .panel h1{font-size:clamp(29px,3.8vw,46px)!important}
+#pause>.panel>p{max-width:850px!important;margin:4px 0 9px!important;font-size:10px!important}
+#pause .seedInput,#pause .difficultyPicker{min-height:42px!important;margin-bottom:8px!important;padding:6px 9px!important}
+#pause .forgePanel{padding:9px!important;margin-bottom:8px!important}
+#pause .forgeHead p{font-size:9px!important}
+#pause .forgeLayout{grid-template-columns:minmax(0,1fr) 174px minmax(0,1fr)!important;gap:8px!important}
+#pause .forgeWeaponCard{padding:8px!important}
+#pause .forgeCardDisplay{grid-template-columns:116px minmax(0,1fr)!important;grid-template-rows:auto auto!important;justify-items:stretch!important;align-items:center!important;gap:3px 9px!important;margin:6px 0 7px!important;padding:6px!important}
+#pause .forgeCardDisplay>img{grid-column:1;grid-row:1/3;width:112px!important;height:68px!important}
+#pause .forgeCardIdentity{text-align:left!important}
+#pause .forgeCardIdentity strong{font-size:14px!important}
+#pause .forgeCardIdentity small{font-size:7px!important}
+#pause .forgeCardStats{grid-column:2;grid-row:2}
+#pause .forgeCardStats span{padding:4px 2px!important}
+#pause .forgeCardStats b{font-size:10px!important}
+#pause .forgeWeaponAbilityChoice{font-size:8px!important}
+#pause .blueprintPanel>summary{min-height:31px!important;padding:6px 9px!important}
+#pause .forgeGearSummary{padding:7px 9px!important}
+#pause #startBtn{min-height:40px!important;padding:9px 20px!important}
+#loadoutOverlay{padding:10px!important}
+#loadoutPanel{width:min(1420px,98vw)!important;max-height:96dvh!important;padding:13px!important;border-radius:9px!important}
+#loadoutPanel .panelTop{min-height:42px!important;margin-bottom:6px!important}
+#loadoutPanel h2{font-size:clamp(18px,2vw,25px)!important}
+#loadoutPanel .loadoutHelp{margin:3px 0 7px!important;font-size:9px!important}
+#loadoutTabNav{gap:6px!important;margin-bottom:8px!important;padding-bottom:6px!important}
+.loadoutTabBtn{min-height:36px!important;padding:6px!important;font-size:9px!important}
+#loadoutContent.loadoutColumns{gap:8px!important}
+#loadoutContent .gunCard,#loadoutContent .bagCard{padding:9px!important;border-radius:7px!important}
+#loadoutContent .gunCard h3,#loadoutContent .bagCard h3{margin-bottom:6px!important}
+#loadoutContent .gunVisual{min-height:83px!important;padding:6px!important}
+#loadoutContent .gunVisual img{height:59px!important}
+#loadoutContent .gunVisual strong{font-size:16px!important}
+#loadoutContent .tabWeaponStats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px;margin:6px 0;padding:7px;border:1px solid #29465b;border-radius:6px;background:#0c1925}
+#loadoutContent .tabWeaponStat{display:grid;grid-template-columns:66px minmax(20px,1fr) 29px;align-items:center;gap:5px;color:#9fb3bd;font:700 8px ui-monospace,monospace}
+#loadoutContent .tabWeaponStat b{color:#e3e9e9;text-align:right;font-size:9px}
+#loadoutContent .tabWeaponStat i{height:5px;overflow:hidden;border-radius:3px;background:#1b3040}
+#loadoutContent .tabWeaponStat i span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#e26869,#efa85c)}
+#loadoutContent .weaponAbilityBadge{padding:6px!important;margin-top:5px!important}
+#loadoutContent .weaponAbilityBadge small{margin-top:2px!important}
+#loadoutContent .weaponTraits{margin-top:5px!important}
+#loadoutContent .weaponTraitRow{padding:5px!important}
+#loadoutContent .advancedStats>summary{padding:6px 8px!important}
+@media(max-width:920px){#pause .forgeLayout{grid-template-columns:1fr 1fr!important}#pause .forgeModuleChoice{grid-column:1/-1!important;grid-row:1!important}#pause .forgeWeaponCard[data-weapon-card="1"]{grid-column:1!important}#pause .forgeWeaponCard[data-weapon-card="2"]{grid-column:2!important}#pause .forgeCardDisplay{grid-template-columns:92px minmax(0,1fr)!important}#pause .forgeCardDisplay>img{width:88px!important;height:60px!important}#pause .forgeCardStats{grid-column:2}#weaponProgressHud{right:8px;bottom:8px;width:180px}main>.statusStrip{max-width:32%!important}}
+@media(max-width:620px){main>footer{width:194px!important;padding:6px!important}.inventory .invSlot{flex-basis:54px!important;width:54px!important;height:55px!important}.inventory .invIcon{width:42px!important;height:23px!important}.inventory .invSub{display:none!important}#weaponProgressHud{right:6px;bottom:6px;width:138px;padding:6px;font-size:7px}main>.statusStrip{bottom:74px!important;max-width:calc(100% - 16px)!important;left:8px!important;right:8px!important;transform:none!important;flex-wrap:wrap!important}#pause .forgeLayout{grid-template-columns:1fr!important}#pause .forgeModuleChoice{grid-column:1!important;grid-row:1!important}#pause .forgeWeaponCard[data-weapon-card="1"],#pause .forgeWeaponCard[data-weapon-card="2"]{grid-column:1!important}#pause .forgeCardDisplay{grid-template-columns:84px minmax(0,1fr)!important}#pause .forgeCardDisplay>img{width:80px!important;height:56px!important}#loadoutContent.loadoutColumns{grid-template-columns:1fr!important}#loadoutContent .tabWeaponStats{grid-template-columns:1fr 1fr}}
+#shell:has(#loadoutOverlay:not(.hidden))>.inventory,#shell:has(#pause:not(.hidden))>.inventory{display:none!important}
+#shell:has(#pause:not(.hidden)) #weaponProgressHud{display:none!important}
