@@ -1,0 +1,29 @@
+/* In-run HUD, inspired by the warm mine reference. */
+#shell{position:relative!important}
+main>footer{position:absolute!important;z-index:7;top:14px!important;left:14px!important;right:auto!important;bottom:auto!important;width:266px!important;max-width:calc(100% - 28px)!important;display:grid!important;grid-template-columns:1fr 1fr!important;grid-template-rows:auto auto auto!important;align-items:center!important;gap:7px 12px!important;padding:11px 12px!important;border:1px solid #806342!important;border-radius:7px!important;background:linear-gradient(145deg,rgba(26,29,30,.95),rgba(12,19,25,.94))!important;box-shadow:0 5px 18px #0009,inset 0 1px #ddad6870!important;color:#eee0c8!important;pointer-events:none}
+main>footer .stat:first-child{grid-column:1/-1;display:grid!important;grid-template-columns:auto 1fr auto!important;grid-template-rows:auto 17px!important;gap:5px 9px!important;width:100%!important}
+main>footer .stat:first-child .label{grid-column:1;grid-row:1;color:#ffb5a1!important;font-size:9px!important;letter-spacing:1.2px!important}
+main>footer .stat:first-child .meter{grid-column:1/-1;grid-row:2;width:100%!important;height:17px!important;border:1px solid #b54b45!important;border-radius:3px!important;background:#341c20!important;box-shadow:inset 0 2px 4px #08090b!important}
+main>footer .stat:first-child .meter>div{background:linear-gradient(90deg,#b92131 0%,#eb3941 72%,#ff8874 100%)!important;border-radius:1px!important}
+main>footer #hpText{grid-column:2;grid-row:1;font:bold 12px ui-monospace,monospace!important;color:#fff1df!important;text-align:right}
+main>footer .shieldStat{grid-column:1/-1;display:grid!important;grid-template-columns:auto 1fr auto!important;gap:5px 8px!important;font-size:9px!important}
+main>footer .shieldStat .label{color:#d4b37f!important;font-size:8px!important;letter-spacing:1px!important}
+main>footer .shieldMeter{width:auto!important;height:5px!important;border:0!important;border-radius:2px!important;background:#27343a!important}
+main>footer .shieldMeter>div{background:linear-gradient(90deg,#d18d48,#f1ca77)!important}
+main>footer #shieldText{font:700 8px ui-monospace,monospace!important;color:#f0d7a9!important}
+main>footer .stat.ammo,main>footer .stat:nth-child(4),main>footer .stat:nth-child(5),main>footer .stat.hint{display:none!important}
+main>.statusStrip{position:absolute!important;z-index:7;top:auto!important;left:auto!important;right:14px!important;bottom:14px!important;width:max-content!important;max-width:min(45%,310px)!important;display:flex!important;flex-direction:column!important;align-items:flex-end!important;gap:4px!important;padding:7px 9px!important;border:1px solid #806342!important;border-radius:5px!important;background:rgba(13,19,23,.9)!important;color:#e4d4b6!important;text-align:right!important;font:700 8px/1.25 ui-monospace,monospace!important;pointer-events:none}
+main>.statusStrip #abilityStatus{color:#e7b968!important}
+#shell>.inventory{position:absolute!important;z-index:8;left:14px!important;bottom:14px!important;justify-content:flex-start!important;width:max-content!important;max-width:calc(100% - 28px)!important;margin:0!important;padding:6px!important;border:1px solid #806342!important;border-radius:6px!important;background:rgba(13,19,23,.94)!important;box-shadow:0 4px 18px #0009!important}
+.inventorySlots{gap:5px!important}
+.inventory .invSlot{flex-basis:80px!important;width:80px!important;height:70px!important;border:1px solid #66553e!important;border-radius:3px!important;background:rgba(29,34,36,.96)!important;box-shadow:inset 0 1px #ffffff12!important}
+.inventory .invSlot.selected{border-color:#f2c474!important;background:linear-gradient(180deg,#785a35,#342d24)!important;box-shadow:0 0 0 1px #efbf65,0 0 13px #e5a94766!important}
+.inventory .invKey{border-radius:2px!important;background:#bd8a47!important;color:#16181a!important;font-weight:900!important}
+.inventory .invName{color:#f0e5d3!important;font-size:8px!important}
+.inventory .invSub{color:#d0b486!important}
+.inventory .invIconWrap{min-height:29px!important}
+.inventory .invIcon{width:64px!important;height:30px!important}
+#shell:has(.veil:not(.hidden))>.inventory{display:none!important}
+@media(max-width:760px){main>footer{top:7px!important;left:7px!important;width:230px!important;padding:7px 8px!important}#shell>.inventory{left:7px!important;bottom:7px!important;max-width:calc(100% - 14px)!important}.inventory .invSlot{flex-basis:64px!important;width:64px!important;height:61px!important}.inventory .invIcon{width:50px!important;height:25px!important}.inventory .invSub{display:none!important}main>.statusStrip{right:7px!important;bottom:7px!important}}
+@media(max-width:520px){main>footer{width:196px!important;gap:5px!important;padding:6px!important}.inventory .invSlot{flex-basis:56px!important;width:56px!important;height:56px!important}.inventory .invIcon{width:44px!important;height:22px!important}.inventory .invName{font-size:7px!important}.inventory .invSub{display:none!important}main>.statusStrip{max-width:42%!important;font-size:7px!important}}
+#shell:has(#pause:not(.hidden)) main>footer{display:none!important}

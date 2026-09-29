@@ -873,7 +873,7 @@ function drawFollowingKeys(room){
 }
 function updateHud(){
  if(!game)return;const p=game.player;
- $('hpFill').style.width=(p.hp/p.maxHp*100)+'%';$('hpText').textContent=p.hp+' / '+p.maxHp;
+ $('hpFill').style.width=(p.hp/p.maxHp*100)+'%';$('hpText').textContent=p.hp+' / '+p.maxHp;const flow=clamp(game.flow||0,0,100);if($('shieldFill'))$('shieldFill').style.width=flow+'%';if($('shieldText'))$('shieldText').textContent=Math.round(flow)+'%';
  $('weaponLabel').textContent=weaponName(p.weapon);$('weaponTypeLabel').textContent=weaponType(p.weapon);
  $('hudXp').innerHTML=p.weapon===null?'':xpBarHTML(p.weapon);
  $('ammoText').textContent=p.weapon===null?'—':p.ammo+' / '+p.reserve;
