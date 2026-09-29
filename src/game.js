@@ -292,7 +292,7 @@ function melee(){
 }
 
 // Single weapon stat model shared by shot simulation, reload and both build screens.
-const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getMasteryStyle:id=>masteryStyles[id],getModLevel:(id,slot)=>slot?.traits?.levels?.[id]??1});
+const weaponStats=window.DropForgeWeaponStats.createWeaponStats({WEAPON_DAMAGE,WEAPON_FIRE_RATES,WEAPON_PROJECTILES,MAG_SIZE,getMasteryLevel:masteryLevel,getMasteryTalents:id=>talents[id],getMasteryStyle:id=>masteryStyles[id],getModLevel:(id,slot)=>slot?.traits?.levels?.[id]??1,getResonanceActive:slot=>game?.player?.slots?.some(other=>other&&other!==slot&&WEAPON_PROJECTILES[other.weapon]===WEAPON_PROJECTILES[slot.weapon])||false});
 function updateStatusStrip(){
  if(!game)return;const p=game.player,room=currentRoom(),status=$('statusMessage'),ability=$('abilityStatus');
  const message=announcement>0?announcementText:(game.inHub?'HAZIRLIK':'DERİNLİK '+room.y);if(status&&status.textContent!==message)status.textContent=message;
