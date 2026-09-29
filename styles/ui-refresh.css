@@ -317,3 +317,37 @@ main>.statusStrip #abilityStatus{display:none!important}
 @media(max-width:575px){#blueprintCatalog{grid-template-columns:1fr}#blueprintCatalog>p{grid-column:auto}}
 @media(max-width:760px){main>footer{top:7px!important;left:7px!important;max-width:205px!important;padding:7px 8px!important}.inventory .invSlot{flex-basis:67px!important;width:67px!important;height:63px!important}.inventory .invSub{font-size:7px!important}#shell>.inventory{left:7px!important;bottom:7px!important}}
 @media(max-width:520px){main>footer{max-width:190px!important}.inventory .invSlot{flex-basis:58px!important;width:58px!important;height:60px!important}.inventory .invIcon{width:48px!important}.inventory .invName{font-size:8px!important}.inventory .invSub{font-size:6px!important}.socketOverview article{padding:6px 4px}.socketOverview article strong{font-size:8px}}
+
+/* Compact preparation panel and keep the quickbar below every active overlay. */
+#shell:has(.veil:not(.hidden))>.inventory{display:none!important}
+#pause>.panel{max-height:92dvh!important;padding:14px!important}
+#pause .forgePanel{padding:8px!important}
+#pause .forgePreviewLarge{grid-template-columns:minmax(105px,.28fr) minmax(0,1.72fr)!important;gap:7px!important;padding:7px!important}
+#pause .forgePreviewVisual{position:static!important;min-height:112px!important;padding:5px!important}
+#pause .forgePreviewVisual img{height:54px!important}
+#pause .forgeBadge{font:700 7px ui-monospace,monospace!important}
+#pause .forgePreviewInfo>b{margin:0 0 3px!important;font-size:12px!important}
+#pause .forgePanel #forgeMastery{display:none!important}
+#pause .forgePreviewInfo .weaponAbilityBadge{gap:2px!important;margin:3px 0!important;padding:5px 7px!important}
+#pause .forgePreviewInfo .weaponAbilityBadge b{font-size:8px!important}
+#pause .forgePreviewInfo .weaponAbilityBadge small{font-size:8px!important;line-height:1.25!important}
+#pause .forgeStats{gap:4px!important;margin:4px 0!important}
+#pause .forgeStats .forgeStat{min-height:36px!important;padding:5px!important}
+#pause .forgeStats .forgeStat label{font-size:7px!important}
+#pause .forgeStats .forgeStat strong{font-size:12px!important}
+.forgeOptionalDetails{margin-top:5px;border:1px solid var(--ui-line);border-radius:6px;background:#0d171f}
+.forgeOptionalDetails>summary{padding:6px 8px;color:#b7c8c8;cursor:pointer;font:700 8px ui-monospace,monospace;letter-spacing:.25px}
+.forgeOptionalDetails[open]{padding:0 6px 6px}
+.forgeOptionalDetails[open]>summary{margin:0 -6px 5px;border-bottom:1px solid var(--ui-line)}
+#pause .forgeOptionalDetails .xpMeta{font-size:8px!important}
+#pause .forgeOptionalDetails .masteryStyleBadge{margin:4px 0!important;padding:5px!important}
+#pause .forgeOptionalDetails .weaponTraits{margin:4px 0!important;padding:5px!important}
+#pause .forgeOptionalDetails .weaponTraitRow{padding:4px!important}
+main>footer{max-width:330px!important;padding:8px 10px!important;grid-template-columns:minmax(0,1fr) auto!important;gap:4px 10px!important;border-color:#9c454b!important;background:rgba(16,12,16,.93)!important}
+main>footer .stat:first-child{grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto 23px;gap:4px 8px!important;width:100%}
+main>footer .stat:first-child .label{grid-column:1;grid-row:1;font-size:9px!important}
+main>footer .stat:first-child .meter{grid-column:1/-1;grid-row:2;height:23px!important;border-radius:3px!important;border:1px solid #d45458!important;background:#36171d!important}
+main>footer .stat:first-child .meter>div{background:linear-gradient(90deg,#ad1f2d,#ed3947 72%,#ff8b75)!important;border-radius:1px!important}
+main>footer #hpText{grid-column:2;grid-row:1;font-size:11px!important}
+@media(max-width:760px){main>footer{left:7px!important;top:7px!important;max-width:min(330px,calc(100% - 14px))!important;padding:6px!important}}
+@media(max-width:575px){#pause>.panel{padding:10px!important}#pause .forgePreviewLarge{grid-template-columns:minmax(0,1fr)!important}#pause .forgePreviewVisual{min-height:88px!important}#pause .forgePreviewVisual img{height:48px!important}}
