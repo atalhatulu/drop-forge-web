@@ -1,0 +1,88 @@
+/* Preparation and loadout screens follow the same cool metal / warm brass language. */
+:root{--ref-ink:#0a1420;--ref-panel:#0d1b29;--ref-panel2:#122436;--ref-line:#315674;--ref-cyan:#5ed9e4;--ref-amber:#f0bd61;--ref-text:#e6edf1;--ref-muted:#9bb0be}
+#pause>.panel{width:min(1380px,98vw)!important;max-height:96dvh!important;padding:24px!important;border:1px solid #34556b!important;background:linear-gradient(180deg,rgba(9,20,31,.97),rgba(10,24,36,.985))!important;box-shadow:0 25px 80px #000c, inset 0 1px #7cb7ce22!important;text-align:left!important}
+#pause .eyebrow{color:var(--ref-amber)!important;font:800 10px system-ui!important;letter-spacing:2px!important}
+#pause .panel h1{margin:2px 0 2px!important;font:900 clamp(30px,4.4vw,54px)/1 'Arial Narrow',Inter,system-ui,sans-serif!important;letter-spacing:.3px!important;color:var(--ref-text)!important}
+#pause .panel h1 em{color:var(--ref-amber)!important}
+#pause>.panel>p{margin:5px 0 12px!important;color:var(--ref-muted)!important;font:12px/1.4 system-ui!important}
+#pause .seedInput,#pause .difficultyPicker{display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;align-items:center!important;gap:12px!important;width:calc(50% - 7px)!important;max-width:none!important;margin:0 0 12px!important;padding:8px 11px!important;border:1px solid #274761!important;border-radius:8px!important;background:rgba(11,24,36,.78)!important}
+#pause .seedInput{margin-right:10px!important}
+#pause .seedInput label,#pause .difficultyPicker label{color:#a9c4d3!important;font:800 9px system-ui!important;letter-spacing:1.3px!important}
+#pause .seedInput input,#pause .difficultyPicker select{padding:9px 11px!important;border:1px solid #335670!important;border-radius:5px!important;background:#0b1722!important;color:#ecf1f2!important;font:12px system-ui!important}
+#pause .forgePanel{margin:0 0 10px!important;padding:12px!important;border:1px solid #294a61!important;border-radius:10px!important;background:linear-gradient(145deg,#0d1a26,#0b1722)!important}
+#pause .forgeHead{margin-bottom:8px!important}
+#pause .forgeHead b{color:var(--ref-amber)!important;font:800 11px system-ui!important;letter-spacing:1.1px!important}
+#pause .forgeHead p{max-width:none!important;color:#9ab0bd!important;font:10px/1.4 system-ui!important}
+#pause .forgeKey{border:1px solid #35556a!important;border-radius:4px;color:#b4d6d6!important;font:700 8px ui-monospace,monospace!important}
+#pause .forgeLayout{display:grid!important;grid-template-columns:minmax(0,1fr) 205px minmax(0,1fr)!important;gap:10px!important;align-items:stretch!important}
+#pause .forgeModuleChoice{grid-column:2!important;grid-row:1!important;display:flex!important;flex-direction:column!important;align-items:stretch!important;justify-content:center!important;gap:8px!important;padding:12px!important;border:1px solid #927245!important;border-radius:9px!important;background:radial-gradient(ellipse at 50% 25%,#2a2a24,#111d27 72%)!important;color:#edc778!important;text-align:center!important;font:800 9px system-ui!important;letter-spacing:.8px!important}
+#pause .forgeModuleChoice select{padding:10px 8px!important;border:1px solid #82663e!important;background:#151e23!important;color:#f1e7cf!important;font:11px system-ui!important}
+#pause .forgeChoices{display:contents!important}
+#pause .forgeWeaponCard{grid-row:1!important;padding:11px!important;border:1px solid #345d73!important;border-radius:9px!important;background:linear-gradient(160deg,#112332,#0c1924)!important;box-shadow:inset 0 1px #91c6da17!important}
+#pause .forgeWeaponCard[data-weapon-card="1"]{grid-column:1!important;border-color:#4d8990!important}
+#pause .forgeWeaponCard[data-weapon-card="2"]{grid-column:3!important}
+#pause .forgeWeaponTop{align-items:center!important}
+#pause .forgeSelectWrap{color:#a8c1ce!important;font:800 8px system-ui!important;letter-spacing:.8px!important}
+#pause .forgeSelectWrap select{padding:8px!important;border:1px solid #345a72!important;border-radius:5px!important;background:#0b1822!important;color:#ebf0ee!important;font:11px system-ui!important}
+#pause .forgeFocusBtn{padding:6px 8px!important;border:1px solid #36566b!important;border-radius:5px!important;background:#142635!important;color:#d1e2e8!important;font:800 8px system-ui!important}
+#pause .forgeCardDisplay{display:grid;grid-template-columns:minmax(0,1fr);justify-items:center;gap:5px;margin:8px 0 10px;padding:7px 9px;border:1px solid #243f53;border-radius:7px;background:radial-gradient(ellipse at 50% 40%,#1c3446,#0b1722 75%)}
+#pause .forgeCardDisplay>img{width:min(100%,250px);height:85px;object-fit:contain;image-rendering:pixelated;filter:drop-shadow(0 5px 0 #070e16)}
+#pause .forgeCardIdentity{text-align:center}
+#pause .forgeCardIdentity strong{display:block;color:#eaf0ef;font:900 17px/1.1 ui-monospace,monospace;letter-spacing:1px}
+#pause .forgeCardIdentity small{display:block;margin-top:3px;color:#9db6c3;font:700 8px system-ui;letter-spacing:1.5px}
+#pause .forgeCardStats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:100%;border:1px solid #29475e;border-radius:5px;background:#0b1823}
+#pause .forgeCardStats span{display:grid;gap:3px;padding:5px;text-align:center;border-right:1px solid #203c50}
+#pause .forgeCardStats span:last-child{border:0}
+#pause .forgeCardStats small{color:#90a9b7;font:700 7px system-ui;letter-spacing:.5px}
+#pause .forgeCardStats b{color:#f4d99e;font:800 12px ui-monospace,monospace}
+#pause .forgeWeaponAbilityChoice{margin-top:2px!important;padding-top:4px;border-top:1px solid #294457}
+#pause .forgeWeaponAbilityChoice select{padding:8px!important;border-color:#335970!important}
+#pause .forgePreviewLarge{display:none!important}
+#pause #forgeMastery{margin:8px 0 0!important;color:#879daa!important;font:8px system-ui!important;text-align:center}
+#pause .blueprintPanel{margin:0 0 9px!important;border:1px solid #66543a!important;border-radius:8px!important;background:linear-gradient(110deg,#1c1d1b,#101a22)!important}
+#pause .blueprintPanel>summary{min-height:36px;padding:8px 11px!important}
+#pause .blueprintPanel>summary b{color:#f0cc84!important;font:800 9px system-ui!important;letter-spacing:1px!important}
+#pause .blueprintPanel>summary span{color:#a9b7b6!important;font:9px ui-monospace,monospace!important}
+#blueprintCatalog{display:flex;gap:12px;max-width:100%;overflow-x:auto;padding:0 10px 9px;scrollbar-color:#705b3b #151b1e}
+#blueprintCatalog>p{display:none!important}
+#blueprintCatalog>section{display:flex;flex:0 0 auto;align-items:stretch;gap:6px}
+#blueprintCatalog>section h4{align-self:center;max-width:80px;margin:0!important;color:#a9b5b5!important;font:700 7px/1.2 system-ui!important}
+#blueprintCatalog article{display:grid;align-content:center;gap:4px;min-width:112px;max-width:145px;padding:7px!important;border:1px solid #344652!important;border-radius:5px!important;background:#101b24!important}
+#blueprintCatalog article.owned{border-color:#b18a4a!important;background:#24251f!important}
+#blueprintCatalog article span{overflow:hidden;color:#e1e7e4!important;font:800 8px/1.1 system-ui!important;text-overflow:ellipsis;white-space:nowrap}
+#blueprintCatalog article small{color:#98a9ac!important;font:7px/1.2 ui-monospace,monospace!important}
+#pause .forgeGearPanel{margin:0 0 8px!important;border:1px solid #2f4a5a!important;border-radius:8px!important;background:#0e1a25!important}
+#pause .forgeGearSummary{padding:9px 11px!important;gap:10px!important}
+#pause .forgeGearSummary b{color:#dce8e8!important;font:800 9px system-ui!important;letter-spacing:.7px!important}
+#pause .forgeGearSummary span{color:#9cabb2!important;font:9px system-ui!important}
+#pause .forgeGearSummary small{color:#74cbbb!important;font:8px system-ui!important}
+#pause #forgeMastery{display:none!important}
+#pause #startBtn{min-height:44px!important;padding:11px 22px!important;border:1px solid #ffe09b!important;border-radius:6px!important;background:linear-gradient(#f8d37e,#dca84e)!important;color:#17212b!important;box-shadow:0 0 15px #dfad4c40!important;font:900 12px system-ui!important;letter-spacing:.6px!important}
+#pause .controls{margin-top:7px!important;color:#7f929c!important;font:8px system-ui!important}
+/* Equipment overlay */
+#loadoutOverlay{padding:16px!important;background:rgba(3,10,17,.88)!important;backdrop-filter:blur(5px)!important}
+#loadoutPanel{width:min(1480px,98vw)!important;max-height:96dvh!important;padding:18px!important;border:1px solid #315670!important;border-radius:10px!important;background:linear-gradient(155deg,#0b1722,#0b1a29 68%,#0d1d2b)!important;box-shadow:0 25px 80px #000c,inset 0 1px #9dc7d81a!important}
+#loadoutPanel .panelTop{min-height:55px!important;margin-bottom:8px!important;padding:0 4px!important;border-bottom:1px solid #29495e}
+#loadoutPanel h2{font:900 clamp(20px,2.5vw,30px) system-ui!important;letter-spacing:1px!important;color:#e5edf0!important}
+#loadoutPanel .panelTop button{padding:7px 12px!important;border:1px solid #345873!important;border-radius:5px!important;background:#112538!important;color:#cfdee4!important;font:800 9px system-ui!important}
+#loadoutTabNav{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 0 12px;padding-bottom:8px;border-bottom:1px solid #29465b}
+.loadoutTabBtn{min-height:43px!important;padding:8px!important;border:1px solid #355e7c!important;border-radius:7px!important;background:linear-gradient(#102135,#0c1927)!important;color:#9fbcd1!important;font:900 10px system-ui!important;letter-spacing:.5px!important}
+.loadoutTabBtn.active{border:2px solid #edc36a!important;background:linear-gradient(#1a3448,#102537)!important;color:#f3d17f!important;box-shadow:0 0 12px #d5a84a38!important}
+#loadoutContent.loadoutColumns{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:10px!important}
+#loadoutContent .gunCard,#loadoutContent .bagCard{padding:12px!important;border:1px solid #31536b!important;border-radius:8px!important;background:linear-gradient(150deg,#102131,#0c1a27)!important;box-shadow:inset 0 1px #8bc5db13!important}
+#loadoutContent .gunCard:nth-child(2){border-color:#4c8490!important}
+#loadoutContent .gunCard h3,#loadoutContent .bagCard h3{margin:0 0 8px!important;color:#b5cad3!important;font:800 9px system-ui!important;letter-spacing:1px!important}
+#loadoutContent .gunVisual{min-height:102px!important;gap:10px!important;padding:9px!important;border:1px solid #27475e!important;border-radius:6px!important;background:radial-gradient(ellipse at 33% 50%,#1e394d,#0b1824 75%)!important}
+#loadoutContent .gunVisual img{width:42%!important;height:74px!important;filter:drop-shadow(0 4px 0 #050d15)}
+#loadoutContent .gunVisual strong{font:900 19px ui-monospace,monospace!important;letter-spacing:.6px!important;color:#eaf0ee!important}
+#loadoutContent .gunVisual small{color:#91aebb!important;font:800 8px/1.35 system-ui!important;letter-spacing:1px!important}
+#loadoutContent .xpTrack{height:8px!important;border:0!important;border-radius:4px!important;background:#172e3c!important;box-shadow:none!important}
+#loadoutContent .xpTrack>div{border-radius:4px!important;background:linear-gradient(90deg,#4fc8bf,#91eac7,#f3d77f)!important}
+#loadoutContent .weaponAbilityBadge,#loadoutContent .weaponTraits,#loadoutContent .legacyWeaponMods,#loadoutContent .weaponStats,#loadoutContent .chipPanel,#loadoutContent .gearSummary{padding:8px!important;border:1px solid #29465b!important;border-radius:6px!important;background:#0d1a25!important}
+#loadoutContent .weaponAbilityBadge b,#loadoutContent .weaponTraits h4,#loadoutContent .weaponStatsHeading{color:#efc878!important;font:800 8px system-ui!important;letter-spacing:.6px!important}
+#loadoutContent .weaponAbilityBadge small,#loadoutContent .weaponTraitRow small{color:#96aab4!important;font:9px/1.35 system-ui!important}
+#loadoutContent .weaponTraitRow{padding:7px!important;border:1px solid #29495c!important;border-radius:5px!important;background:#102131!important}
+#loadoutContent .advancedStats{margin-top:7px;border:1px solid #355a76!important;border-radius:5px;background:#0c1926!important}
+#loadoutContent .advancedStats>summary{padding:8px 10px;color:#a9cce0;font:800 9px system-ui;letter-spacing:.8px;cursor:pointer}
+@media(max-width:920px){#pause>.panel{padding:14px!important}#pause .forgeLayout{grid-template-columns:1fr 1fr!important}#pause .forgeModuleChoice{grid-column:1/-1!important;grid-row:1!important;display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;text-align:left!important}#pause .forgeWeaponCard{grid-row:2!important}#pause .forgeWeaponCard[data-weapon-card="1"]{grid-column:1!important}#pause .forgeWeaponCard[data-weapon-card="2"]{grid-column:2!important}#pause .forgeCardDisplay>img{height:68px!important}#loadoutPanel{overflow-y:auto!important}}
+@media(max-width:620px){#pause .seedInput,#pause .difficultyPicker{display:grid!important;width:100%!important;margin:0 0 6px!important}#pause .forgeLayout{grid-template-columns:1fr!important}#pause .forgeModuleChoice{grid-column:1!important;grid-row:1!important}#pause .forgeWeaponCard{grid-row:auto!important}#pause .forgeWeaponCard[data-weapon-card="1"],#pause .forgeWeaponCard[data-weapon-card="2"]{grid-column:1!important}#pause .forgeCardDisplay{grid-template-columns:90px 1fr}#pause .forgeCardDisplay>img{grid-row:1/3;height:58px!important}#pause .forgeCardStats{grid-column:1/-1}#loadoutPanel{padding:10px!important}#loadoutTabNav{gap:4px}.loadoutTabBtn{font-size:8px!important;padding:5px!important}#loadoutContent.loadoutColumns{grid-template-columns:1fr!important}#loadoutContent .gunVisual img{width:34%!important}}
