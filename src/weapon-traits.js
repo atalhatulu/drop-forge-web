@@ -34,7 +34,11 @@ const TRAITS=Object.freeze({
  gravityRound:{name:'YERÇEKİMİ MERMİSİ',kind:'attack',groups:['explosive','energy','arc'],mod:'gravityRound',description:'İsabet çevresindeki düşmanları hedefe doğru çeker.'},
  echoRound:{name:'YANKI MERMİSİ',kind:'attack',groups:['sniper','laser','energy','arc'],mod:'echoRound',description:'Aynı hedefe arka arkaya vuruşlar giderek güçlenir.'},
  volatileRound:{name:'KIRILGAN YÜK',kind:'attack',groups:['shotgun','explosive','energy'],mod:'volatileRound',description:'İsabet, hedef çevresine küçük bir patlama yayar.'},
- capacitorRound:{name:'KAPASİTÖR ATIŞI',kind:'attack',groups:['lmg','energy','laser','arc'],mod:'capacitorRound',description:'İsabetler kısa süreli atış hızı biriktirir.'}
+ capacitorRound:{name:'KAPASİTÖR ATIŞI',kind:'attack',groups:['lmg','energy','laser','arc'],mod:'capacitorRound',description:'İsabetler kısa süreli atış hızı biriktirir.'},
+ bleedRound:{name:'KANATAN ÇEKİRDEK',kind:'attack',groups:['pistol','lmg','shotgun','sniper'],mod:'bleedRound',description:'İsabet hedefi 2,4 sn boyunca kanatır; etkiler yenilenir.'},
+ concussiveCore:{name:'SARSINTI ÇEKİRDEĞİ',kind:'attack',groups:['shotgun','explosive','arc'],mod:'concussiveCore',description:'İsabet düşmanı sertçe geri savurur ve kısa süre sersemletir.'},
+ openingRound:{name:'AÇIK YARA ATIŞI',kind:'attack',groups:['pistol','sniper','laser'],mod:'openingRound',description:'Canı yüksek hedeflere ilk isabet daha ağır vurur.'},
+ frostBloom:{name:'KIŞ ÇEKİRDEĞİ',kind:'attack',groups:['shotgun','energy','arc'],mod:'frostBloom',description:'Donmuş hedef parçalanınca yakındaki düşmanlar da yavaşlar.'}
 });
 const SYNERGIES=Object.freeze([
  {ids:['shockCore','tripleBurst'],name:'AŞIRI YÜK',description:'Elektrik zinciri her tetik serisinde iki hedefe sıçrayabilir.'},

@@ -46,7 +46,11 @@ const ALL_MODS={
  gravityRound:{name:'YERÇEKİMİ MERMİSİ',level:6,slot:2,description:'İsabet çevresindeki düşmanları hedefe çeker.'},
  echoRound:{name:'YANKI MERMİSİ',level:4,slot:1,description:'Aynı hedefe art arda vurdukça hasar artar.'},
  volatileRound:{name:'KIRILGAN YÜK',level:6,slot:2,description:'Atış başına ilk isabet çevreye küçük patlama yayar.'},
- capacitorRound:{name:'KAPASİTÖR ATIŞI',level:8,slot:3,description:'İsabetler kısa süreli atış hızı biriktirir.'}
+ capacitorRound:{name:'KAPASİTÖR ATIŞI',level:8,slot:3,description:'İsabetler kısa süreli atış hızı biriktirir.'},
+ bleedRound:{name:'KANATAN ÇEKİRDEK',level:4,slot:1,description:'İsabet hedefi 2,4 sn kanatır.'},
+ concussiveCore:{name:'SARSINTI ÇEKİRDEĞİ',level:6,slot:2,description:'İsabet düşmanı geri savurur ve sersemletir.'},
+ openingRound:{name:'AÇIK YARA ATIŞI',level:4,slot:1,description:'Canı yüksek hedeflere ilk isabet +%45 hasar.'},
+ frostBloom:{name:'KIŞ ÇEKİRDEĞİ',level:6,slot:2,description:'Donmuş hedef parçalanınca çevreyi yavaşlatır.'}
 };
 const MOD_SLOT_NAMES=['NAMLU · HASAR / ATIŞ / DELME','MEKANİZMA · HIZ / ŞARJÖR / TASARRUF','ÇEKİRDEK · FAZ / ŞOK / YANMA','KABZA · DENGE / HAREKET / TEPKİ'];
 const WEAPON_PROJECTILES=['kinetic','kinetic','scatter','plasma','pierce','kinetic','plasma','scatter','pierce','plasma','laser','explosive','arc'];
