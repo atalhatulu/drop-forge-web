@@ -351,3 +351,22 @@ main>footer .stat:first-child .meter>div{background:linear-gradient(90deg,#ad1f2
 main>footer #hpText{grid-column:2;grid-row:1;font-size:11px!important}
 @media(max-width:760px){main>footer{left:7px!important;top:7px!important;max-width:min(330px,calc(100% - 14px))!important;padding:6px!important}}
 @media(max-width:575px){#pause>.panel{padding:10px!important}#pause .forgePreviewLarge{grid-template-columns:minmax(0,1fr)!important}#pause .forgePreviewVisual{min-height:88px!important}#pause .forgePreviewVisual img{height:48px!important}}
+/* Keep the workbench centered and compact at laptop widths. */
+#pause>.panel{width:min(900px,100%)!important}
+#pause .panel h1{font-size:clamp(26px,3.2vw,34px)!important}
+#pause .forgeHead{margin-bottom:5px!important}
+#pause .forgePanel{padding:7px!important}
+#pause .forgeModuleChoice{padding:6px 8px;grid-template-columns:minmax(115px,.35fr) minmax(0,1.65fr);gap:6px}
+#pause .forgeChoices{gap:6px!important}
+#pause .forgeWeaponCard{padding:6px!important}
+#pause .forgeSelectWrap select{padding:5px!important}
+#pause .forgeWeaponAbilityChoice{gap:3px;margin-top:5px}
+#pause .forgeAbilitySummary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px}
+#pause .forgeAbilitySummary .weaponAbilityBadge{min-width:0;margin:2px 0!important;padding:5px 6px!important}
+#pause .forgeAbilitySummary .weaponAbilityBadge small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden}
+#pause .forgeStats{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+#pause .forgeStats .forgeStat{min-width:0}
+#pause .blueprintPanel,#pause .forgeGearPanel{margin:6px 0!important}
+.top-right{min-width:0;max-width:calc(100vw - 170px);overflow:hidden}
+#seedLabel{max-width:min(190px,26vw);overflow:hidden;text-overflow:ellipsis}
+@media(max-width:620px){.top-right #seedLabel{display:none!important}#pause .forgeModuleChoice{grid-template-columns:1fr;gap:4px}#pause .forgeAbilitySummary{grid-template-columns:1fr}#pause>.panel h1{font-size:25px!important}}
