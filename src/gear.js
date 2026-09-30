@@ -35,32 +35,29 @@ function drawPiece(ctx,slot,color,x=0,y=0,scale=1){
 function icon(item){if(!item||!SETS[item.set])return '';const canvas=document.createElement('canvas');canvas.width=64;canvas.height=64;const ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;drawPiece(ctx,item.slot,SETS[item.set].color,32,33,1.6);return canvas.toDataURL('image/png');}
 function drawEquipped(ctx,equipment,bob=0,leg=0){for(const slot of ['boots','armor','belt','gloves','helmet']){const item=equipment?.[slot],set=item&&SETS[item.set];if(!set)continue;ctx.save();if(slot==='boots'){ctx.fillStyle=set.color;ctx.fillRect(-10,17+leg,9,7);ctx.fillRect(2,17-leg,9,7);}else{drawPiece(ctx,slot,set.color,0,-bob);}ctx.restore();}}
 
-// Unarmored adult fighter: bare skin and plain white briefs. Armor adds the silhouette piece by piece.
+// A compact sci-fi salvage runner. Equipment recolors and layers onto this shared silhouette.
 function drawWarrior(ctx,equipment={},bob=0,leg=0,face=1,dashing=false){
  const r=(color,x,y,w,h)=>{ctx.fillStyle=color;ctx.fillRect(Math.round(x),Math.round(y),w,h);};
- const skin='#c88d67',light='#e5b18a',shade='#9c634e',dark='#302b32';
- // Legs and bare feet; boots replace the visible feet when equipped.
- r(shade,-10,10+leg,9,13);r(skin,-9,10+leg,7,12);
- r(shade,2,10-leg,9,13);r(skin,3,10-leg,7,12);
- r(light,-11,21+leg,11,4);r(light,2,21-leg,11,4);
- // White briefs remain visible until the belt or torso armor covers the waist.
- r('#e9edf0',-12,7-bob,24,9);r('#ffffff',-10,8-bob,20,5);
- r('#b5c1cb',-2,9-bob,4,5);
- // Lean, adult torso: unarmored shoulders do not have the armored silhouette.
- r(shade,-12,-13-bob,24,23);r(skin,-11,-12-bob,22,20);
- r(light,-9,-11-bob,8,6);r(light,2,-11-bob,7,6);
- r(shade,-1,-9-bob,2,10);r(shade,-8,0-bob,16,2);
- // Bare arms and hands.
- r(shade,-17,-10-bob,6,15);r(skin,-16,-9-bob,5,14);
- r(shade,11,-10-bob,6,15);r(skin,12,-9-bob,5,14);
- r(light,-17,4-bob,6,4);r(light,11,4-bob,6,4);
- // Adult face, short hair and visible brow; no default helmet or visor.
- r(shade,-11,-27-bob,22,17);r(skin,-10,-26-bob,20,15);
- r(dark,-11,-29-bob,22,6);r(dark,-12,-25-bob,4,6);
- r('#553a35',face>0?3:-8,-20-bob,5,2);
- r('#28303a',face>0?5:-7,-19-bob,3,2);
- r(shade,-4,-13-bob,9,2);
- // Each collected piece replaces the relevant exposed body area.
+ const ink='#101b29',shadow='#1b2c3c',steel='#344b5d',edge='#637d8c',light='#9fb6bd',glow='#75e7e2',warm='#f2bf67';
+ // Reinforced boots and articulated legs keep the runner readable while moving.
+ r(ink,-12,17+leg,12,9);r(shadow,-10,12+leg,9,9);r(steel,-9,13+leg,6,6);r(warm,-9,20+leg,5,2);r(ink,-13,24+leg,14,4);r(light,-11,25+leg,10,1);
+ r(ink,1,17-leg,12,9);r(shadow,3,12-leg,9,9);r(steel,4,13-leg,6,6);r(warm,4,20-leg,5,2);r(ink,0,24-leg,14,4);r(light,2,25-leg,10,1);
+ // Dark undersuit, chest plate, shoulder guards and a compact utility belt.
+ r(ink,-13,-14-bob,26,25);r(shadow,-10,-12-bob,20,19);r(steel,-9,-11-bob,18,12);r(edge,-8,-11-bob,16,2);
+ r('#24394a',-7,-8-bob,14,8);r(glow,-2,-8-bob,4,8);r('#b4d1d0',-1,-7-bob,2,4);
+ r(ink,-17,-11-bob,7,9);r(steel,-16,-10-bob,6,6);r(warm,-15,-10-bob,3,2);
+ r(ink,10,-11-bob,7,9);r(steel,10,-10-bob,6,6);r(warm,12,-10-bob,3,2);
+ r(shadow,-15,-3-bob,5,12);r(steel,-14,-2-bob,3,8);r(shadow,10,-3-bob,5,12);r(steel,11,-2-bob,3,8);
+ r(ink,-13,6-bob,26,5);r(warm,-3,7-bob,6,4);r('#fff0b2',-1,8-bob,2,2);
+ r(ink,-17,5-bob,6,5);r(steel,-16,5-bob,4,4);r(ink,11,5-bob,6,5);r(steel,12,5-bob,4,4);
+ // Small salvage pack and hose sit behind the shoulders.
+ r(ink,-20,-10-bob,5,17);r('#283c4b',-19,-8-bob,3,11);r(glow,-19,-5-bob,2,3);r(warm,-19,4-bob,2,3);
+ // Sealed helmet with a broad luminous visor; no exposed face or hair.
+ r(ink,-12,-29-bob,24,19);r(steel,-10,-28-bob,20,4);r(edge,-7,-30-bob,14,3);r('#192d3d',-10,-23-bob,20,9);
+ r(glow,-9,-22-bob,18,5);r('#d7ffff',-7,-21-bob,12,2);r('#3b9ea9',5,-20-bob,4,2);
+ r(warm,-13,-22-bob,3,6);r('#fff0b2',-12,-21-bob,1,3);r(ink,-8,-13-bob,16,3);
+ if(dashing){const trail=-face;r('#d8ffff',trail*20,-3-bob,4,9);r(glow,trail*23,0-bob,3,7);}
+ // Collected pieces keep their set colors and layer over the base suit.
  drawEquipped(ctx,equipment,bob,leg);
 }
 root.DropForgeGear=Object.freeze({SLOTS,SLOT_NAMES,SETS,CHIPS,chipStats,createGear,stats,randomGear,drawPiece,icon,drawEquipped,drawWarrior});
