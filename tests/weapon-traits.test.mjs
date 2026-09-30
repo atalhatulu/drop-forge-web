@@ -18,38 +18,38 @@ test('trait cards are limited to three unique, currently compatible weapon offer
  assert.equal(new Set(cards.map(card=>card.weaponSlot+':'+card.id)).size,cards.length);
  assert.ok(cards.every(card=>traits.canGrant([gun(),gun(1)][card.weaponSlot],card.id,projectiles)));
 });
-test('a main transformation is applied without occupying a legacy socket and upgrades in place',()=>{
+test('any compatible trait uses a free run socket and upgrades in place',()=>{
  const w=gun();
- assert.equal(traits.grant(w,'shockCore',projectiles),true);
+ assert.equal(traits.grant(w,'burnCore',projectiles),true);
  assert.equal(w.mods[2],null);
- assert.equal(w.traits.main,'shockCore');
- assert.ok(traits.effectiveMods(w).includes('shockCore'));
- assert.equal(traits.grant(w,'burnCore',projectiles),false,'a filled main socket cannot be replaced');
- assert.equal(traits.grant(w,'shockCore',projectiles),true);
+ assert.equal(w.traits.slots[0],'burnCore');
+ assert.ok(traits.effectiveMods(w).includes('burnCore'));
+ assert.equal(traits.grant(w,'overheat',projectiles),true,'another compatible trait uses the next empty socket');
+ assert.equal(traits.grant(w,'burnCore',projectiles),true);
  assert.equal(w.mods[2],null);
- assert.equal(w.traits.main,'shockCore');
- assert.ok(traits.effectiveMods(w).includes('shockCore'));
- assert.equal(w.traits.levels.shockCore,2);
+ assert.equal(w.traits.slots[0],'burnCore');
+ assert.ok(traits.effectiveMods(w).includes('burnCore'));
+ assert.equal(w.traits.levels.burnCore,2);
 });
-test('supports are capped at two and a duplicate increases trait level without taking a new slot',()=>{
+test('three shared sockets accept distinct traits and duplicates upgrade without taking a slot',()=>{
  const w=gun();
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.equal(traits.grant(w,'stabilizer',projectiles),true);
- assert.equal(traits.grant(w,'lightGrip',projectiles),false);
+ assert.equal(traits.grant(w,'lightGrip',projectiles),true);
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.equal(w.traits.levels.loader,2);
- assert.equal(w.traits.supports.length,2);
+ assert.equal(w.traits.slots.filter(Boolean).length,3);
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.equal(traits.grant(w,'loader',projectiles),false);
 });
-test('main transformation and support work together even when their legacy sockets match',()=>{
+test('different trait kinds coexist in shared run sockets without touching old attachment slots',()=>{
  const w=gun();
- assert.equal(traits.grant(w,'overheat',projectiles),true);
+ assert.equal(traits.grant(w,'burnCore',projectiles),true);
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.equal(w.mods[1],null);
- assert.ok(traits.effectiveMods(w).includes('overheat'));
+ assert.ok(traits.effectiveMods(w).includes('burnCore'));
  assert.ok(traits.effectiveMods(w).includes('loader'));
- assert.equal(traits.grant(gun(2),'overheat',projectiles),false);
+ assert.equal(traits.grant(gun(2),'burnCore',projectiles),false);
 });
 test('chest UI grants traits directly rather than routing them into the mod bag',()=>{
  const game=readFileSync('src/game.js','utf8');
@@ -58,11 +58,10 @@ test('chest UI grants traits directly rather than routing them into the mod bag'
  assert.match(game,/SİLAHA HEMEN UYGULA/);
 });
 
-test('chest selection presents a main and support when both are available',()=>{
+test('chest selection presents three distinct eligible traits without fixed kind ordering',()=>{
  const cards=traits.choices({slots:[gun()],projectiles,seed:11,hash:(_a,_b,c)=>c});
  assert.equal(cards.length,3);
- assert.equal(cards[0].kind,'main');
- assert.equal(cards[1].kind,'support');
+ assert.ok(cards.every(card=>traits.eligible(gun(),card.id,projectiles)));
  assert.equal(new Set(cards.map(card=>card.id)).size,3);
 });
 test('normal chest offers do not fall back to legacy attachment cards',()=>{
@@ -96,15 +95,15 @@ test('chest trait claims do not increase the legacy global mod level',()=>{
 
 test('TAB displays every weapon trait, level and remaining open support slot',()=>{
  const w=gun();
- assert.equal(traits.grant(w,'shockCore',projectiles),true);
- assert.equal(traits.grant(w,'shockCore',projectiles),true);
+ assert.equal(traits.grant(w,'burnCore',projectiles),true);
+ assert.equal(traits.grant(w,'burnCore',projectiles),true);
  assert.equal(traits.grant(w,'stabilizer',projectiles),true);
  const html=traits.loadoutHTML(w);
- assert.match(html,/ANA DÖNÜŞÜM/);
- assert.match(html,/ELEKTRİK ZİNCİRİ · SEV 2\/3/);
+ assert.match(html,/YUVA 1/);
+ assert.match(html,/YANICI ATIŞ · SEV 2\/3/);
  assert.match(html,/DENGELİ ATIŞ · SEV 1\/3/);
- assert.match(html,/DESTEK 2[^]*BOŞ · SANDIKTAN ÖZELLİK SEÇ/);
- assert.doesNotMatch(traits.loadoutHTML(gun()),/ELEKTRİK ZİNCİRİ · SEV/);
+ assert.match(html,/YUVA 3[^]*BOŞ · SANDIKTAN ÖZELLİK SEÇ/);
+ assert.doesNotMatch(traits.loadoutHTML(gun()),/YANICI ATIŞ · SEV/);
 });
 test('TAB prioritizes run traits and shows old equipped attachments as read-only legacy items',()=>{
  const game=readFileSync('src/game.js','utf8');
@@ -122,33 +121,32 @@ test('TAB prioritizes run traits and shows old equipped attachments as read-only
 
 test('a dropped weapon keeps an independent snapshot of all its run trait levels',()=>{
  const source=gun();
- traits.grant(source,'shockCore',projectiles);
- traits.grant(source,'shockCore',projectiles);
+ traits.grant(source,'burnCore',projectiles);
+ traits.grant(source,'burnCore',projectiles);
  traits.grant(source,'stabilizer',projectiles);
  const ground={weapon:source.weapon,mods:[...source.mods],traits:traits.snapshot(source)};
- assert.equal(ground.traits.levels.shockCore,2);
+ assert.equal(ground.traits.levels.burnCore,2);
  assert.equal(ground.traits.supports[0],'stabilizer');
- source.traits.levels.shockCore=3;
- source.traits.supports.push('loader');
- assert.equal(ground.traits.levels.shockCore,2);
- assert.equal(ground.traits.supports.length,1);
+ source.traits.levels.burnCore=3;
+ source.traits.slots.push('loader');
+ assert.equal(ground.traits.levels.burnCore,2);
+ assert.equal(ground.traits.slots.length,3);
  assert.equal(traits.hasInvestment(ground),true);
  assert.equal(traits.hasInvestment(gun()),false);
 });
 test('reforge gives three distinct main transformations for the newly picked-up gun only',()=>{
  const incoming=gun(1),old=gun();
- traits.grant(old,'shockCore',projectiles);
- const offers=traits.choices({slots:[old,incoming],projectiles,kind:'main',seed:43,hash:(_a,_b,c)=>c});
- assert.equal(offers.length,3);
- assert.ok(offers.every(offer=>offer.kind==='main'));
- assert.equal(new Set(offers.map(offer=>offer.id)).size,3);
- const forIncoming=traits.choices({slots:[null,incoming],projectiles,kind:'main',seed:43,hash:(_a,_b,c)=>c});
+ traits.grant(old,'burnCore',projectiles);
+ const offers=traits.choices({slots:[old,incoming],projectiles,seed:43,hash:(_a,_b,c)=>c});
+ assert.ok(offers.length>0&&offers.length<=3);
+ assert.equal(new Set(offers.map(offer=>offer.weaponSlot+':'+offer.id)).size,offers.length);
+ const forIncoming=traits.choices({slots:[null,incoming],projectiles,seed:43,hash:(_a,_b,c)=>c});
  assert.ok(forIncoming.every(offer=>offer.weaponSlot===1));
- assert.equal(forIncoming.length,3);
+ assert.ok(forIncoming.length>0&&forIncoming.length<=3);
 });
 test('live swap retains old weapon traits on the ground and equips any traits on the pickup',()=>{
  const game=readFileSync('src/game.js','utf8');
- assert.match(game,/old\.mods\|\|\[\],old\.traits,old\.rune\)/);
+ assert.match(game,/old\.mods\|\|\[\],old\.traits,old\.rune,old\.rightClickAbility/);
  assert.match(game,/sameBuild\(duplicate,item\)/);
  assert.match(game,/rune:item\.rune\|\|null/);
  assert.match(game,/traits:window\.DropForgeWeaponTraits\.snapshot\(item\)/);
@@ -164,9 +162,9 @@ test('wheel offers three immediate traits after its result animation, never a le
  assert.match(wheel,/DropForgeWeaponTraits\.choices/);
  assert.match(wheel,/w\.traitOffers=offers/);
  assert.doesNotMatch(wheel,/game\.stashedMods\.push\(mod\)/);
- assert.match(game,/if\(w\.resultTime===0&&w\.traitOffers\?\.length\)/);
+ assert.match(game,/traitOffers\?\.length/);
  assert.match(game,/openChestUpgradeModal\(offers\)/);
- assert.match(game,/labels=\['SİLAH','ÖZELLİK'/);
+ assert.match(game,/w\.resultLabel\.includes\('ÖZELLİK'\)\?1/);
 });
 test('manual weapon drop preserves run traits just like a weapon swap',()=>{
  const game=readFileSync('src/game.js','utf8');

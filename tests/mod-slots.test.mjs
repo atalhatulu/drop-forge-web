@@ -7,7 +7,9 @@ const traits=readFileSync('src/weapon-traits.js','utf8');
 
 test('run trait capacity is independent from the retired four attachment sockets',()=>{
  assert.doesNotMatch(game,/function modSlotUnlocked\(|function getModSlots\(|function installMod\(|function applyStashedMods\(/);
- assert.match(traits,/s\.supports\.length>=2/);
+ assert.match(traits,/function state\(slot\)/);
+ assert.match(traits,/slots\.some\(value=>!value\)/);
+ assert.match(traits,/three equal sockets/);
  assert.match(traits,/next\.levels\[id\]=Math\.min\(3,/);
  assert.match(game,/Silah özellikleri seferde sandık, çark ve oda ödüllerinden kazanılır/);
 });

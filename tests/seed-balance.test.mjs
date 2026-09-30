@@ -49,8 +49,8 @@ assert.ok(start>=0&&end>start,'reward generator must be independently testable')
 function rewardScenario({level=1,slots=[{weapon:0,mods:[]}],offers=[{type:'trait',id:'shockCore',weaponSlot:0,kind:'main'}],paused=false,chestUpgradeOpen=false}={}){
  const drops=[],opened=[],messages=[],game={seed:19,player:{slots},currentChestUpgradeChoices:null};
  const traits={choices(args){assert.equal(args.slots,slots);return offers;}};
- const fn=new Function('game','window','paused','chestUpgradeOpen','openChestUpgradeModal','WEAPON_PROJECTILES','hash2','dropPickup','grantMastery','announce','availableChips','weightedLoot','W','FLOOR',gameSource.slice(start,end)+'return awardRoomReward;')(
-  game,{DropForgeWeaponTraits:traits},paused,chestUpgradeOpen,choices=>opened.push(choices),['kinetic'],()=>3,(...args)=>drops.push(args),()=>{},message=>messages.push(message),()=>[],()=>null,1120,548);
+ const fn=new Function('game','window','paused','chestUpgradeOpen','openWeaponRewardChoice','WEAPON_PROJECTILES','hash2','dropPickup','grantMastery','announce','availableChips','weightedLoot','W','FLOOR',gameSource.slice(start,end)+'return awardRoomReward;')(
+  game,{DropForgeWeaponTraits:traits},paused,chestUpgradeOpen,()=>{if(paused||chestUpgradeOpen||!offers.length)return false;opened.push(offers);game.currentChestUpgradeChoices=offers;return true;},['kinetic'],()=>3,(...args)=>drops.push(args),()=>{},message=>messages.push(message),()=>[],()=>null,1120,548);
  fn({id:1,x:1,y:1,level,reward:'mod',type:'combat',branchEnd:false});
  return {drops,opened,messages,game};
 }
@@ -61,7 +61,7 @@ test('room reward offers run traits immediately without dropping legacy attachme
  assert.equal(opened.length,1);
  assert.deepEqual(opened[0],game.currentChestUpgradeChoices);
  assert.equal(opened[0][0].id,'shockCore');
- assert.ok(messages.some(message=>message.includes('SİLAHINA ÖZELLİK SEÇ')));
+ assert.ok(messages.some(message=>message.includes('SİLAHINI SEÇ')));
 });
 
 test('room reward gives scaled gold when no trait is eligible or a choice modal is already open',()=>{

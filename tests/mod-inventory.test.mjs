@@ -14,8 +14,7 @@ test('legacy installed parts and run traits coexist without using the old bag or
  assert.equal(traits.grant(w,'overheat',projectiles),true);
  assert.equal(traits.grant(w,'loader',projectiles),true);
  assert.deepEqual(w.mods,['barrel',null,null,null],'legacy attachments retain their own sockets');
- assert.equal(w.traits.main,'overheat');
- assert.deepEqual([...w.traits.supports],['loader']);
+ assert.deepEqual([...w.traits.slots],['overheat','loader',null]);
  const effective=traits.effectiveMods(w);
  assert.ok(effective.includes('barrel')&&effective.includes('overheat')&&effective.includes('loader'));
  const stats=root.DropForgeWeaponStats.createWeaponStats({

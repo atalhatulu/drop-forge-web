@@ -68,17 +68,12 @@ test('old XP and weapon unlocks remain intact while mastery styles persist and r
  assert.ok(again.unlockedWeapons.has(7));
  assert.ok(again.ALL_PROGRESS_KEYS.includes(key),'manual export and reset include the new key');
 });
-test('hub style selection is permanent but never occupies an expedition trait slot',()=>{
+test('mastery style data powers stats and remains separate from run trait slots',()=>{
  const source=readFileSync('src/game.js','utf8');
- const html=readFileSync('index.html','utf8');
- assert.match(source,/function chooseForgeStyle\(n,choice\)/);
- assert.match(source,/masteryLevel\(id\)<4/);
- assert.match(source,/saveMasteryStyles\(\)/);
  assert.match(source,/getMasteryStyle:id=>masteryStyles\[id\]/);
  assert.match(source,/masteryStyleHTML\(w\.weapon\)/);
  assert.match(source,/masteryStyleHTML\(id\)/);
- assert.match(html,/id="forgeStyle1"/);
- assert.match(html,/id="forgeStyle2"/);
+ assert.doesNotMatch(source,/function chooseForgeStyle\(/,'styles are not offered as a preparation selection in the current build flow');
 });
 
 test('manual backups round-trip mastery styles and reset clears them without losing legacy save compatibility',()=>{

@@ -59,14 +59,16 @@ test('wheel fallback pays gold instead of discarding a full gear bag or reserve'
  assert.match(source,/w\.traitOffers=offers/);
  assert.match(source,/ÇARK ÖDÜLÜ · \+85 ALTIN/);
 });
-test('boss trait prize recomputes a compatible offer and grants it directly to the equipped weapon',()=>{
+test('boss trait prize first opens a weapon target choice, then that weapon’s trait pool',()=>{
  const source=readFileSync('src/game.js','utf8');
  const render=source.slice(source.indexOf('if(game.pendingBossReward){'),source.indexOf('if(game.pendingRune){',source.indexOf('if(game.pendingBossReward){')));
  const claim=source.slice(source.indexOf("const bossButton=e.target.closest('button[data-boss-reward]')"),source.indexOf("const runeButton=e.target.closest('button[data-rune-slot]')"));
  assert.match(render,/DropForgeWeaponTraits\.choices/);
  assert.match(render,/data-boss-reward="trait"/);
  assert.doesNotMatch(render,/dataset\.attachment/);
- assert.match(claim,/DropForgeWeaponTraits\.grant\(slot,offer\.id,WEAPON_PROJECTILES\)/);
+ assert.match(claim,/openWeaponRewardChoice\(seed\)/);
+ assert.match(source,/function weaponRewardTargets\(\)/);
+ assert.match(source,/function openWeaponRewardChoice\(seed\)/);
  assert.doesNotMatch(claim,/game\.stashedMods\.push\(id\)/);
  assert.match(claim,/game\.pendingBossReward=null;renderLoadout\(\)/);
 });
@@ -90,4 +92,3 @@ test('chest cards show run trait details and apply directly to the owning weapon
  assert.match(game,/DropForgeWeaponTraits\.grant\(w,item\.id,WEAPON_PROJECTILES\)/);
  assert.doesNotMatch(game,/ÇANTAYA AL · TAB İLE TAK/);
 });
-

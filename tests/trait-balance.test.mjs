@@ -26,8 +26,7 @@ test('all thirteen weapons have valid projectile families and three unique eligi
   const w=gun(id),cards=traits.choices({slots:[w],projectiles:catalog.WEAPON_PROJECTILES,seed,hash});
   assert.equal(cards.length,3,'weapon '+id+' seed '+seed);
   assert.equal(new Set(cards.map(card=>card.id)).size,3);
-  assert.equal(cards[0].kind,'main');
-  assert.equal(cards[1].kind,'support');
+  assert.ok(cards.every(card=>traits.eligible(w,card.id,catalog.WEAPON_PROJECTILES)));
   assert.ok(cards.every(card=>traits.canGrant(w,card.id,catalog.WEAPON_PROJECTILES)));
   assert.ok(cards.every(card=>card.weaponSlot===0));
   if(catalog.WEAPON_PROJECTILES[id]==='explosive')assert.ok(cards.every(card=>card.id!=='overheat'));
@@ -39,6 +38,7 @@ test('every allowed transformation combines safely with every support across all
   const w=gun(id);
   if(!traits.eligible(w,main,catalog.WEAPON_PROJECTILES))continue;
   assert.equal(traits.grant(w,main,catalog.WEAPON_PROJECTILES),true);
+  if(!traits.eligible(w,support,catalog.WEAPON_PROJECTILES)||main===support)continue;
   assert.equal(traits.grant(w,support,catalog.WEAPON_PROJECTILES),true);
   const st=stats(w),profile=combat.shotProfile(w,1,st);
   for(const key of ['damage','fireRate','reload','mag','dps','movementBonus','ammoSave'])assert.ok(Number.isFinite(st[key]),'weapon '+id+' '+main+' '+support+' '+key);
@@ -46,15 +46,15 @@ test('every allowed transformation combines safely with every support across all
   assert.ok(st.ammoSave>=0&&st.ammoSave<=.8);
   assert.ok(catalog.PROJECTILE_FAMILIES[profile.family],'weapon '+id+' '+main+' '+support+' projectile family');
   assert.ok(profile.pellets>=1&&profile.pellets<=5);
-  assert.equal(w.traits.supports.length,1);
+  assert.equal(w.traits.slots.filter(Boolean).length,2);
   assert.equal(w.mods.length,0,'run traits never consume retired sockets');
  }
 });
 
 test('fully upgraded weapon falls back to gold instead of endless main replacement offers',()=>{
  const w=gun(0);
- for(const id of ['shockCore','loader','stabilizer'])for(let level=0;level<3;level++)assert.equal(traits.grant(w,id,catalog.WEAPON_PROJECTILES),true);
- assert.equal(traits.canGrant(w,'burnCore',catalog.WEAPON_PROJECTILES),false,'an occupied main socket only upgrades its current mechanic');
+ for(const id of ['burnCore','loader','stabilizer'])for(let level=0;level<3;level++)assert.equal(traits.grant(w,id,catalog.WEAPON_PROJECTILES),true);
+ assert.equal(traits.canGrant(w,'burnCore',catalog.WEAPON_PROJECTILES),false,'all three occupied sockets reject new mechanics');
  const options=traits.choices({slots:[w],projectiles:catalog.WEAPON_PROJECTILES,seed:44,hash});
  assert.equal(options.length,0,'ordinary rewards should fall back to gold on a fully developed gun');
  const newGun=gun(1),withSecond=traits.choices({slots:[w,newGun],projectiles:catalog.WEAPON_PROJECTILES,seed:44,hash});
@@ -63,12 +63,13 @@ test('fully upgraded weapon falls back to gold instead of endless main replaceme
 
 test('upgrade cards level occupied mechanics and never replace them',()=>{
  const w=gun(0);
- for(let i=0;i<2;i++)assert.equal(traits.grant(w,'shockCore',catalog.WEAPON_PROJECTILES),true);
+ for(const id of ['burnCore','loader','stabilizer'])assert.equal(traits.grant(w,id,catalog.WEAPON_PROJECTILES),true);
  const cards=traits.choices({slots:[w],projectiles:catalog.WEAPON_PROJECTILES,seed:10,hash});
  assert.ok(cards.length>0);
- assert.equal(cards[0].kind,'main','the occupied main socket is offered as an upgrade');
- assert.equal(cards[0].upgrade,true);
- assert.ok(cards.every(card=>!card.replace));
+ assert.ok(cards.every(card=>card.upgrade),'full builds only offer upgrades to installed mechanics');
+ assert.ok(cards.every(card=>card.level<=3));
+ assert.equal(traits.grant(w,cards[0].id,catalog.WEAPON_PROJECTILES),true);
+ assert.equal(traits.state(w).slots.length,3,'upgrade retains the three-slot build');
 });
 
 test('five pellets in one shotgun shot count as a single cryo hit per target',()=>{
@@ -81,7 +82,7 @@ test('five pellets in one shotgun shot count as a single cryo hit per target',()
  const second={};
  combat.resolveAttachmentHit(second,{mods:['cryoCore'],shotEffects:shared},.1,false,.5);
  assert.equal(second.cryoHits,1,'a separate enemy still receives a cryo stack');
- assert.match(readFileSync('src/game.js','utf8'),/const shotEffects=\{shockRemaining:1,cryoTargets:new Set\(\)\}/);
+ assert.match(readFileSync('src/attachment-effects.js','utf8'),/cryoTargets/);
 });
 
 test('light grip movement damage is earned only by equipping the trait',()=>{
@@ -101,13 +102,13 @@ test('same-weapon pickups cannot silently consume distinct legacy mods traits or
  assert.equal(traits.sameBuild(pickup,equipped),false,'comparison is symmetric');
  pickup.mods[0]='barrel';
  assert.equal(traits.sameBuild(equipped,pickup),true);
- traits.grant(equipped,'shockCore',catalog.WEAPON_PROJECTILES);
+ traits.grant(equipped,'burnCore',catalog.WEAPON_PROJECTILES);
  assert.equal(traits.sameBuild(equipped,pickup),false);
  pickup.traits=traits.snapshot(equipped);
  assert.equal(traits.sameBuild(equipped,pickup),true);
- pickup.traits.levels.shockCore=2;
+ pickup.traits.levels.burnCore=2;
  assert.equal(traits.sameBuild(equipped,pickup),false,'trait levels distinguish builds');
- pickup.traits.levels.shockCore=1;
+ pickup.traits.levels.burnCore=1;
  pickup.rune='hunt';
  assert.equal(traits.sameBuild(equipped,pickup),false,'different runes distinguish builds');
  equipped.rune='hunt';
@@ -115,7 +116,7 @@ test('same-weapon pickups cannot silently consume distinct legacy mods traits or
  const source=readFileSync('src/game.js','utf8');
  assert.match(source,/sameBuild\(duplicate,item\)/);
  assert.match(source,/rune:item\.rune\|\|null/);
- assert.match(source,/old\.traits,old\.rune\)/);
+ assert.match(source,/traits:window\.DropForgeWeaponTraits\.snapshot\(item\)/);
 });
 
 test('two-weapon reward distribution reaches both equipped guns across deterministic seeds',()=>{
@@ -124,7 +125,7 @@ test('two-weapon reward distribution reaches both equipped guns across determini
   const guns=[gun(0),gun(11)];
   const offers=traits.choices({slots:guns,projectiles:catalog.WEAPON_PROJECTILES,seed,hash});
   assert.ok(offers.length>0&&offers.length<=3);
-  assert.equal(new Set(offers.map(offer=>offer.id)).size,offers.length);
+  assert.equal(new Set(offers.map(offer=>offer.weaponSlot+':'+offer.id)).size,offers.length);
   for(const offer of offers){
    counts[offer.weaponSlot]++;
    kinds[offer.kind]++;
