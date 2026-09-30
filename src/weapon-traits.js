@@ -81,8 +81,9 @@ function choices({slots,projectiles,seed=0,hash=(a,b,c)=>c,kind=null}){
  return result;
 }
 function snapshot(slot){
- const s=slot?.traits;
- return s?{slots:[...s.slots],main:s.slots[0]||null,supports:s.slots.slice(1),levels:{...s.levels}}:null;
+ if(!slot?.traits)return null;
+ const s=state(slot);
+ return {slots:[...s.slots],main:s.main,supports:[...s.supports],levels:{...s.levels}};
 }
 function sameBuild(a,b){
  if(!a||!b||a.weapon!==b.weapon)return false;
