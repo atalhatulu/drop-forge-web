@@ -35,7 +35,7 @@ const ALL_MODS={
  tripleBurst:{name:'ÜÇLÜ ATIŞ',level:4,slot:1,description:'Tetikle kısa aralıklarla 3 atış yapar; her atış kendi mermisini harcar.'},
  cryoCore:{name:'KRİYO ÇEKİRDEK',level:6,slot:2,description:'Yavaşlatır; 3 sn içinde 3 kez vurursan dondurur.'},
  resonanceCore:{name:'REZONANS ÇEKİRDEĞİ',level:6,slot:2,description:'Diğer silahın da plazma ailesindeyse bu silah +%20 hasar verir.'},
- hunterMark:{name:'AVCI İŞARETİ',level:6,slot:2,description:'İlk isabet işaretler; sonraki 5 sn içindeki isabetler kritik vurur.'},
+ hunterMark:{name:'AVCI İŞARETİ',level:6,slot:2,description:'İlk isabet kritik vurur ve hedefi 5 sn işaretler; sonraki isabetler de kritik vurur.'},
  heavyStabilizer:{name:'AĞIR STABİLİZATÖR',level:8,slot:3,description:'Hareketsizken her isabette %25 kritik şansı.'},
  overchargeGrip:{name:'HIZ AŞIMI',level:8,slot:3,description:'İlk atışla 2 sn boyunca 2 kat atış hızı; 10 sn bekleme.'},
  steadyGrip:{name:'DENGELİ KABZA',level:8,slot:3,description:'Saçılma azalır, uzun mesafe isabeti artar.'},

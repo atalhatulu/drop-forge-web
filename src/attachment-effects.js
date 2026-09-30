@@ -21,8 +21,8 @@ function resolveAttachmentHit(enemy,bullet,now,stationary,roll){
  const mods=bullet.mods||[];
  let critical=false;
  if(mods.includes('hunterMark')){
-  critical=(enemy.hunterMarkTime||0)>0;
   enemy.hunterMarkTime=5;
+  critical=true;
  }else if((enemy.hunterMarkTime||0)>0)critical=true;
  if(!critical&&stationary&&mods.includes('heavyStabilizer')&&roll<.25)critical=true;
  if(mods.includes('cryoCore')&&(!bullet.shotEffects?.cryoTargets||!bullet.shotEffects.cryoTargets.has(enemy))){

@@ -6,7 +6,7 @@ const TRAITS=Object.freeze({
  shockCore:{name:'ELEKTRİK ZİNCİRİ',kind:'main',groups:['lmg','arc'],mod:'shockCore',description:'İsabet ettiğin düşmandan yakındaki başka bir düşmana elektrik sıçrar.'},
  burnCore:{name:'YANICI ATIŞ',kind:'main',groups:['pistol','energy','explosive'],mod:'burnCore',description:'İsabetlerin düşmanı 3 saniye yakar.'},
  cryoCore:{name:'KRİYO İSABETİ',kind:'main',groups:['shotgun','energy'],mod:'cryoCore',description:'İsabetler yavaşlatır; art arda 3 isabet düşmanı dondurur.'},
- hunterMark:{name:'AVCI İŞARETİ',kind:'main',groups:['sniper','laser'],mod:'hunterMark',description:'İsabet hedefi işaretler; işaretli hedefe sonraki isabetler kritik vurur.'},
+ hunterMark:{name:'AVCI İŞARETİ',kind:'main',groups:['sniper','laser'],mod:'hunterMark',description:'İlk isabet kritik vurur ve hedefi 5 sn işaretler; sonraki isabetler de kritik vurur.'},
  laserSweep:{name:'LAZER HATTI',kind:'main',groups:['lmg','sniper','laser','energy'],mod:'laserSweep',description:'Atışların delici bir lazer hattına dönüşür.'},
  overheat:{name:'SON MERMİ PATLAMASI',kind:'main',groups:['pistol','lmg','shotgun','energy','arc'],mod:'overheat',description:'Şarjörün son mermisi patlayıcı olur.'},
  loader:{name:'HIZLI BESLEME',kind:'support',groups:['pistol','lmg','shotgun','energy','explosive','arc'],mod:'loader',description:'Daha hızlı ateş eder ve doldurursun.'},
