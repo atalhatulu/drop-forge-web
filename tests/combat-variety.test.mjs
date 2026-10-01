@@ -21,7 +21,7 @@ test('finisher rewards preserve consumables and grant capped temporary shields',
   const trigger=new Function('e','game','room','hash2','dropPickup','floating','burst',code);
   trigger({finisherExecution:true,x:100,y:200,w:30,h:40},gameState,{},()=>roll,(...args)=>drops.push(args),()=>{},()=>{});
   if(roll===3){assert.equal(gameState.player.phaseShield,45);assert.equal(drops.length,0);}
-  else{assert.equal(drops.length,1);assert.equal(drops[0][1],['ammo','health','grenade'][roll]);assert.equal(drops[0][5],true);}
+  else{assert.equal(drops.length,1);assert.equal(drops[0][1],['ammo','health','grenade'][roll]);assert.equal(drops[0][4],true);}
  }
 });
 test('ranged attack alternation has readable warnings and lower multi-projectile damage',()=>{
