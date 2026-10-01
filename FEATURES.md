@@ -1,182 +1,110 @@
-# Drop Forge — Oyun özellikleri
+# Drop Forge — Güncel oyun ve savaş mekanikleri
 
-## Uzun sefer güncellemesi
+> **Güncel kod referansı:** `main`, Ekim 2026. Bu belge eski dört eklenti yuvasına dayalı tasarımın yerine geçen mevcut sistemi anlatır. Farklı sürümlere ait kayıtlar için uyumluluk yolu korunur.
 
-- Yeni seferler seed'e göre yaklaşık 64–70 odadan oluşur. Ana rota 20 oda aşağı iner; her 5 aşağı odada bir geniş boss arenası vardır (B1/B2/B3/B4). Zafer yalnızca dördüncü boss yenilince gelir. İlk üç boss sonrası sağlık kitleri ve mühimmat verilir.
-- M haritası tüm oda bağlantılarını baştan gösterir. Ulaşılmamış odalar gri `?` olarak etkin değildir; keşfedilince oda türleri ve rota ödülleri görünür.
-- Sağlık %50'nin altına inince oyuncu hayattaysa ve çantada kit bulunuyorsa kit otomatik kullanılır (manuel `3/H` de kullanılabilir).
-- `V` yakın dövüş kısa zaman penceresinde üç vuruşluk komboya dönüşür; üçüncü vuruş daha geniş alan, daha yüksek hasar ve geri itme uygular.
-- Geri tepme, namlu ışığı, isabet kıvılcımları, hasarda kırmızı ekran parlaması ve boss aşaması göstergesi eklendi.
+## 1. Oyunun akışı ve dört bölge
 
-## Dört bölge ve düşman seviyeleri
+Oyun, kukla ve ödülsüz savaş test alanı içeren **fiziksel hazırlık merkezinde** başlar. `E` ile atölyeden başlangıç silahlarını ve yeteneklerini seçip portal üzerinden sefere girersin. Seed'e göre oluşan uzun rota dört bölge içerir: Terk Edilmiş Maden (LV 1), Zehirli Orman (LV 2), Mor Kristal (LV 3), Lav Çekirdeği (LV 4). Ana rota her beş derinlikte boss arenasına çıkar; son boss dördüncü bölgededir. Yan dallarda hazine, anahtar, özel oda ve ödül seçenekleri bulunur. `M` haritası bağlantıları ve keşfedilmiş oda bilgilerini gösterir.
 
-- **Bölge I, derinlik 0–5:** Terk Edilmiş Maden; LV 1 düşmanlar; derinlik 5'te boss.
-- **Bölge II, derinlik 6–10:** Zehirli Orman; LV 2 düşmanlar; derinlik 10'da boss.
-- **Bölge III, derinlik 11–15:** Mor Kristal; LV 3 düşmanlar; derinlik 15'te boss.
-- **Bölge IV, derinlik 16–20:** Lav Çekirdeği; LV 4 düşmanlar; derinlik 20'de son boss.
+Normal odalarda portal ve düşman temizleme, işaretli av hedefi, jeneratör savunması gibi görevler bulunur. Odada uzun süre kalmak tehdidi yükseltir. Düşmanların canı/hasarı bölgeyle artar; son bölgedeki düşmanlar ek kalkan taşıyabilir. Boss arenalarında şifacı doğuşunu engelleyen ayrı davranış vardır.
 
-Biyom ve düşman seviyesi odanın derinliğine bağlıdır; yan dallarda da aynı bölgede kalır. Dallar yalnızca ana rotanın normal odalarına bağlanır ve ödül/hazine odalarında sonlanır. Boss kapılarını yan dallardan atlamak mümkün değildir. Düşman canı, saldırı hasarı ve ateş sıklığı LV 2–3'te artar. Harita dört bölgeyi ve henüz keşfedilmemiş odaları gösterir.
+## 2. Üç eşdeğer silah özelliği yuvası
 
-Sağlık %50'nin altındayken yakında yerde bir sağlık kiti bulunursa önce o kit doğrudan kullanılır; kit çantası dolu olsa bile çantadaki mevcut kitler harcanmaz. Yakında kit yoksa çantadaki kit otomatik kullanılır.
+**13 silah** için `src/weapon-traits.js` içinde **36 silah özelliği** tanımlıdır. Her silahın **üç run özellik yuvası** bulunur; bunlar ana/destek/atak olarak zorunlu bölünmez. Katalogdaki `kind` alanı etkinin sınıfını anlatır, yuva zorunluluğunu değil.
 
-## Stat eklentileri ve gezgin tüccar
+- Her yeni özellik, açık bulunan ilk yuvayı doldurur.
+- Aynı özelliği yeniden almak kendi seviyesini yükseltir; üst sınır **3**'tür.
+- Üç yuva doluysa boş yuvaya yeni özellik gelmez. Henüz en üst seviyeye ulaşmamış takılı özelliklerin yükseltmeleri sunulabilir.
+- Özellik seçimi **silaha özeldir**: tabanca, hafif otomatik, pompalı, enerji, keskin nişancı, lazer, patlayıcı ve ark gruplarının uygun havuzları farklıdır.
+- Özellikler ve seviyeleri silahın üzerindedir. Silah yere bırakılıp tekrar alındığında diğer yapılandırma parçalarıyla birlikte korunur.
+- Önceki sürümün `traits.main` ve `traits.supports` kayıtları, üç yuvalı düzene dönüştürülerek okunur.
 
-Her silahın ustalık 2 / 4 / 6 / 8'de açılan dört kategorik yuvası vardır. Her yuvada **üç farklı eklentiden yalnızca biri** takılabilir (toplam 12 seçenek): namluda Güç / Seri / Delici; mekanizmada Hızlı / Geniş Şarjör / Verimli; çekirdekte Faz / Şok / Yanıcı; kabzada Dengeleyici / Hafif / Ağır. Şok Çekirdeği isabetten yakın hedefe %35 zincir hasarı verir; Yanıcı Çekirdek 3 saniyelik yanma uygular. Başlangıç atölyesi, TAB çantası ve tüccar bu alternatifleri destekler. Yere bırakılan silah eklentilerini korur.
+### 36 özellik — etki grupları
 
-Atış, reload ve stat kartları aynı `weaponStats` hesaplamasını kullanır. Silah kartında hasar / mermi, pompalıda tam isabet hasarı, teorik DPS, atış hızı, doldurma, hız, delme, saçılma, gerçek şarjör, mühimmat tasarrufu, hareket bonusu ve geri tepme görünür. Teorik DPS yenileme ve şartlı etkileri hesaba katmaz.
+| Savaş davranışı | Özellikler |
+| --- | --- |
+| Element ve isabet etkileri | Elektrik Zinciri, Yanıcı Atış, Kriyo İsabeti, Avcı İşareti, Şok Ağzı, Kanatan Çekirdek, Kış Çekirdeği |
+| Mermi biçimi ve delme | Lazer Hattı, Son Mermi Patlaması, Seken Mermi, Faz Delici Namlu, Avcı Mermi, Yankı Mermisi, Yerçekimi Mermisi |
+| Atış ve mühimmat | Hızlı Besleme, Geniş Şarjör, Mühimmat Tasarrufu, Hız Aşımı, Üçlü Atış, Geri Kazanım, Hızlı Namlu, Kapasitör Atışı |
+| Hasar, dağılım ve hareket | Dengeli Atış, Hareketli Atış, Rezonans Çekirdeği, Ağır Sabitleyici, Uzun Menzil Kabzası, Ağır Namlu, Faz Çekirdeği, Ağır Kabza |
+| İlave etkiler | İnfaz Çekirdeği, Parçalayıcı Çekirdek, Sömürü Mermisi, Kırılgan Yük, Sarsıntı Çekirdeği, Açık Yara Atışı |
 
-Düşmanlar garantili altın ve sıkça mühimmat bırakır. Altın düştüğü yerde kalır; toplamak için karakterin paraya dokunması gerekir. Hazine ve ara boss odalarında arena temiz olduğunda sefer tüccarına E ile ulaşılır. Mermi, kit, bomba ve ustalığı açık stat eklentileri sefer altınıyla alınır. Başlangıç arenasındaki ayrı kalıcı usta yalnızca Kalıcı Çekirdek kullanır. Mağaza, çanta kapasitesini ve yetersiz altın durumunu kontrol eder; ESC ile kapanır.
+Bu gruplama okuyucu içindir; hangi özelliğin hangi silahta seçilebildiğinin kaynağı koddaki `groups` listeleridir. İstatistik, mermi ailesi ve efektler `weapon-stats.js`, `attachment-effects.js` ve `game.js` tarafından birlikte uygulanır.
 
-## Oynanabilir hazırlık alanı ve test
+### Tanımlı ikili sinerjiler
 
-Yeni oyun doğrudan fiziksel hazırlık alanında başlar. **Atölye tezgâhına yaklaşıp E** ile iki başlangıç silahını, eklentileri, zorluğu ve seed'i ayarlayabilirsiniz. Hedef kuklasına ateş ederek hasarı ölçebilir, V ile melee kombosunu deneyebilirsiniz. Hazırlıkta yedek mühimmat otomatik yenilenir; antrenman atışları kalıcı ustalık XP'si kazandırmaz. **Sağdaki sefer portalına gidip E** ile ilk savaş odasına geçilir. Geçişte sağlık ve başlangıç mühimmatı doldurulur. YARDIM düğmesi kontrolleri ve ilerleme döngüsünü açar.
+| İkili | Sinerji |
+| --- | --- |
+| Elektrik Zinciri + Üçlü Atış | **Aşırı Yük:** tetik serisinde elektrik zinciri daha fazla hedefe sıçrayabilir. |
+| Yanıcı Atış + Mühimmat Tasarrufu | **Kalıcı Yanma:** yanma süresi ve hasarı artar. |
+| Kriyo İsabeti + Hareketli Atış | **Hareketli Dondurucu:** hareket ederken dondurmak için gereken isabet sayısı azalır. |
+| Avcı İşareti + Ağır Sabitleyici | **Nokta Atışı:** işaretli hedefe hareketsiz ateş etme kritik hasarı artırır. |
+| Lazer Hattı + Faz Delici Namlu | **Faz Kesici:** lazer daha fazla hedefi deler. |
 
-Dash görüntü izleri ve enerji çemberi bırakır; kancanın hattı animasyonludur. Düşmanlar isabette kısa süre sarsılır ve geri tepilir. Silahların geri tepmesi sınıfa ve kabza eklentisine göre değişir. Çarkın tabanı ve tüccarın ayakları zemine hizalıdır.
+## 3. Ödül seçimi ve ekonomi
 
-## Neler düşer, neler satın alınır?
+İlgili sandık ve oda özellik ödülleri önce **hangi silahı geliştireceğini** seçtirir; ardından yalnızca o silaha uygun özellik kartları gösterilir. Seçilen özellik hemen ilgili silaha işlenir. Ödül havuzunda silahın sağ tık yeteneği için geliştirmeler ve zırh çipleri gibi ayrı hedefler de bulunabilir; görüntülenen seçenekler mevcut envanter ve oyun durumuna bağlıdır.
 
-- Düşmanlar garantili **altın**, sıkça **yedek mühimmat** ve bazen sağlık kiti bırakır. Altın için fiziksel temas gerekir; uzaktan çekilmez. Boss'lar daha çok altın, garantili mühimmat ve sağlık kiti bırakır.
-- Odaların ödülleri, sandıklar ve çarklar eklenti, ustalık XP'si, silah, sağlık, mühimmat veya bomba kazandırabilir. Özel eşya türleri: Koruyucu Kalkan, Adrenalin Serumu, Spor Filtresi ve Prizma Bobini.
-- Sefer tüccarında altınla mühimmat, sağlık kiti, bomba ve ustalığı açılmış 12 eklenti alternatifinden biri alınabilir. Başlangıç arenasındaki kalıcı ustadan ise Kalıcı Çekirdek ile başlangıç canı, kit, yedek mühimmat, seçili silaha kalıcı XP ve yeni silah açma yükseltmeleri alınır.
-- **Kalıcı ilerleme:** Tarayıcıya kaydedilen silah ustalığı XP/seviyeleri (kalıcı ustadan satın alınan XP dâhil), şans çarkında veya kalıcı ustadan açılan silahlar, Kalıcı Çekirdek bakiyesi ve kalıcı başlangıç yükseltmeleri. Ustalık 2/4/6/8 seviyeleri yeni eklenti yuvası açar.
-- **Yalnızca o sefere ait:** Altın, satın alınan ve takılı/çantadaki eklentiler, iki silahın mevcut mühimmatı, ganimet, sağlık kitleri, bombalar, özel eşyalar ve oda ilerlemesi. Ölümden sonra hazırlık alanında yeni sefer sıfır kaynakla başlar; ustalık ve açılmış silahlar kalır.
+Hazine, çark, oda temizleme, boss ve görevler altın, ekipman, ustalık XP'si, silah ve sarf malzemesi gibi farklı sonuçlar üretebilir. Uygun seçim kalmadığında bazı ödüllerde **altın telafisi** devreye girer. Geçici sefer tüccarı sağlık kiti, mühimmat, bomba gibi sarf malzemelerini satar; **eski dört yuvalı eklentilerin satın alınıp TAB çantasından takılması artık güncel döngünün parçası değildir**. Kalıcı usta ise Kalıcı Çekirdek kullanır.
 
-Her beş düşman öldürülünce +1, boss öldürülünce +3 Kalıcı Çekirdek kazanılır; birikim ölünce silinmez. Bu kaynak başlangıç arenasındaki kalıcı ustada harcanır. Sefer altını ise ölümde sıfırlanır. Yalnızca kalıcı yükseltme veya XP kazandıysan sonraki sefer daha güçlü başlar. Kalıcı kayıtlar tarayıcının yerel depolamasındadır; başka cihazlara otomatik taşınmaz.
+## 4. Silah başına sağ tık yeteneği ve Z karakter modülü
 
-## Silah sınıfına özgü eklentiler ve karşılaştırmalı atölye
+Atölyede iki silah seçilir. **Her silahın sağ tık yeteneği ayrıca seçilir**; uygun seçenekler silahın mermi ailesine göre belirlenir. Sağ tık, bu silah yeteneğini kendi bekleme süresiyle etkinleştirir. Seçenek havuzunda üçlü atış, hız aşımı, şok dalgası, plazma mızrağı, nüfuz, sarsıcı atış, plazma yağmuru, pompalı süpürme, avcı işareti, seri aşım, lazer süpürme, küme bomba ve elektrik sıçraması gibi **13 temel yetenek tanımı** bulunur. Yeteneklere ait geliştirme seviyesi, silah yapılandırmasının bir parçasıdır.
 
-Başlangıç arenasındaki tezgâhta açık bir `+` eklenti yuvasına tıklayınca o kategorinin üç seçeneği kartlar halinde görünür. Kartlar **gerçek atış hesaplarından gelen önce → sonra stat değişimlerini**, silaha özel etki açıklamasını ve varsa oynanış bedelini gösterir. Takılan eklentinin adı, seçili silah görseli ve özellikleri anında güncellenir. Aynı açıklamalar TAB envanterindeki takılı eklentilerin altında bulunur.
+**`Z` karakter modülü sağ tıktan bağımsızdır.** Hazırlıkta modül seçimi, silaha ait sağ tık seçicileriyle karıştırılmamalıdır. Aktif modülün bekleme süresi ve etkisi ayrı yönetilir. Silah değişimi silaha ait yeteneği ve yapılandırmayı değiştirebilir; karakter modülü ayrı kalır.
 
-Eklentiler farklı silahlarda aynı sonucu vermeyebilir: Delici Namlu kinetikte +1 delme, pompalıda %25 sıkı dağılım, patlayıcıda %20 geniş etki alanı sağlar. Faz Çekirdeği kinetikte +1 delme, alan etkili enerji silahlarında %25 geniş etki alanı sağlar; her ikisinde de %25 hız verir. Pompalıdaki Dengeleyici saçılmayı %42 azaltırken Ağır Kabza artık Dengeleyici'nin kopyası değildir: %35 daha az geri tepme ve düşmana %50 uzun sarsılma verir. Şok zinciri özellikle pompalılarda dengeli kalması için **atış başına en fazla bir ek hedefe** sıçrar. Çekirdeklerin Yanma ve Şok etkileri mevcut özel etkiler olarak korunur.
+## 5. Yakın dövüş, sersemletme ve finisher
 
-## Sağ tıkla silaha özel yetenekler
+`V`, uygun hedef yokken zaman penceresine bağlı **üç vuruşluk yakın dövüş kombosu** uygular. Üçüncü vuruşun menzili ve hasarı daha yüksektir. Sersemlemiş ve finisher için uygun hale gelmiş düşmana nişan alıp menzilde `V` kullanıldığında normal bıçak yerine **finisher** başlatılır: karakter hedefe kısa bir ileri atılmayla yaklaşır, darbe animasyonu ve kısa dokunulmazlık penceresi kullanır. Menzil dışındaki hedefte işlem başlamaz. Bazı çipler finisher erişimini, can iadesini, dash yenilemeyi veya mühimmat kazanımını etkiler.
 
-Her silahın kendine ait **sağ tık yeteneği** ve bağımsız bekleme süresi vardır; silah değişimi süreyi sıfırlamaz. Alt arenadaki şerit seçili silahın yetenek adını ve bekleme süresini gösterir. Hazırlık alanında kuklada denemek serbesttir; portaldan sefere geçince bekleme süreleri sıfırlanır. 13 yetenek: Kıvılcım üçlü atış, Vizir hız aşımı, Kor şok dalgası, enerji tüfeği plazma mızrağı, keskin nişancı nüfuz atışı, ağır tabanca sarsıcı atış, enerji otomatiği plazma yağmuru, ikinci pompalı süpürme, ikinci keskin nişancı avcı işareti, hızlı otomatik seri aşım, lazer süpürme, patlayıcı küme bomba, ark elektrik sıçraması. Sağ tık yetenekleri şarj değil, süre bazlı kullanılır.
+Savaş okunurluğu için mermi çarpma kıvılcımları, statü efektleri, namlu parlaması, geri tepme, ekran vurulma tepkileri, düşman/boss görselleri ve piksel siluetleri yeniden düzenlenmiştir. `src/procedural-background.js` ile maden dekorları ve sahne ayrıntıları desteklenir.
 
-**Eklenti sahipliği:** Sefer içinde tüccardan satın alınan eklenti önce ortak çantaya gider; aynı anda yalnızca takıldığı silahı güçlendirir. TAB çantasında söküp uyumlu yuvaya sahip diğer silaha aktarılabilir. Eklentinin adı ve sınıfa özgü etkisi silaha göre değişebilir. Sefer bitince satın alınan ve takılan bu parçalar sıfırlanır; ustalıkla açılan yuvalar kalıcıdır.
+## 6. Zırh, pasif çipler ve blueprint
 
-**Kalıcı usta:** Hazırlıkta kukla ile portalın arasında bulunur. Başlangıç canı +10 (3 seviye), başlangıç kiti +1 (2 seviye), başlangıç yedek mühimmatı +1 şarjör (3 seviye), seçili silaha +90 kalıcı ustalık XP veya sıradaki kilitli silahı açma sağlar. Kalıcı Çekirdek hesabı `localStorage` içinde tutulur. Alt bilgi şeridi artık oyun alanının altında; coin'ler mıknatıslı değil, temasla toplanır.
+Zırh **beş parça** üzerinden kurulur: kask, gövde zırhı, eldiven, kemer ve bot. Kale, Rüzgâr, Cephanelik ve Kanbağı setleri tam set bonusları sağlar. Pasif çipler belirli parça yuvalarına uygundur. Güncel örnekler:
 
-## İlk boss kapısının üç anahtarı
+- **Mıknatıslı Kemer:** yakındaki ganimeti kendine çeker.
+- **Ayna Göğüslüğü:** alınan hasarın bir kısmını yakındaki düşmana yansıtır.
+- **Koç Botları / Sert İniş:** dash çarpması ve yüksekten inişe savaş etkileri ekler.
+- **Avcı Vizörü / Hasat Eldiveni / İnfaz Haznesi:** finisher menzili, can veya mühimmat kazanımı.
+- **Koruyucu Kapasitör / Faz Bataryası:** dash sonrasında savunma veya hasar emme.
+- **Sıçrama Yayı / Çift Adım:** ek hava hareketliliği veya dash.
+- **Son Savunma / Karşı Darbe:** kritik durumda koruma veya hasar sonrası çevresel sersemletme.
 
-İlk bölgedeki (LV 1) üç yan dalın son odası, seed'den bağımsız olarak birer boss anahtarı taşır. Anahtar, ilgili oda temizlendiğinde veya hazine odasına girildiğinde otomatik toplanır; böylece düşman ganimetine veya şansa bağlı kalmaz. İlk boss odasına geçiş için üçünün de toplanması gerekir. Oyun içi gösterge anahtar sayısını, rota haritası da anahtar odalarını ve toplanma durumlarını gösterir. Diğer boss kapıları mevcut ilerleme kurallarını korur.
+Güncel hazırlık ekranında **Blueprint Koleksiyonu** ve ayrı **Zırh Atölyesi** bulunur. Bu ekranlar silahın üç run özelliği yuvasından bağımsızdır.
 
-## Tank hücumu
+## 7. Kalıcı ustalık ve kayıtlar
 
-Kırmızı tank düşmanları oyuncu yatay menzildeyken kısa süre hücumu zeminde işaretler, ardından sabit yöne yüksek hızla atılır. Hücum isabeti normal temastan daha yüksek hasar ve belirgin geri itme uygular; aynı hücum yalnızca bir kez vurur. Hücum bitince bekleme süresi başlar. Jeneratör savunması ve diğer düşman davranışları korunur.
+Kalıcı ilerleme; silah ustalığı XP/seviyeleri, açılmış silahlar, Ustalık 4'te seçilebilen başlangıç tarzları, üst ustalık tercihleri, Kalıcı Çekirdek ile alınan gelişmeler ve ilgili koleksiyon kayıtlarını kapsar. **Run özellikleri, sefer altını ve çoğu sarf malzemesi kalıcı değildir.**
 
-## Uçan düşmanların hızı
+Kayıtlar tarayıcı `localStorage` alanındadır. Dışa aktarma/yedekten yükleme ve sıfırlama seçenekleri mevcuttur. `src/progression.js` önceki `weaponBuilds.v1` gibi uyumluluk anahtarlarını tanımayı sürdürür, ancak bunlar **güncel atölyede dört soketli eklenti build'i kurulduğu anlamına gelmez**. Eski silahlardaki eklentilerin savaş etkileri için uyumluluk kodu korunabilir.
 
-Mavi uçan düşmanlar oyuncuyu daha hızlı takip eder (azami yatay hız 245), dikey konumlarını daha çevik düzeltir ve mermilerden daha hızlı sıyrılır. Atış aralıkları kısaltılmıştır; saldırı öncesi nişan alma uyarısı korunur.
+## 8. Test, HUD ve harita
 
-## Büyücülerin patlayan mermileri
+Hazırlıkta hedef kuklası ve **ödülsüz savaş test alanı** vardır. Test alanı taşıdığın silahın mevcut özelliklerini, sağ tık yapılandırmasını ve uyumlu eski parçalarını kullanacak şekilde tasarlanmıştır; test bitince önceki ekipman geri yüklenir ve kalıcı ustalık XP'si verilmez. `TAB` ekipman/özellikleri, `M` haritayı açar. Güncel HUD sağlık, akış/kalkan göstergesi, silah-mühimmat, oda, altın ve öldürme bilgisini ayrı sunar.
 
-Mor büyücülerin mermileri oyuncuya, jeneratöre veya arena sınırına çarptığında ya da süreleri dolduğunda patlar. Patlama, merminin etrafında 76 birimlik alan hasarı uygular; görsel patlama halkası kısa süre görünür. Oyuncunun dash sırasında patlama hasarından kaçınması mümkündür. Diğer düşman mermilerinin davranışı değişmez.
+Kod kontrolleri:
 
-## Ganimet çeşitliliği
+```sh
+npm run check
+npm test
+```
 
-Oda tamamlandığında temel rota ödülüne ek olarak seed'e bağlı bomba, altın veya yan dal sonlarında aksesuar ödülü çıkabilir. Normal düşmanlar türlerine göre farklı ihtimallerle bomba düşürebilir. Boss'lar aksesuar ve bomba bırakır; hazine sandıkları garanti aksesuar, ayrıca bomba ve sağlık kiti ihtimali taşır. Elit ve av odaları ilave altın verir. Oda temizleme sonundaki temel sağlık/mühimmat ödülü artık garanti olarak yere düşer; mevcut toplama ve çanta sınırları korunur.
+Bu komutlar JS sözdizimi ve mevcut regresyon testlerini doğrular; görsel uyum, uzun sefer, özellik kombinasyonlarının gerçek güç dengesi ve tüm boss davranışları için **oynanış testi ayrıca gereklidir**.
 
-## İlk kez edinilen eşyaların vurgusu
+## 9. Kontrol özeti
 
-Seferde ilk kez alınan bir silah, eklenti veya aksesuar oyuncunun çevresinde altın renkli parlama ve kısa bir keşif bildirimi oluşturur. Aynı eşya türü aynı seferde yeniden alındığında bildirim tekrarlanmaz. Eşya gerçekten envantere girdikten sonra tetiklenir; dolu çanta nedeniyle alınamayan eşyalar keşfedilmiş sayılmaz.
-
-## Düşman seviyesi ve kalkan
-
-Düşman canı LV 1'e göre LV 2'de ×1,75; LV 3'te ×3,0625; LV 4'te ×3,828125 olarak ölçeklenir (zorluk çarpanı ayrıca uygulanır). LV 4 düşmanları, boss ve işaretli av hedefi dâhil, nihai canlarının %50'si kadar ayrı bir kalkanla doğar. Hasar önce kalkanı tüketir; boss aşaması ve av hedefi can artışları kalkana da yansır.
-
-## Portal savunması ve hızlandırılmış üretim
-
-Portalın kalkanı artık mermi sayısına bağlı değildir. Canı ilk kez %50 veya altına düştüğünde 2,7 saniyelik kalkan açar ve bu sırada düşman üretimini durdurur. Kalkan sona erdiğinde üretim aralığı normalin %60'ına iner; portal aynı seferde ikinci kez kalkan açmaz. Portalın aynı anda üretebileceği düşman sınırı değişmez.
-
-## Odada kalma baskısı
-
-Savaş odasında geçen süre 30, 60 ve 90. saniyelerde tehdit seviyesini artırır (en fazla 3). Her kademe düşmanların hareketini %12 hızlandırır, saldırı bekleme aralığını %10 oranında kısaltan bir çarpan uygular ve saldırı hasarını %8 artırır. Tehdit seviyesi ve odada geçen süre oyun ekranında gösterilir; yeni odanın sayacı sıfırdan başlar. Hazırlık ve temizlenmiş odalarda tehdit artmaz.
-
-## Savaş odalarında şifacı
-
-Her savaş odası (boss odaları dâhil) başlangıçta en az bir şifacıyla açılır; hazine odalarında düşman doğmaz. Başlangıç düşman sayısı oda sınırını doldurmuşsa şifacıya yer açmak için eşzamanlı düşman sınırı başlangıç sayısına yükseltilir. Şifacı portalları odada canlı şifacı varken ikinci bir şifacı üretmez. Şifacılar birbirlerini iyileştiremez; işaretli av hedefi başlangıç diziliminde ilk düşman olarak kalır.
-
-## Silah build kayıtları
-
-Hazırlık atölyesinde her silah için **BUILD KAYDET**, **KAYITLI BUILD** ve **ÖNERİLEN BUILD** düğmeleri bulunur. Build tercihleri silah kimliğine göre tarayıcıda saklanır ve sonraki seferlerde yeniden uygulanabilir. Önerilen dizilim silahın mermi ailesine göre bir başlangıç seçeneğidir; yalnızca ustalık seviyesiyle açılmış yuvalara uygun eklentiler takılır. Kayıtlar eklenti veya ustalık kilidini açmaz ve mevcut seferin ganimetini kalıcılaştırmaz.
-
-## Animasyonlu şans çarkı
-
-Çarkla etkileşim, oyun kanvası üzerinde ayrı bir tam ekran 2D çark sahnesi açar. Altı renkli dilim, sabit gösterge ve yavaşlayarak dönen animasyon 2,4 saniye sürer. Ödül belirlendikten sonra sonuç 1,8 saniye gösterilir; mevcut ödül olasılıkları ve kazanım mantığı korunur.
-
-## Sandık ganimet çeşitliliği
-
-Özel sandıklar artık yalnızca eklenti değil, eksik ihtiyaca göre sağlık kiti, bomba veya mühimmat da verebilir. Uygun yeni eklenti kalmadığında ya da eklenti çantası dolduğunda kullanılamayacak kopya yerine ek altın ve iki kuşanılmış silaha ustalık XP'si verilir. Hazine sandığı sahip olunan aksesuarı tekrar seçmez; tüm aksesuarlar mevcutsa ilave altın verir. Temel +45 altın ödülü korunur.
-
-## Yakın dövüş animasyonu
-
-Üç vuruşlu bıçak kombosu artık vuruş boyunca ilerleyen kavis, hareket eden bıçak ve isabet anında parlayan uç efektiyle çizilir. İkinci vuruş ters yönde savrulur; üçüncü vuruşun daha geniş ve uzun animasyonu bitirici darbeyi belirginleştirir. Hasar, menzil ve kombo zamanlaması değişmez.
-
-## Kalıcı usta ve sefer tüccarı
-
-Hazırlık alanındaki **Kalıcı Usta** yalnızca kalıcı çekirdek kabul eder; alınan gelişimler sonraki seferlere aktarılır. Odalardaki **Sefer Tüccarı** yalnızca o seferin altınını kabul eder; satın alınan sarf malzemeleri sefer sonunda sıfırlanır. Tüccar türü artık odadaki tüccarın kalıcı niteliğinden belirlenir. Kalıcı çekirdek her 5 düşmanda +1, boss başına +3, elit veya av odası temizlenince +1 ve hazine odasına girince +1 kazanılır. Kalıcı ustada bu sefer kazanılan çekirdekler de görünür; sefer tüccarında kalıcı çekirdek bakiyesi ayrıca gösterilir.
-
-## Şans çarkı ekranı etkileşimi
-
-Odada duran çark ayrı ekranı kendiliğinden açmaz. Çarkın yanına gidip **E** tuşuna basınca animasyon başlar; ödül gösterimi tamamlanınca oyun ekranı otomatik geri gelir.
-
-## Yakın çevre mini haritası
-
-Seferde savaş dışında sağ üst köşede yalnızca bulunduğun oda ve doğrudan bağlı komşularını gösteren yarı saydam mini harita görünür. Aktif savaş, canlı düşman veya portal varken otomatik gizlenir. Tam harita tuşu ve mevcut harita ekranı değişmez.
-
-## Takip eden boss anahtarları
-
-Toplanan boss anahtarları savaş dışında oyuncunun arkasında küçük 2D anahtarlar ve aralarındaki ışıklı bağ ile takip eder. Savaşta gizlenirler; oda değiştirince oyuncunun yanından tekrar takip etmeye başlarlar. İlk boss odasına açılan kapı üzerinde anahtar simgesiyle mevcut/gerekli anahtar sayısı (ör. 0/3) görünür ve yeterli anahtar yoksa kapı kilitli kalır.
-
-## Yeni çağırıcı düşmanlar
-
-LV2 ve üstü normal savaş odalarında başlangıç diziliminin ikinci düşmanı %30 olasılıkla iki özel türden biri olur: **Mühür Ustası** ağır, yüksek canlı ve yavaş muhafızlar çağırır (aynı anda en fazla iki); **Geçitçi** en fazla iki küçük düşman portalı açar. Bu geçitler üçer düşman ürettikten sonra kapanır ve oyuncu tarafından daha erken yok edilebilir. Her iki çağırıcı da oyuncudan mesafe korumaya çalışır. Düşmanlar biyoma özgü ad ve renklerle çizilir; dağılım oranları daha sonra dengelenebilir.
-
-## Sade tüccar kartları
-
-Tüccar kartları artık simge, ürün adı, tek satırlık ana etki, fiyat ve satın alınabilirlik durumunu öne çıkarır. Uzun teknik açıklamalar kartın üzerine gelindiğinde görünür; kalıcı/seferlik ayrımı başlık altında kısa bir etiketle belirtilir.
-
-## Ustalıkla büyüyen silah istatistikleri
-
-Silah ustalığı artık yalnızca eklenti yuvası açmaz. Seviye 1'den 10'a kadar her seviyede temel hasar +%3,5, atış hızı +%1,2 ve doldurma süresi -%1,2 ölçeklenir. LV10'da LV1'e kıyasla yaklaşık +%31,5 hasar, +%10,8 atış hızı ve %10,8 daha kısa doldurma süresi vardır. Bu gelişimler kalıcı ustalık XP'sine bağlıdır ve atölye, çanta ve gerçek atışlar aynı istatistik modelini kullanır.
-
-## Yenilenen silah siluetleri
-
-13 silahın piksel çizimleri ailelerine göre farklı namlu, gövde, şarjör ve enerji parçası siluetleriyle yenilendi. Aynı aileyi paylaşan modellerde farklı vurgu işaretleri bulunur. Atölye ve HUD aynı sprite kaynağını kullanır.
-
-## Başlangıç alanı savaş test ekranı
-
-Hazırlık alanındaki **TEST ALANI** düğmesiyle 13 silahtan birini, düşman türünü (çağırıcılar ve boss dâhil), LV1–LV4 seviyesini ve 1–4 düşman sayısını seçebilirsin. Test sırasında XP, altın, ganimet veya çekirdek kazanılmaz; can sıfırlanmak yerine yenilenir. Aynı düğmeden testi bitirince önceki silahların ve konumun geri gelir. Test, gerçek sefere başlamadan farklı silah ve düşman kombinasyonlarını denemek içindir.
-
-## Daha seyrek şans çarkı ve boss anahtarları
-
-Şans çarkı artık yalnızca hazine odalarının yaklaşık dörtte birinde bulunur; normal savaş odalarında çıkmaz. Her dönüş farklı bir rastgelelik tohumu kullanır. Dolu sağlık kiti/bomba veya kullanılamayan eklenti yerine altın verilir; doğrudan altın ödülü de eklendi. İlk boss kapısına üç anahtarla girildiğinde anahtarlar parıltı efektiyle tüketilir ve takip eden anahtarlar kaybolur.
-
-## Güçlendirilmiş av hedefi ve platform inişi
-
-Av odasının işaretli hedefi artık 2,5 kat temel cana, %35 daha hızlı harekete, %30 daha sık saldırıya ve %45 daha yüksek hasar çarpanına sahip. Yerde yürüyen düşmanlar oyuncu aşağıdayken üst platformdan aşağı inebilir; iniş sırasında kısa süre platformun içinden geçerek oyuncuyu takip eder.
-
-## Yedi farklı mühimmat ganimeti
-
-Düşmanlardan ve oda ödüllerinden çıkan mühimmat, düşüş anında eldeki silahın yedi mermi ailesinden biriyle eşleşir: standart, saçmalı, delici, plazma, lazer, patlayıcı ve elektrik. Her aile ayrı renk ve simgeli yer ganimetine sahiptir. Toplanan paket yalnızca aynı aileyi kullanan silahların yedek mühimmatını doldurur; uyumsuz paketler yerde kalır.
-
-## Yeni oda olayları: Altın Kasası ve Saldırı Odası
-
-Bazı yan kollar, anahtar odalarını değiştirmeden **Altın Kasası** olur: savaş yerine seviyeye göre artan iki altın ödülü ve sandık içerir. Bazı normal savaş odaları **Saldırı Odası**na dönüşür: başlangıçta daha fazla düşman, iki yerine üç portal ve artırılmış oda düşman kapasitesi vardır. Haritada Altın Kasası `$`, Saldırı Odası `!` simgesiyle görünür. Şans çarkı yalnızca seyrek hazine odalarında kalır.
-
-## Giysi setleri ve karakter build'leri
-
-Kask, zırh, eldiven, kemer ve bot için dört seferlik set bulunur: **Kale** (parça başına +20 maksimum can; tam sette +80), **Rüzgâr** (parça başına %5,5 hız; tam sette +%15), **Cephanelik** (parça başına %5,5 mühimmat tasarrufu; tam sette +%20), **Kanbağı** (parça başına öldürmede +3 can; tam sette +12). Giysiler düşmanlardan, bosslardan, hazine sandıklarından ve çarktan düşebilir. TAB çantasında en fazla 20 yedek giysi tutulur; aynı yuvadaki eski parça çantaya geri döner. Giysiler seferliktir, silah ustalığı kalıcı kalır.
-
-## Portal dayanıklılığı
-
-Portalların maksimum canı LV1–4 için sırasıyla 320, 490, 720 ve 960'tır. LV1–2 portalları %50 can eşiğinde bir kez; LV3–4 portalları %70 ve %50 eşiklerinde iki kez 2,7 saniyelik kalkan açar. Kalkan sırasında düşman üretimi durur; sonrasında hızlanır.
-
-## Yedi boss ve iki faz
-
-Her seferin dört boss kademesi bulunur; ilk üç kademenin ikişer, son kademenin bir boss alternatifi vardır. Aynı seed ve oda için seçim sabittir. Maden Muhafızı (yaylı atış), Tünel Yarıcı (hücum), Spor Ana (minyon), Kök Avcısı (uzak atış), Prizma Hükümdarı (mermi yelpazesi), Ayna Hayaleti (ışınlanma) ve Kül İmparatoru (ateş yağmuru) farklı saldırı profillerine sahiptir. Bosslar güçlendirilmiş canla başlar; %50 can eşiğinde ikinci faza geçip saldırı temposunu artırır.
-
-## Sadeleştirilmiş oyun HUD'u
-
-Üst menü kısa simge ve tuş etiketlerine indirildi. Oyun sırasında can, mermi, oda, altın ve yetenek durumu görünür kalır; uzun kontrol açıklamaları yardım ekranına ve araç ipuçlarına taşındı. Hızlı envanterde tekrarlanan açıklama satırları gizlendi. Silah ustalığı ayrıntısı TAB çantasında durur.
+| Tuş | Eylem |
+| --- | --- |
+| `A/D` | Hareket |
+| `Space/W` | Zıplama / çift zıplama |
+| `Shift` | Dash |
+| Sol tık | Ateş |
+| Sağ tık | Silaha ait seçilmiş özel yetenek |
+| `Z` | Karakter modülü |
+| `Q` / `1` / `2` | Silah değişimi |
+| `R` | Doldurma |
+| `V` | Yakın dövüş / uygun hedefte finisher |
+| `3/H`, `4`, `5` | Sağlık kiti, bomba, özel eşya |
+| `E` | Yakın etkileşim |
+| `TAB`, `M`, `ESC` | Ekipman, harita, menü |
