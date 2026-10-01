@@ -1,6 +1,7 @@
 /* Canvas overlays for the timed wheel and in-room status HUD. */
 (function(root){
 function createHudView({ctx,W,H,getGame,currentRoom,requiredBossKeys,bossGateReady,BIOMES}){
+const clamp=(value,min,max)=>Math.max(min,Math.min(max,value));
 function drawWheelScreen(w){
  if(!w||!(w.spinTime>0||w.resultTime>0))return;
  const cx=W/2,cy=H/2+22,r=177,labels=['SİLAH BLUEPRINTİ','ÖZELLİK','SAĞLIK','MERMİ','BOMBA','SÜRPRİZ'],colors=['#e3a654','#6559ad','#4aa782','#438fb5','#b45e76','#b68c49'];
@@ -14,7 +15,7 @@ function drawWheelScreen(w){
  if(w.resultTime>0){ctx.fillStyle='rgba(12,22,39,.95)';ctx.fillRect(115,H-103,W-230,61);ctx.fillStyle='#ffe5a2';ctx.font='bold 17px monospace';ctx.fillText(w.resultLabel||'ÇARK ÖDÜLÜ',cx,H-65);}
  ctx.restore();
 }
-function drawGameHud(){const game=getGame(),room=currentRoom();if(game.inHub)return;const flow=game.flow||0,stage=room.stage;ctx.save();ctx.textAlign='center';ctx.font='bold 13px monospace';ctx.fillStyle='#f4e2b8';ctx.fillText('LV '+room.level+' · TERK EDİLMİŞ MADEN',W/2,28);ctx.fillStyle='rgba(6,13,20,.78)';ctx.fillRect(W/2-118,37,236,9);ctx.fillStyle='#e2ad53';ctx.fillRect(W/2-115,39,230*flow/100,5);ctx.strokeStyle='rgba(227,190,123,.65)';ctx.strokeRect(W/2-118,37,236,9);ctx.fillStyle='#f3d997';ctx.font='bold 9px monospace';ctx.fillText('B'+stage+' · ODA '+(game.roomId+1)+' / '+game.rooms.length+' · '+Math.floor(flow)+'%',W/2,61);if(room.type==='boss'&&room.enemies.length){const e=room.enemies.find(e=>e.type==='boss');if(e){ctx.fillStyle='rgba(10,12,18,.9)';ctx.fillRect(W*.31,77,W*.38,12);ctx.fillStyle='#d94f51';ctx.fillRect(W*.31+2,79,(W*.38-4)*clamp(e.hp/e.maxHp,0,1),8);ctx.strokeStyle='#d9b484';ctx.strokeRect(W*.31,77,W*.38,12);ctx.fillStyle='#ffe1bf';ctx.font='bold 10px monospace';ctx.fillText('BOSS · '+(e.bossName||BIOMES[room.biome].name),W/2,73);}}ctx.restore();}
+function drawGameHud(){const game=getGame(),room=currentRoom();if(game.inHub)return;const flow=game.flow||0,stage=room.stage;ctx.save();ctx.textAlign='center';ctx.font='bold 13px monospace';ctx.fillStyle='#f4e2b8';ctx.fillText('LV '+room.level+' · '+(BIOMES[room.biome]?.name||'BİLİNMEYEN BÖLGE'),W/2,28);ctx.fillStyle='rgba(6,13,20,.78)';ctx.fillRect(W/2-118,37,236,9);ctx.fillStyle='#e2ad53';ctx.fillRect(W/2-115,39,230*flow/100,5);ctx.strokeStyle='rgba(227,190,123,.65)';ctx.strokeRect(W/2-118,37,236,9);ctx.fillStyle='#f3d997';ctx.font='bold 9px monospace';ctx.fillText('B'+stage+' · ODA '+(game.roomId+1)+' / '+game.rooms.length+' · '+Math.floor(flow)+'%',W/2,61);if(room.type==='boss'&&room.enemies.length){const e=room.enemies.find(e=>e.type==='boss');if(e){ctx.fillStyle='rgba(10,12,18,.9)';ctx.fillRect(W*.31,77,W*.38,12);ctx.fillStyle='#d94f51';ctx.fillRect(W*.31+2,79,(W*.38-4)*clamp(e.hp/e.maxHp,0,1),8);ctx.strokeStyle='#d9b484';ctx.strokeRect(W*.31,77,W*.38,12);ctx.fillStyle='#ffe1bf';ctx.font='bold 10px monospace';ctx.fillText('BOSS · '+(e.bossName||BIOMES[room.biome].name),W/2,73);}}ctx.restore();}
 function drawNearbyMinimap(room){
  const game=getGame();if(game.inHub)return;
  const x=W-236,y=18,w=220,h=128,cx=x+w/2,cy=y+74,size=23,neighbors=Object.values(room.links).map(id=>game.rooms[id]).filter(Boolean),visible=[room,...neighbors],seen=new Set(visible.map(r=>r.id));
