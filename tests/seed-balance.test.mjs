@@ -36,6 +36,42 @@ test('1,024 seeded expeditions contain reachable gates, quest rooms and an early
  }
 });
 
+test('all procedural side-door ledges are reachable using ordinary jumps',()=>{
+ for(let seed=1;seed<=256;seed++){
+  const rooms=generate(seed);
+  for(const room of rooms){
+   for(const side of ['left','right']){
+    const door=room.doors[side];
+    if(!door||door.y>=548-110)continue;
+    const ledgeY=door.y+43,top=room.platforms.find(p=>p.y===ledgeY&&(side==='left'?p.x===39:p.x===1120-222));
+    assert.ok(top,'seed '+seed+' room '+room.id+' '+side+' lacks door ledge');
+    if(ledgeY<548-200){
+     const step=room.platforms.find(p=>p.x===(side==='left'?198:1120-353)&&p.y===Math.min(548-124,ledgeY+125));
+     assert.ok(step,'seed '+seed+' room '+room.id+' '+side+' lacks intermediate jump ledge');
+     assert.ok(548-step.y<=150,'initial jump must be reachable');
+     assert.ok(step.y-ledgeY<=150,'second jump must be reachable');
+     assert.ok(side==='left'?step.x<top.x+top.w:step.x+step.w>top.x,'ledge horizontal overlap');
+    }
+   }
+  }
+ }
+});
+test('boss doors are connected to the main progression spine and valid in every biome',()=>{
+ for(let seed=1;seed<=512;seed++){
+  const rooms=generate(seed);
+  for(let stage=1;stage<=4;stage++){
+   const boss=rooms.find(r=>r.type==='boss'&&r.bossStage===stage);
+   assert.ok(boss&&boss.spine,'seed '+seed+' missing spine boss '+stage);
+   const above=rooms[boss.links.up];
+   assert.ok(above&&above.y===boss.y-1);
+   assert.equal(above.links.down,boss.id);
+   assert.ok(boss.doors.up,'boss entry must have an up door');
+   assert.equal(boss.stage,stage,'boss level and biome must match gate stage');
+   assert.ok(Array.isArray(boss.platforms)&&boss.platforms.length>0);
+  }
+ }
+});
+
 test('seeded room layouts, rewards and early treasure remain deterministic',()=>{
  for(const seed of [18,56,209,263,319,403,382711]){
   const digest=rooms=>rooms.map(room=>[room.id,room.x,room.y,room.type,room.reward,room.bossKey,room.secret?.kind]);
