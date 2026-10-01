@@ -7,6 +7,31 @@ function enemyUpdate(e,room,dt){
  const targetGenerator=room.generator&&!room.generator.failed&&room.generator.time>0&&e.type==='red'?room.generator:null;const dx=(targetGenerator?targetGenerator.x:p.x+p.w/2)-(e.x+e.w/2),dy=(targetGenerator?targetGenerator.y-18:p.y+p.h/2)-(e.y+e.h/2),dist=Math.abs(dx);
  // Dodge only when a bullet is approaching: 10-second per-enemy cooldown.
  if(e.dodgeCd<=0&&!(e.type==='red'&&(e.chargeWindup>0||e.chargeTime>0))){const threat=game.bullets.find(b=>{const rx=e.x+e.w/2-b.x,ry=e.y+e.h/2-b.y,closing=(rx*b.vx+ry*b.vy)>0,d=Math.hypot(rx,ry),cross=Math.abs(rx*b.vy-ry*b.vx)/(Math.hypot(b.vx,b.vy)||1);return closing&&d<200&&cross<e.h*.65+20;});if(threat){e.dodgeCd=10;e.dodgeTime=e.type==='blue'?.34:.26;e.dodgeDir=Math.random()<.5?-1:1;if(e.type==='blue')e.vy=-e.dodgeDir*440;else {e.vy=-470;e.grounded=false;}burst(room,e.x+e.w/2,e.y+e.h/2,'#bdefff',12,185);floating(e.x,e.y-22,'DODGE','#a3edff');sound(630,.08,'triangle',.018);}}
+ if(e.type==='purple'||e.type==='warlock'){
+  if(!e.cloned&&!e.isClone&&e.hp<=e.maxHp*.5&&room.enemies.length<(room.enemyCap||game.settings.cap)+3){
+   e.cloned=true;
+   const clone=spawnEnemy(room,e.type,clamp(e.x+(dx>0?-60:60),50,W-e.w-50),e.y);
+   clone.isClone=true;clone.hp=1;clone.maxHp=1;clone.damageScale=0.5;clone.variant='GÖLGE KLON';
+   burst(room,clone.x+clone.w/2,clone.y+clone.h/2,'#d8a8ff',18,170);
+   floating(e.x,e.y-25,'GÖLGE KLON ÇAĞIRDI','#d8a8ff');
+   sound(640,.18,'sine',.03);
+  }
+ }
+ if(e.type==='scavenger'){
+  e.escapeTime=(e.escapeTime??12)-dt;
+  if(e.escapeTime<=0){
+   e.alive=false;
+   burst(room,e.x+e.w/2,e.y+e.h/2,'#ffdf78',30,220);
+   floating(e.x,e.y-25,'YAĞMACI KAÇTI!','#ffb378');
+   sound(220,.25,'sawtooth');
+   return;
+  }
+  const fleeDir=Math.sign(e.x-(p.x+p.w/2))||(Math.random()<.5?1:-1);
+  e.vx=fleeDir*270;
+  e.x=clamp(e.x+e.vx*dt*moveBoost*(e.cryoSlowTime>0?.65:1),45,W-e.w-45);
+  e.y=clamp(e.y+Math.sin(e.phase*5)*32*dt+clamp(p.y-100-e.y,-60,60)*dt,90,460);
+  return;
+ }
  if(e.type==='warlock'){e.summonCooldown-=dt;const active=room.enemies.filter(a=>a.alive&&a.summoner===e).length;if(e.summonCooldown<=0&&active<2&&room.enemies.length<(room.enemyCap||game.settings.cap)+2){const brute=spawnEnemy(room,'brute',clamp(e.x+(dx>0?75:-85),60,W-110),FLOOR-69);brute.summoner=e;e.summons++;e.summonCooldown=8;burst(room,brute.x+brute.w/2,brute.y,'#c5a3ff',17,155);floating(e.x,e.y-27,'MUHAFIZ ÇAĞIRDI','#d8c1ff');}}if(e.type==='riftcaller'){e.summonCooldown-=dt;const portal=room.portals.find(q=>q.owner===e&&q.alive);if(e.summonCooldown<=0&&!portal&&e.summons<2){const x=clamp(e.x+(dx>0?85:-85),85,W-85);room.portals.push({type:'red',biome:room.biome,x,y:FLOOR-27,produced:0,max:1,spawnLimit:3,owner:e,time:2,spawnDuration:2,alive:true,hp:115,maxHp:115,hit:0,shield:0,shieldTriggered:false,overdrive:false,regenDelay:5,regenBase:115,regenCap:115});e.summons++;e.summonCooldown=12;burst(room,x,FLOOR-27,'#8be4f5',20,170);floating(e.x,e.y-27,'GEÇİT AÇTI','#9ceeff');}}if(e.type==='healer'){const allies=room.enemies.filter(a=>a.alive&&a!==e&&a.type!=='healer'&&a.hp<a.maxHp);if(e.healPulse<=0&&allies.length){allies.sort((a,b)=>Math.hypot(a.x-e.x,a.y-e.y)-Math.hypot(b.x-e.x,b.y-e.y));const ally=allies[0];if(Math.hypot(ally.x-e.x,ally.y-e.y)<335){ally.hp=Math.min(ally.maxHp,ally.hp+14);e.healPulse=1.25;burst(room,ally.x+ally.w/2,ally.y,'#81ffbd',7,100);floating(ally.x,ally.y-22,'+14','#82ffbc');}}if(e.hit>0&&e.teleportCd<=0){e.x=clamp(e.x+(dx>0?-245:245),70,W-e.w-70);e.y=FLOOR-e.h;e.vy=-300;e.teleportCd=5;burst(room,e.x,e.y,'#8bffcb',17,150);floating(e.x,e.y-15,'IŞINLANDI','#8bffcb');}}
  if(e.type==='red'&&e.chargeWindup<=0&&e.chargeTime<=0&&e.chargeCooldown<=0&&e.grounded&&e.stagger<=0&&dist>115&&dist<590&&Math.abs(dy)<95){e.chargeWindup=.62;e.chargeDir=Math.sign(dx)||1;e.chargeHit=false;e.windup=0;e.fire=Math.max(e.fire,.9);floating(e.x+e.w/2,e.y-25,'HÜCUM!','#ffb17e');}
  if(e.type==='red'&&e.chargeWindup>0){e.chargeWindup=Math.max(0,e.chargeWindup-dt);if(e.chargeWindup===0){e.chargeTime=.48;burst(room,e.x+e.w/2,e.y+e.h/2,'#ff9c67',12,145);}}

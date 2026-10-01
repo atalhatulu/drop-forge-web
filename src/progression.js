@@ -49,6 +49,7 @@
   MATRIX_KEY,
   'dropForge.gearLocker.v1',
   'dropForge.gearBuild.v1',
+  'dropForge.blueprints.v1',
   'dropForge.bossBlueprints.v1'
  ];
  function resetAllProgress(){
